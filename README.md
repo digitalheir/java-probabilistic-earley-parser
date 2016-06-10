@@ -16,3 +16,6 @@ parse:
 Note that this implementation does not apply [Joop Leo's improvement](http://www.sciencedirect.com/science/article/pii/030439759190180A) to run linearly on on right-recursive grammars as well, nor does it implement, nor [Aycock and Horspool's fix for nullable grammars](http://webhome.cs.uvic.ca/~nigelh/Publications/PracticalEarleyParsing.pdf). I would have liked to, but it takes considerable effort.
 
 For a better parser, look into [Marpa](http://lukasatkinson.de/2015/marpa-overview/#earley-and-marpa). Marpa is a C library with a Perl interface, and a Lua interface is underway. It is currently painful to embed within a Java project, however.
+
+## License
+This software is licensed under the strong copyleft license [GNU GPLv3](http://choosealicense.com/licenses/gpl-3.0/).
