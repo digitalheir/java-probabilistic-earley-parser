@@ -2,7 +2,7 @@
 package org.leibnizcenter.cfg.earleyparser.event;
 
 import org.leibnizcenter.cfg.Grammar;
-import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+import org.leibnizcenter.cfg.earleyparser.exception.ParseException;
 import org.leibnizcenter.cfg.earleyparser.parse.Parse;
 
 import java.util.EventListener;
@@ -25,33 +25,33 @@ public interface ParserListener extends EventListener {
     /**
      * Notifies a listener that the parser was seeded with a start category.
      *
-     * @param edgeEvent An event containing the added edge.
+     * @param stateEvent An event containing the added edge.
      */
-    public void parserSeeded(EdgeEvent edgeEvent);
+    public void parserSeeded(StateEvent stateEvent);
 
     /**
      * Signals to a listener that an edge was added to the chart based on a
      * prediction from the {@link Grammar grammar}.
      *
-     * @param edgeEvent An event containing the added edge.
+     * @param stateEvent An event containing the added edge.
      */
-    public void edgePredicted(EdgeEvent edgeEvent);
+    public void edgePredicted(StateEvent stateEvent);
 
     /**
      * Lets the listener know that a token was scanned from the input string.
      *
-     * @param edgeEvent An event containing the edge created on the basis of
+     * @param stateEvent An event containing the edge created on the basis of
      *                  scanning a token.
      */
-    public void edgeScanned(EdgeEvent edgeEvent);
+    public void edgeScanned(StateEvent stateEvent);
 
     /**
      * Notifies a listener that an edge was added to the chart based on
      * completion.
      *
-     * @param edgeEvent An event containing the added edge.
+     * @param stateEvent An event containing the added edge.
      */
-    public void edgeCompleted(EdgeEvent edgeEvent);
+    public void edgeCompleted(StateEvent stateEvent);
 
     /**
      * Called when parsing completes.
@@ -73,8 +73,8 @@ public interface ParserListener extends EventListener {
      *
      * @param parseErrorEvent An error event containing the parse that was
      *                        in progress and the error that occurred.
-     * @throws PepException If the listener does not wish to handle the
+     * @throws ParseException If the listener does not wish to handle the
      *                      exception, it can re-throw the cause of the parse error event.
      */
-    public void parseError(ParseErrorEvent parseErrorEvent) throws PepException;
+    public void parseError(ParseErrorEvent parseErrorEvent) throws ParseException;
 }

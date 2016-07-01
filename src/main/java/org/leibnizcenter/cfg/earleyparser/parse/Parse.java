@@ -2,8 +2,10 @@
 package org.leibnizcenter.cfg.earleyparser.parse;
 
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +18,7 @@ import static org.leibnizcenter.cfg.earleyparser.parse.Status.*;
 
 
 /**
- * Represents a parse completed by an {@link EarleyParser Earley parser}.
+ * Represents a parse completed by an Earley parser.
  * <p>
  * A parse contains the string ({@link List list} of
  * {@link #getTokens() tokens}) parsed, the {@link #getSeed() seed category}
@@ -30,7 +32,6 @@ import static org.leibnizcenter.cfg.earleyparser.parse.Status.*;
  * using a grammar that permits structural or lexical ambiguity, the methods
  * for fetching parse trees will return sets that contain more than one element.
  *
- * @see EarleyParser
  * @see Chart
  */
 public class Parse<T> {
@@ -89,18 +90,20 @@ public class Parse<T> {
         return chart;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public Set<Edge> getCompletedEdges(Category category, int origin, int index) {
-        Set<Edge> edges = chart.edgeSets.get(index);
-        if (edges == null || edges.isEmpty()) { // any edges at this index?
-            return Collections.emptySet();
-        }
 
-        return edges.stream()
-                .filter(e -> e.origin == origin
-                        && e.isPassive()
-                        && e.rule.left.equals(category))
-                .collect(Collectors.toSet());
+    @SuppressWarnings("WeakerAccess")
+    public Set<State> getCompletedStates(Category category, int origin, int index) {
+//        Set<State> edges = chart.edgeSets.get(index);
+//        if (edges == null || edges.isEmpty()) { // any edges at this index?
+//            return Collections.emptySet();
+//        }
+//
+//        return edges.stream()
+//                .filter(e -> e.origin == origin
+//                        && e.isPassive()
+//                        && e.rule.left.equals(category))
+//                .collect(Collectors.toSet());
+        throw new NotImplementedException();
     }
 
     /**
@@ -110,11 +113,11 @@ public class Parse<T> {
      * <ol>
      * <li>its index is the last {@link Chart#indices() index} in the
      * chart,</li>
-     * <li>it is {@link Edge#isPassive() passive},</li>
-     * <li>its {@link Edge#getOrigin() origin} is the beginning of the string
+     * <li>it is passive,</li>
+     * <li>its origin is the beginning of the string
      * (position <code>0</code>), and</li>
      * <li>the {@link Rule#getLeft() left side} of its
-     * {@link Edge#getRule()() dotted rule} is the same as the
+     * dotted rule is the same as the
      * start category that {@link #getSeed() seeded} the parse.</li>
      * </ol>
      *
@@ -124,7 +127,7 @@ public class Parse<T> {
      */
     public Status getStatus() {
         return error
-                ? ERROR : getCompletedEdges(START, 0, tokens.size()).isEmpty()
+                ? ERROR : getCompletedStates(START, 0, tokens.size()).isEmpty()
                 ? REJECT : ACCEPT;
     }
 
@@ -149,30 +152,28 @@ public class Parse<T> {
         return parseTrees;
     }
 
-    /**
-     * Gets a parse tree corresponding to the given edge.
-     *
-     * @param edge The edge to find a parse tree for.
-     * @return The parse tree corresponding to the specified edge. If the
-     * edge is not contained in this parse's {@link #getChart() chart}, returns
-     * <code>null</code>. The parse tree returned will be the same as
-     * calling
-     * <blockquote><code>ParseTree.newParseTree(edge);</code>
-     * </blockquote>
-     * @throws NullPointerException If <code>edge</code> is <code>null</code>.
-     * @see ParseTree#newParseTree(Edge)
-     * @see Chart#contains(Edge)
-     */
-    public ParseTree getParseTreeFor(Edge edge) {
-        if (edge == null) {
-            throw new NullPointerException("edge is null");
-        }
-        if (!chart.contains(edge)) {
-            return null;
-        }
-
-        return ParseTree.newParseTree(edge);
-    }
+//    /**
+//     * Gets a parse tree corresponding to the given edge.
+//     *
+//     * @param edge The edge to find a parse tree for.
+//     * @return The parse tree corresponding to the specified edge. If the
+//     * edge is not contained in this parse's {@link #getChart() chart}, returns
+//     * <code>null</code>. The parse tree returned will be the same as
+//     * calling
+//     * <blockquote><code>ParseTree.newParseTree(edge);</code>
+//     * </blockquote>
+//     * @throws NullPointerException If <code>edge</code> is <code>null</code>.
+//     */
+//    public ParseTree getParseTreeFor(State edge) {
+//        if (edge == null) {
+//            throw new NullPointerException("edge is null");
+//        }
+//        if (!chart.contains(edge)) {
+//            return null;
+//        }
+//
+//        return ParseTree.newParseTree(edge);
+//    }
 
     /**
      * Gets the parse trees derived during this parse with the specified
@@ -209,7 +210,7 @@ public class Parse<T> {
                                            int index) {
         if (category == null) throw new NullPointerException("null category");
 
-        return getCompletedEdges(category, origin, index).stream()
+        return getCompletedStates(category, origin, index).stream()
                 .map(ParseTree::newParseTree)
                 .collect(Collectors.toSet());
     }

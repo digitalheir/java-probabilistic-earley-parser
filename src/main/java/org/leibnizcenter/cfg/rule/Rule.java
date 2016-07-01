@@ -4,7 +4,6 @@ package org.leibnizcenter.cfg.rule;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.Terminal;
 
 import java.util.Arrays;
 
@@ -25,10 +24,11 @@ import java.util.Arrays;
  * @see Grammar
  */
 public class Rule {
-    public final Category left;
+    public final NonTerminal left;
     public final Category[] right;
     @SuppressWarnings("WeakerAccess")
-    public final boolean isPreTerminal;
+//    public final boolean isPreTerminal;
+    private final double probability;
 
     /**
      * Creates a new rule with the specified left side category and series of
@@ -44,9 +44,9 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    public Rule(Category left, Category... right) {
+    public Rule(double probability, NonTerminal left, Category... right) {
+        this.probability = probability;
         if (left == null) throw new IllegalArgumentException("empty left category");
-        if (!(left instanceof NonTerminal)) throw new IllegalArgumentException("left category must be non-terminal");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
 
         // check for nulls on right
@@ -64,9 +64,13 @@ public class Rule {
         this.left = left;
         this.right = right;
 
-        isPreTerminal = Arrays.stream(right)
-                .filter(r -> r instanceof Terminal)
-                .limit(1).count() > 0;
+//        isPreTerminal = Arrays.stream(right)
+//                .filter(r -> r instanceof Terminal)
+//                .limit(1).count() > 0;
+    }
+
+    public Rule(NonTerminal left, Category... right) {
+        this(1.0, left, right);
     }
 
     public static Rule startRule(Category seed) {
@@ -74,9 +78,44 @@ public class Rule {
     }
 
     /**
+     * Gets the active category in the underlying rule, if any.
+     *
+     * @return The category at this dotted rule's
+     * dot position in the underlying rule's
+     * {@link Rule#getRight() right side category sequence}. If this rule's
+     * dot position is already at the end of the right side category sequence,
+     * returns <code>null</code>.
+     */
+    public Category getActiveCategory(int dotPosition) {
+        if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
+
+        if (dotPosition < right.length) {
+            Category returnValue = right[dotPosition];
+            if (returnValue == null) throw new NullPointerException();
+            else return returnValue;
+        } else return null;
+    }
+
+
+    /**
+     * Tests whether this is a completed edge or not. An edge is completed when
+     * its dotted rule contains no
+     * {@link #getActiveCategory(int) active category}, or equivalently the dot is at position == |RHS|.
+     * Runs in O(1)
+     *
+     * @return <code>true</code> iff the active category of this edge's dotted
+     * rule is <code>null</code>.
+     */
+    public boolean isPassive(int dotPosition) {
+        if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
+        return dotPosition == right.length;
+    }
+
+
+    /**
      * Gets the left side category of this rule.
      */
-    public Category getLeft() {
+    public NonTerminal getLeft() {
         return left;
     }
 
@@ -87,28 +126,28 @@ public class Rule {
         return right;
     }
 
-    /**
-     * Tests whether this rule is a pre-terminal production rule. A rule is a
-     * preterminal rule if its right side contains a
-     * {@link Category#isTerminal(Category) terminal category}.
-     *
-     * @return <code>true</code> iff this rule's right side contains a
-     * terminal category.
-     */
-    public boolean isPreterminal() {
-        return isPreTerminal;
-    }
-
-    /**
-     * Tests whether this rule is a pre-terminal with a right side of length
-     * <code>1</code>.
-     *
-     * @see #isPreterminal()
-     * @see #getRight()
-     */
-    public boolean isSingletonPreterminal() {
-        return (isPreterminal() && right.length == 1);
-    }
+//    /**
+//     * Tests whether this rule is a pre-terminal production rule. A rule is a
+//     * preterminal rule if its right side contains a
+//     * {@link Category#isTerminal(Category) terminal category}.
+//     *
+//     * @return <code>true</code> iff this rule's right side contains a
+//     * terminal category.
+//     */
+//    public boolean isPreterminal() {
+//        return isPreTerminal;
+//    }
+//
+//    /**
+//     * Tests whether this rule is a pre-terminal with a right side of length
+//     * <code>1</code>.
+//     *
+//     * @see #isPreterminal()
+//     * @see #getRight()
+//     */
+//    public boolean isSingletonPreterminal() {
+//        return (isPreterminal() && right.length == 1);
+//    }
 
     /**
      * Tests whether this rule is equal to another, with the same left and
@@ -120,6 +159,7 @@ public class Rule {
      */
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) return true;
         if (obj instanceof Rule) {
             Rule or = (Rule) obj;
             return (left.equals(or.left) && Arrays.equals(right, or.right));
@@ -140,7 +180,7 @@ public class Rule {
     /**
      * Gets a string representation of this rule.
      *
-     * @return &quot;<code>S -> NP VP</code>&quot; for a rule with a left side
+     * @return &quot;<code>S → NP VP</code>&quot; for a rule with a left side
      * category of <code>S</code> and a right side sequence
      * <code>[NP, VP]</code>.
      * @see Category#toString()
@@ -148,7 +188,7 @@ public class Rule {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(left.toString());
-        sb.append(" ->");
+        sb.append(" →");
 
         for (Category aRight : right) {
             sb.append(' '); // space between category
@@ -156,5 +196,34 @@ public class Rule {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Gets a string representation of this dotted rule.
+     *
+     * @return E.g. &quot;<code>S → NP · VP</code>&quot; for a dotted rule with
+     * an underlying rule <code>S → NP VP</code> and a dot position
+     * <code>1</code>.
+     * @see Rule#toString()
+     */
+    public String toString(int dotPosition) {
+        if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
+        StringBuilder sb = new StringBuilder(left.toString());
+        sb.append(" →");
+
+        for (int i = 0; i <= right.length; i++) {
+            if (i == dotPosition) sb.append(" ·"); // insert dot at position
+
+            if (i < right.length) {
+                sb.append(' '); // space between category
+                sb.append(right[i].toString());
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public double getProbability() {
+        return probability;
     }
 }

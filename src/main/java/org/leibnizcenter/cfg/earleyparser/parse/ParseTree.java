@@ -3,12 +3,10 @@ package org.leibnizcenter.cfg.earleyparser.parse;
 
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.earleyparser.chart.State;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
-import java.util.Optional;
-
-import static org.leibnizcenter.cfg.category.Category.START;
 
 /**
  * A parse tree that represents the derivation of a string based on the
@@ -19,7 +17,7 @@ import static org.leibnizcenter.cfg.category.Category.START;
  * tree until it returns <code>null</code>.
  * <p>
  * Parse trees are essentially partial views of a {@link Chart} from a
- * given {@link Edge} or {@link Category}. They represent the completed
+ * given {@link State} or {@link Category}. They represent the completed
  * category at a given string index and origin position. The special
  * {@link Category#START} category is not included in a parse tree at the root
  * (only category that are actually specified in the corresponding grammar
@@ -64,11 +62,11 @@ public class ParseTree {
      * resulting parse tree.
      *
      * @param edge The edge that is to be at the root of the parse tree.
-     * @return The result of calling {@link #newParseTree(Edge, ParseTree)} with
+     * @return The result of calling {@link #newParseTree(State, ParseTree)} with
      * <code>null</code> as the argument for the parent parse tree.
-     * @see #newParseTree(Edge, ParseTree)
+     * @see #newParseTree(State, ParseTree)
      */
-    public static ParseTree newParseTree(Edge edge) {
+    public static ParseTree newParseTree(State edge) {
         return ParseTree.newParseTree(edge, null);
     }
 
@@ -80,41 +78,42 @@ public class ParseTree {
      * @param parent The parent tree of the new parse tree.
      * @return A new parse tree whose {@link #getNode() node} is the
      * specified edge's dotted rule's left side and whose children are based
-     * on the {@link Edge#getBases() bases} of the specified edge.
+     * on the {@link State#getBases() bases} of the specified edge.
      */
-    public static ParseTree newParseTree(Edge edge, ParseTree parent) {
-        Edge e;
-        ParseTree parentTree;
-
-        if (edge.rule.left.equals(START)) { // first child if START
-            e = edge.bases.iterator().next();
-            parentTree = null;
-        } else {
-            e = edge;
-            parentTree = (parent != null && parent.node.equals(START))
-                    ? null : parent;
-        }
-
-        Rule dr = e.rule;
-        ParseTree newTree;
-
-        Optional<Category> activeCategory = e.getActiveCategory();
-        if (!activeCategory.isPresent()) { // basis from a completion?
-            int basisCount = e.bases.size();
-            newTree = new ParseTree(dr.left, parentTree, (basisCount == 0) ? null : new ParseTree[basisCount]);
-
-            if (basisCount > 0) {
-                int i = 0;
-                for (Edge base : e.bases) {
-                    newTree.children[i] = ParseTree.newParseTree(base, newTree);
-                    i++;
-                }
-            }
-        } else { // from a scan
-            newTree = new ParseTree(activeCategory.get(), parentTree, null);
-        }
-
-        return newTree;
+    public static ParseTree newParseTree(State edge, ParseTree parent) {
+//        State e;
+//        ParseTree parentTree;
+//
+//        if (edge.rule.left.equals(START)) { // first child if START
+//            e = edge.bases.iterator().next();
+//            parentTree = null;
+//        } else {
+//            e = edge;
+//            parentTree = (parent != null && parent.node.equals(START))
+//                    ? null : parent;
+//        }
+//
+//        Rule dr = e.rule;
+//        ParseTree newTree;
+//
+//        Optional<Category> activeCategory = e.getActiveCategory();
+//        if (!activeCategory.isPresent()) { // basis from a completion?
+//            int basisCount = e.bases.size();
+//            newTree = new ParseTree(dr.left, parentTree, (basisCount == 0) ? null : new ParseTree[basisCount]);
+//
+//            if (basisCount > 0) {
+//                int i = 0;
+//                for (State base : e.bases) {
+//                    newTree.children[i] = ParseTree.newParseTree(base, newTree);
+//                    i++;
+//                }
+//            }
+//        } else { // from a scan
+//            newTree = new ParseTree(activeCategory.get(), parentTree, null);
+//        }
+//
+//        return newTree;
+        throw new NotImplementedException();
     }
 
     /**

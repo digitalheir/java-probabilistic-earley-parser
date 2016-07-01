@@ -27,7 +27,7 @@ public interface Category {
     /**
      * Special start category for seeding Earley parsers.
      */
-    Category START = new NonTerminal("<start>") {
+    NonTerminal START = new NonTerminal("<start>") {
         /**
          * Overrides {@link Category#equals(Object)} to compare using the
          * <code>==</code> operator (since there is only ever one start

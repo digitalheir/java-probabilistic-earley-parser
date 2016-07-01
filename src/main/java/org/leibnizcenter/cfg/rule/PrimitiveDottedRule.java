@@ -2,7 +2,7 @@
 package org.leibnizcenter.cfg.rule;
 
 
-import org.leibnizcenter.cfg.earleyparser.parse.Edge;
+import org.leibnizcenter.cfg.earleyparser.chart.State;
 
 /**
  * Helper methods to work with a rule dotted that is not encapsulated in a class for performance reasons.
@@ -12,14 +12,14 @@ import org.leibnizcenter.cfg.earleyparser.parse.Edge;
  * <p>
  * Dotted rules are used by {@link EarleyParser Earley parsers} to keep
  * track of how far within a rule processing has succeeded. In a dotted rule,
- * the {@link Edge#getActiveCategory(Rule, int) active category} is the first
+ * the {@link Rule#getActiveCategory(Rule, int) active category} is the first
  * category after the dot position, and is
  * <code>null</code> when processing has fully covered the underlying rule.
  * {@link Edge Edges} test the active category of dotted rules to determine
  * when an edge is active or passive.
  *
  * @see Rule
- * @see Edge
+ * @see State
  */
 @Deprecated
 public final class PrimitiveDottedRule {

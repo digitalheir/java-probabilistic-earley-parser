@@ -1,21 +1,16 @@
 
 package org.leibnizcenter.cfg.earleyparser;
 
-import org.leibnizcenter.cfg.earleyparser.parse.Edge;
-
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
-
-
 /**
  */
 public class DottedRuleTest {
-    private final Edge dot1 = new Edge(rule1, 2, 0);
-    private final Edge dot2 = new Edge(rule2, 1, 0);
-    private final Edge dot3 = new Edge(rule3, 0, 0);
-
+//    private final State dot1 = new State(rule1, 2);
+//    private final State dot2 = new State(rule2, 1);
+//    private final State dot3 = new State(rule3, 0);
+//
 //    @Test public final void testDottedRule() {
 //        try {
-//            new Edge(rule1, -1);
+//            new State(rule1, -1);
 //            Assert.fail(
 //                    "able to create dotted rule with position < 0");
 //        } catch (IndexOutOfBoundsException expected) {
@@ -67,7 +62,7 @@ public class DottedRuleTest {
 //    }
 //
 //    /**
-//     * Test method for {@link DottedEdge#getActiveCategory()}
+//     * Test method for {@link DottedState#getActiveCategory()}
 //     */
 //    @Test public final void testGetActiveCategory() {
 //        Assert.assertEquals(D, dot1.activeCategory);
