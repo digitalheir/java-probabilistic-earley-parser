@@ -3,20 +3,17 @@ package org.leibnizcenter.cfg.earleyparser.parse;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
-import org.leibnizcenter.cfg.earleyparser.exception.ParseException;
+import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.token.Token;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
 
 /**
@@ -71,8 +68,35 @@ public class Chart {
      * @param index The string index to make predictions at.
      */
     public void predict(int index) {
-        new StatePredictor(index, stateSets);
+        DblSemiring sr = grammar.getSemiring();
 
+        // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
+        Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);
+        for (State statePredecessor : statesToPredictOn) {
+            final Category Z = statePredecessor.getActiveCategory();
+            double prevForward = stateSets.getForwardScore(statePredecessor);
+
+            // For all productions Y → v such that R(Z =*L> Y) is nonzero
+            grammar.getLeftStarCorners().getNonZeroScores(Z).stream()
+                    .flatMap(Y -> grammar.getRules(Y).stream())
+                    // we predict state <code>i: Y<sub>i</sub> → ·v</code>
+                    .forEach(Y_to_v -> {
+                        Category Y = Y_to_v.getLeft();
+                        State s = stateSets.getOrCreate(index, index, 0, Y_to_v); // We might want to increment the probability of an existing state
+                        // α' = α * R(Z =*L> Y) * P(Y → v)
+                        stateSets.addForwardScore(sr, s, sr.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_v.getProbability()));
+
+                        // γ' = P(Y → v)
+                        double innerScore = stateSets.getInnerScore(s);
+                        if (!(Y_to_v.getProbability() == innerScore || 0.0 == innerScore))
+                            throw new Error(Y_to_v.getProbability() + " != " + innerScore);
+                        stateSets.setInnerScore(s, Y_to_v.getProbability());
+                    });
+        }
+    }
+
+    public void scan(int index, Token token) {
+        scan(index, token, null);
     }
 
     /**
@@ -80,55 +104,62 @@ public class Chart {
      *
      * @param index The start index of the scan.
      * @param token The token that was scanned.
-     * @throws ParseException If <code>token</code> is </code>null</code>.
      */
-    public void scan(int index, Token token) throws ParseException {
-        if (token == null) throw new ParseException("null token at index " + index);
+    public void scan(int index, Token token, ScanProbability scanProbability) {
+        if (token == null) throw new Error("null token at index " + index);//TODO exception?
 
-        this.getStates(index).entrySet().stream()
+        // Get all states that are active on a terminal
+        //noinspection unchecked
+        stateSets.getStatesActiveOnTerminals(index).stream()
                 // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
-                .filter(state -> state.getKey().isActive()
-                        && state.getKey().getActiveCategory() instanceof Terminal
-                        && ((Terminal) state.getKey().getActiveCategory()).hasCategory(token)) // TODO we might index on this
+                .filter(state -> ((Terminal) state.getActiveCategory()).hasCategory(token))
+
                 // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
-                .map(state -> new State(
-                        state.getKey().getRule(),
-                        state.getKey().getRuleStartPosition(),
-                        index + 1,
-                        state.getKey().getRuleDotPosition() + 1))
-                .forEach(state -> stateSets.addState(state.getPosition(), state, 0.0, 0.0));
+                .forEach(prevState -> {
+                            State newState = stateSets.getOrCreate(index + 1, prevState.getRuleStartPosition(), prevState.advanceDot(), prevState.getRule());
+
+                            double fw = stateSets.getForwardScore(prevState);
+                            DblSemiring sr = grammar.getSemiring();
+                            if (scanProbability != null) fw = sr.times(fw, scanProbability.getProbability(index));
+                            stateSets.setForwardScore(newState, fw);
+
+                            double inner = stateSets.getInnerScore(prevState);
+                            if (scanProbability != null) inner = sr.times(inner, scanProbability.getProbability(index));
+                            stateSets.setInnerScore(newState, inner);
+                        }
+                );
     }
 
-    /**
-     * Makes completions in the specified chart at the given index.
-     *
-     * @param index The index to make completions at.
-     */
-    public void complete(int index) {
-        // |grammar|
-        Set<State> completedStates = stateSets.getCompletedStates(index).stream()
-                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → μ·</code>...
-                // ... Get all unique non-terminals X
-                .collect(Collectors.toSet());
-
-        // And for all states in j <= i, such that <code>j: Y<sub>k</sub> →  λ·Xμ</code>
-        while (completedStates.size() > 0) {
-            for (State completedState : completedStates) {
-                Set<State> completedStatez =
-                        getStatesWithActiveCategory(completedState.getRuleStartPosition(), completedState.getRule().getLeft())
-                                // Create the new state <code>i: Y<sub>k</sub> →  λX·μ</code> if it does not exist yet
-                                .map(state -> new State(state.getRule(),
-                                        state.getRuleStartPosition(),
-                                        completedState.getPosition(),
-                                        state.getRuleDotPosition() + 1))
-                                .filter(state -> !getCompletedStates(index).anyMatch(state::equals))
-                                .collect(Collectors.toSet());
-                completedStatez.forEach(completion -> stateSets.addState(completion.getPosition(), completion));
-                completedStates = completedStatez.stream().filter(State::isCompleted).collect(Collectors.toSet());
-            }
-        }
-    }
-
+//    /**
+//     * Makes completions in the specified chart at the given index.
+//     *
+//     * @param index The index to make completions at.
+//     */
+//    public void complete(int index) {
+//        // |grammar|
+//        Set<State> completedStates = stateSets.getCompletedStates(index).stream()
+//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → μ·</code>...
+//                // ... Get all unique non-terminals X
+//                .collect(Collectors.toSet());
+//
+//        // And for all states in j <= i, such that <code>j: Y<sub>k</sub> →  λ·Xμ</code>
+//        while (completedStates.size() > 0) {
+//            for (State completedState : completedStates) {
+//                Set<State> completedStatez =
+//                        getStatesWithActiveCategory(completedState.getRuleStartPosition(), completedState.getRule().getLeft())
+//                                // Create the new state <code>i: Y<sub>k</sub> →  λX·μ</code> if it does not exist yet
+//                                .map(state -> new State(state.getRule(),
+//                                        state.getRuleStartPosition(),
+//                                        completedState.getPosition(),
+//                                        state.getRuleDotPosition() + 1))
+//                                .filter(state -> !getCompletedStates(index).anyMatch(state::equals))
+//                                .collect(Collectors.toSet());
+//                completedStatez.forEach(completion -> stateSets.addState(completion.getPosition(), completion));
+//                completedStates = completedStatez.stream().filter(State::isCompleted).collect(Collectors.toSet());
+//            }
+//        }
+//    }
+//
 //    /**
 //     * Makes predictions (adds states) in the specified chart for a given state
 //     * at a given index. This method also make predictions for any newly added state.
@@ -165,8 +196,6 @@ public class Chart {
 //            }
 //        }
 //    }
-
-
     //TODO ?
 //    /**
 //     * Gets the first index in this chart that contains states.
@@ -275,34 +304,34 @@ public class Chart {
 //        return stateSets.isEmpty();
 //    }
 //
-
-
-    /**
-     * Counts the total number of states contained in this chart, at any
-     * index.
-     *
-     * @return The total number of states contained.
-     */
-    public int countStates() {
-        return stateSets.size();
-    }
-
-    /**
-     * Gets the states in this chart at a given index.
-     *
-     * @param index The index to return states for.
-     * @return The {@link Set set} of {@link State states} this chart contains
-     * at <code>index</code>, or <code>null</code> if no state set exists in
-     * this chart for the given index. The state set returned by this
-     * method is <em>not</em> guaranteed to contain the states in the order in
-     * which they were added. This method
-     * returns a set of states that is not modifiable.
-     * @throws NullPointerException If <code>index</code> is <code>null</code>.
-     * @see java.util.Collections#unmodifiableSet(Set)
-     */
-    public Map<State, State.Score> getStates(int index) {
-        return stateSets.getAtIndex(index);
-    }
+//
+//
+//    /**
+//     * Counts the total number of states contained in this chart, at any
+//     * index.
+//     *
+//     * @return The total number of states contained.
+//     */
+//    public int countStates() {
+//        return stateSets.size();
+//    }
+//
+//    /**
+//     * Gets the states in this chart at a given index.
+//     *
+//     * @param index The index to return states for.
+//     * @return The {@link Set set} of {@link State states} this chart contains
+//     * at <code>index</code>, or <code>null</code> if no state set exists in
+//     * this chart for the given index. The state set returned by this
+//     * method is <em>not</em> guaranteed to contain the states in the order in
+//     * which they were added. This method
+//     * returns a set of states that is not modifiable.
+//     * @throws NullPointerException If <code>index</code> is <code>null</code>.
+//     * @see java.util.Collections#unmodifiableSet(Set)
+//     */
+//    public Map<State, State.Score> getStates(int index) {
+//        return stateSets.getAtIndex(index);
+//    }
 
 
     /**
@@ -335,132 +364,208 @@ public class Chart {
         return stateSets.toString();
     }
 
-    public Stream<State> getCompletedStates(int index) {
-        // TODO store map with passive states
-        return getStates(index).keySet().stream().filter(State::isCompleted);
+    public void addState(int index, State state, double forward, double inner) {
+        stateSets.getOrCreate(index, state.getRuleStartPosition(), state.getRuleDotPosition(), state.getRule());
+        stateSets.setInnerScore(state, inner);
+        stateSets.setForwardScore(state, forward);
     }
 
-    public Stream<State> getStatesWithActiveCategory(int index, Category category) {
-        // TODO store map with active states
-        return getStates(index).keySet().stream()
-                .filter(e -> (category.equals(e.getActiveCategory())));
+    public Set<State> getStates(int index) {
+        return stateSets.getStates(index);
     }
 
-    public void addState(int i, State state, double forward, double inner) {
-        stateSets.addState(i, state, forward, inner);
+    public double getForwardScore(State s) {
+        return stateSets.getForwardScore(s);
     }
 
-    public boolean containsStates(int i) {
-        return stateSets.containsStates(i);
+    public double getInnerScore(State s) {
+        return stateSets.getInnerScore(s);
     }
 
     static class StateSets {
-        private final TIntObjectMap<Map<State, State.Score>> stateSets = new TIntObjectHashMap<>(500);
-        private final TIntObjectMap<Map<State, State.Score>> completedStates = new TIntObjectHashMap<>(500);
-        private final TIntObjectMap<Map<State, State.Score>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
+        private static final TIntObjectMap<TIntObjectMap<State>> EMPTY = new TIntObjectHashMap<>();
+
+        private final Map<Rule,
+                /*index*/
+                TIntObjectMap<
+                        /*rule start*/
+                        TIntObjectMap<
+                                /*dot position*/
+                                TIntObjectMap<
+                                        State
+                                        >
+                                >
+                        >
+                > states = new HashMap<>(500);
+
+        private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
+
+        /**
+         * The forward probability <code>α_i</code> of a state is
+         * the sum of the probabilities of
+         * all constrained paths of length i that end in that state, do all
+         * paths from start to position i. So this includes multiple
+         * instances of the same history, which may happen because of recursion.
+         */
+        private final TObjectDoubleHashMap<State> forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, 0.0);
+
+        /**
+         * The inner probability <code>γ_{i}</code> of a state
+         * is the sum of the probabilities of all
+         * paths of length (i - k) that start at position k (the rule's start position),
+         * and end at the current state and generate the input the input symbols up to k.
+         * Note that this is conditional on the state happening at position k with
+         * a certain non-terminal X
+         */
+        private final TObjectDoubleHashMap<State> innerScores = new TObjectDoubleHashMap<>(500, 0.5F, 0.0);
+
+        //        private final TObjectDoubleHashMap<Set<State>> completedStates = new TObjectDoubleHashMap<>(500);
+        private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
+        private final TIntObjectHashMap<Set<State>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
 
 
         public StateSets() {
         }
 
-        /**
-         * Adds an state to this chart at the given index. If no other states
-         * exist in this chart at the same index, a new state set is created before
-         * adding the state.
-         *
-         * @param index The index for <code>state</code>.
-         * @param state The state to add.
-         * @throws IndexOutOfBoundsException If <code>index < 0</code>.
-         * @throws NullPointerException      If <code>index</code> or
-         *                                   <code>state</code> is <code>null</code>.
-         */
-        public void addState(int index, State state, double forward, double inner) {
-            if (index < 0) throw new IndexOutOfBoundsException("invalid index: " + index);
-            if (state == null) throw new NullPointerException("null state");
-            addStateToIndex(stateSets, state, index, forward, inner);
-            if (state.isCompleted()) addStateToIndex(completedStates, state, index, forward, inner);
-            if (state.isActive() && state.getActiveCategory() instanceof NonTerminal)
-                addStateToIndex(statesActiveOnNonTerminals, state, index, forward, inner);
-        }
+        //TODO remove
+//        /**
+//         * Adds an state to this chart at the given index.
+//         *
+//         * @param index The index for <code>state</code>.
+//         * @param state The state to add.
+//         * @throws IndexOutOfBoundsException If <code>index < 0</code>.
+//         * @throws NullPointerException      If <code>index</code> or
+//         *                                   <code>state</code> is <code>null</code>.
+//         */
+//        public void addState(int index, State state, double forward, double inner) {
+//            if (index < 0) throw new IndexOutOfBoundsException("invalid index: " + index);
+//            if (state == null) throw new NullPointerException("null state");
+//
+//            addStateToIndex(stateSets, state, index, forward, inner);
+//
+//            if (state.isCompleted()) completedStates.add(state);
+//        }
+//
+//        private void addStateToIndex(TIntObjectMap<Map<State, State.Score>> map, State state, int index,
+//                                     double forward, double inner) {
+//            Map<State, State.Score> states = map.get(index);
+//            if (states == null) states = new HashMap<>();
+//            if (states.containsKey(state)) {
+//                System.out.println("State already found. Updating forward and inner probabilities.");
+//                states.get(state).incrementForwardScore(forward);
+//                states.get(state).incrementInnerScore(inner);
+//            } else states.put(state, new State.Score(forward, inner));
+//
+//            map.put(index, states); // always true for new state set
+//        }
+//
+//
+//        /**
+//         * Gets the set of indices at which this chart contains states. For any
+//         * member of this set, {@link #getStates(int)} will return a non-empty
+//         * set of states.
+//         *
+//         * @return A set containing every index in this chart where states have
+//         * been added, sorted in ascending order (<code>0 ... <em>n</em></code>).
+//         */
+//        public int[] indices() {
+//            return states.keys();
+//        }
+//
+//        /**
+//         * Tests whether this chart contains any states at a given string index. O(1)
+//         *
+//         * @param index The string index to check for states.
+//         * @return <code>true</code> iff this chart contains an state set at
+//         * <code>index</code>.
+//         */
+//        public boolean containsStates() {
+//            return stateSets.containsKey();
+//        }
+//
+//        public Set<State> getAtIndex(int index) {
+//            return stateSets.get(index);
+//        }
+//
+//        public Set<State> getCompletedStates(int index) {
+//            return completedStates.get(index);
+//        }
 
-        private void addStateToIndex(TIntObjectMap<Map<State, State.Score>> map, State state, int index,
-                                     double forward, double inner) {
-            Map<State, State.Score> states = map.get(index);
-            if (states == null) states = new HashMap<>();
-            if (states.containsKey(state)) {
-                System.out.println("State already found. Updating forward and inner probabilities.");
-                states.get(state).incrementForwardScore(forward);
-                states.get(state).incrementInnerScore(inner);
-            } else states.put(state, new State.Score(forward, inner));
-
-            map.put(index, states); // always true for new state set
-        }
-
-
-        /**
-         * Gets the set of indices at which this chart contains states. For any
-         * member of this set, {@link #getStates(int)} will return a non-empty
-         * set of states.
-         *
-         * @return A set containing every index in this chart where states have
-         * been added, sorted in ascending order (<code>0 ... <em>n</em></code>).
-         */
-        public int[] indices() {
-            return stateSets.keys();
-        }
-
-
-        public int size() {
-            //noinspection unchecked
-            return Arrays.stream(stateSets.values(new Map[stateSets.size()]))
-                    .mapToInt(m -> m.keySet().size())
-                    .sum();
-        }
-
-        /**
-         * Tests whether this chart contains any states at a given string index. O(1)
-         *
-         * @param index The string index to check for states.
-         * @return <code>true</code> iff this chart contains an state set at
-         * <code>index</code>.
-         */
-        public boolean containsStates(int index) {
-            return stateSets.containsKey(index);
-        }
-
-        public Map<State, State.Score> getAtIndex(int index) {
-            return stateSets.get(index);
-        }
-
-        public Map<State, State.Score> getCompletedStates(int index) {
-            return completedStates.get(index);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            StateSets stateSets1 = (StateSets) o;
-
-            return stateSets.equals(stateSets1.stateSets)
-                    && completedStates.equals(stateSets1.completedStates);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = stateSets.hashCode();
-            result = 31 * result + completedStates.hashCode();
-            return result;
-        }
-
-        public void addState(int index, State state, State.Score score) {
-            addState(index, state, score.getForwardScore(), score.getInnerScore());
-        }
-
-        public Map<State, State.Score> getStatesActiveOnNonTerminals(int index) {
+        public Set<State> getStatesActiveOnNonTerminals(int index) {
             return statesActiveOnNonTerminals.get(index);
         }
+
+
+        public Set<State> getStatesActiveOnTerminals(int index) {
+            return statesActiveOnTerminals.get(index);
+        }
+
+        /**
+         * Default 0.0
+         *
+         * @param s state
+         * @return forward score so far
+         */
+        public double getForwardScore(State s) {
+            return forwardScores.get(s);
+        }
+
+        public State getOrCreate(int index, int ruleStart, int dotPosition, Rule rule) {
+            if (!states.containsKey(rule)) states.put(rule, new TIntObjectHashMap<>(30));
+            TIntObjectMap<TIntObjectMap<TIntObjectMap<State>>> forRule = states.get(rule);
+
+            if (!forRule.containsKey(ruleStart)) forRule.put(ruleStart, new TIntObjectHashMap<>(50));
+            TIntObjectMap<TIntObjectMap<State>> forRuleStart = forRule.get(ruleStart);
+
+            if (!forRuleStart.containsKey(index)) forRuleStart.put(index, new TIntObjectHashMap<>(50));
+            TIntObjectMap<State> forInd = forRuleStart.get(index);
+
+            if (!forInd.containsKey(dotPosition)) {
+                State state = new State(rule, ruleStart, index, dotPosition);
+                add(byIndex, index, state);
+                forInd.put(dotPosition, state);
+
+                //if(state.isCompleted()) completedStates.put()
+
+                if (state.isActive())
+                    if (state.getActiveCategory() instanceof NonTerminal) add(statesActiveOnNonTerminals, index, state);
+                    else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
+                    else throw new Error("Neithor Terminal nor NonTerminal...?");
+            }
+
+            return forInd.get(dotPosition);
+        }
+
+        private void add(TIntObjectHashMap<Set<State>> states, int index, State state) {
+            if (!states.containsKey(index)) states.put(index, new HashSet<>());
+            states.get(index).add(state);
+        }
+
+        public void addForwardScore(DblSemiring sr, State state, double increment) {
+            forwardScores.put(state, sr.plus(getForwardScore(state)/*default 0.0*/, increment));
+        }
+
+        public void setForwardScore(State s, double probability) {
+            forwardScores.put(s, probability);
+        }
+
+        public void setInnerScore(State s, double probability) {
+            innerScores.put(s, probability);
+        }
+
+        /**
+         * Default 0.0
+         *
+         * @param s
+         * @return inner score so far
+         */
+        public double getInnerScore(State s) {
+            return innerScores.get(s);
+        }
+
+        public Set<State> getStates(int index) {
+            return byIndex.get(index);
+        }
+
     }
 }

@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.CaseInsenstivieStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
@@ -19,24 +20,27 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings({"WeakerAccess", "SuspiciousNameCombination"})
 public final class PepFixture {
-    public static final Category S = Category.nonTerminal("S");
-    public static final Category seed = S;
-    public static final Category NP = Category.nonTerminal("NP");
-    public static final Category VP = Category.nonTerminal("VP");
-    public static final Category Det = Category.nonTerminal("Det");
-    public static final Category N = Category.nonTerminal("N");
+    public static final NonTerminal S = Category.nonTerminal("S");
+    public static final NonTerminal seed = S;
+    public static final NonTerminal NP = Category.nonTerminal("NP");
+    public static final NonTerminal VP = Category.nonTerminal("VP");
+    public static final NonTerminal Det = Category.nonTerminal("Det");
+    public static final NonTerminal N = Category.nonTerminal("N");
 
-    public final static Category A = Category.nonTerminal("A");
-    public final static Category B = Category.nonTerminal("B");
-    public final static Category C = Category.nonTerminal("C");
-    public final static Category D = Category.nonTerminal("D");
-    public final static Category E = Category.nonTerminal("E");
-    public final static Category X = Category.nonTerminal("X");
-    public final static Category Y = Category.nonTerminal("Y");
-    public final static Category Z = Category.nonTerminal("Z");
+    public final static NonTerminal A = Category.nonTerminal("A");
+    public final static NonTerminal B = Category.nonTerminal("B");
+    public final static NonTerminal C = Category.nonTerminal("C");
+    public final static NonTerminal D = Category.nonTerminal("D");
+    public final static NonTerminal E = Category.nonTerminal("E");
+    public final static NonTerminal X = Category.nonTerminal("X");
+    public final static NonTerminal Y = Category.nonTerminal("Y");
+    public final static NonTerminal Z = Category.nonTerminal("Z");
 
     public final static Category a = new ExactStringTerminal("a");
     public final static Category b = new ExactStringTerminal("b");
+    public final static Category c = new ExactStringTerminal("c");
+    public final static Category d = new ExactStringTerminal("d");
+    public final static Category e = new ExactStringTerminal("e");
     public final static Category the = new ExactStringTerminal("the");
     public final static Category boy = new ExactStringTerminal("boy");
     public final static Category girl = new ExactStringTerminal("girl");
@@ -51,6 +55,10 @@ public final class PepFixture {
 
     public final static Rule rule1 = new Rule(A, B, C, D, E);
     public final static Rule rule2 = new Rule(A, a);
+    public final static Rule ruleB = new Rule(0.5, B, C);
+    public final static Rule ruleC = new Rule(0.5, C, D);
+    public final static Rule ruleD = new Rule(0.5, D, E);
+    public final static Rule ruleE = new Rule(0.5, E, e);
     public final static Rule rule3 = new Rule(X, Y, Z);
     public final static Rule rule4 = new Rule(A, X, a);
     public final static Rule rule5 = new Rule(X, a, Z);

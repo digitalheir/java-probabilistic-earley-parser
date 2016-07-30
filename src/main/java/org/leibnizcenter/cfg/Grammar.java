@@ -2,80 +2,123 @@
 package org.leibnizcenter.cfg;
 
 import Jama.Matrix;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 /**
- * Represents a context-free grammar (set of production rules).
+ * Represents a stochastic context-free grammar (set of production rules with probabilities).
  * <p>
  * Grammars maintain their rules indexed by
  * {@link Rule#getLeft() left side category}. The rule sets contained for
  * any given {@link Category left category} are not guaranteed to be
  * maintained in the order of insertion.
  * <p>
+ * This class pre-computes all the left-relations for the non-terminals that occur
+ * <p>
  * Once the Grammar is instantiated, it is immutable.
  */
 public class Grammar {
     public final String name;
     public final ImmutableMultimap<Category, Rule> rules;
-    private final LeftCornerRelation leftCorners = new LeftCornerRelation();
+
+    /**
+     * Two non-terminals X and Y are said to be in a left-corner relation
+     * <code>X -L> Y</code> iff there exists a production for X that has a RHS starting with Y,
+     * <code>X -> Y ...</code> . This relation is defined as the sum of the probabilities of
+     * all such rules
+     */
+    private final LeftCorners leftCorners;
 
     /**
      * Reflexive, transitive closure of leftCorners, with the probabilities summed
      */
-    private final LeftCornerRelation leftStarCorners = new LeftCornerRelation();
+    private final LeftCorners leftStarCorners;
+
+    private final Set<NonTerminal> nonTerminals;
+    private final DblSemiring semiring;
 
     /**
      * Creates a grammar with the given name, and given rules.
+     * <p>
+     * <p>
+     * TODO: Ensure that the probabilities in a SCFG are proper and consistent as defined in Booth and Thompson (1973), and that the grammar contains no useless nonterminals (ones that can never appear in a derivation).
+     * These restrictions ensure that
+     * all nonterminals define probability measures over strings; i.e., P(X ~ x) is a proper distribution over x for all
+     * X. Formal definitions of these conditions are given in Appendix A of An Efficient Probabilistic .
      *
-     * @param name  The mnemonic name for this grammar.
-     * @param rules Rules for the grammar
+     * @param name     The mnemonic name for this grammar.
+     * @param rules    Rules for the grammar
+     * @param semiring
      */
-    public Grammar(String name, ImmutableMultimap<Category, Rule> rules) {
+    public Grammar(String name, ImmutableMultimap<Category, Rule> rules, DblSemiring semiring) {
         this.name = name;
         this.rules = rules;
-
-        // Compute left corners
-        Collection<NonTerminal> nonTerminals = getAllRules().stream()
+        this.nonTerminals = getAllRules().stream()
                 .map(Rule::getLeft)
                 .distinct().collect(Collectors.toSet());
+        this.semiring = semiring;
+        leftCorners = new LeftCorners(semiring);
+        setLeftCorners();
+        leftStarCorners = new LeftCorners(semiring);
+        setLeftStarCorners();
+    }
 
+    public DblSemiring getSemiring() {
+        return semiring;
+    }
+
+    /**
+     * Compute left corner relations
+     */
+    private void setLeftCorners() {
+        // Sum all probabilities for left corners
         nonTerminals.stream()
                 .forEach(X -> getRules(X).stream()
                         .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
                         .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
+    }
 
-
-        /**
-         * R_L = I + P_L R_L = (I - P_L)^-1
-         */
+    /**
+     * Uses a trick to compute left*Corners (R_L), the reflexive transitive closure of leftCorners:
+     * <p>
+     * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
+     */
+    private void setLeftStarCorners() {
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
-        Matrix matrix = new Matrix(nonTerminals.size(), nonTerminals.size());
+        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
             NonTerminal X = nonterminalz[row];
             for (int col = 0; col < nonterminalz.length; col++) {
                 NonTerminal Y = nonterminalz[col];
                 final double prob = leftCorners.get(X, Y);
-                matrix.set(row, col, (row == col ? 1 : 0) - prob);
+                R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
         }
-        matrix = matrix.inverse();
-        for (int row = 0; row < matrix.getRowDimension(); row++) {
-            for (int col = 0; col < matrix.getColumnDimension(); row++) {
-                leftStarCorners.set(nonterminalz[row], nonterminalz[col], matrix.get(row, col));
-            }
-        }
-        System.out.println(leftCorners);
+        final Matrix R_L = R_L_inverse.inverse();
+        /**
+         * Copy all matrix values into our {@link LeftCorners} object
+         */
+        IntStream.range(0, R_L.getRowDimension()).forEach(row ->
+                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
+                        leftStarCorners.set(nonterminalz[row], nonterminalz[col], R_L.get(row, col))
+                )
+        );
     }
 
     /**
@@ -105,7 +148,7 @@ public class Grammar {
      * Gets the set of rules contained by this grammar with the given left
      * side category.
      *
-     * @param left The {@link Rule#getLeft() left side} of the rules to find.
+     * @param LHS The {@link Rule#getLeft() left side} of the rules to find.
      * @return A set containing the rules in this grammar whose
      * {@link Rule#getLeft() left side} is
      * {@link Category#equals(Object) the same} as <code>left</code>, or
@@ -113,8 +156,8 @@ public class Grammar {
      * rule set returned by this method is <em>not</em> guaranteed to contain
      * the rules in the order in which they were {@link Builder#addRule(Rule) added}.
      */
-    public Collection<Rule> getRules(Category left) {
-        return rules.get(left);
+    public Collection<Rule> getRules(Category LHS) {
+        return rules.get(LHS);
     }
 
     /**
@@ -124,8 +167,8 @@ public class Grammar {
         return rules.values();
     }
 
-    public double getLeftStarScore(Category left, Category right) {
-        return leftStarCorners.get(left, right);
+    public double getLeftStarScore(Category LHS, Category RHS) {
+        return leftStarCorners.get(LHS, RHS);
     }
 
     //    /**
@@ -169,9 +212,22 @@ public class Grammar {
         return getAllRules().size();
     }
 
+    public double getLeftScore(NonTerminal LHS, NonTerminal RHS) {
+        return leftCorners.get(LHS, RHS);
+    }
+
+    public LeftCorners getLeftCorners() {
+        return leftCorners;
+    }
+
+    public LeftCorners getLeftStarCorners() {
+        return leftStarCorners;
+    }
+
     public static class Builder {
         private final ImmutableMultimap.Builder<Category, Rule> rules;
         private String name;
+        private DblSemiring semiring = new ProbabilitySemiring();
 
         public Builder(String name) {
             this.name = name;
@@ -180,6 +236,10 @@ public class Grammar {
 
         public Builder() {
             this.rules = new ImmutableMultimap.Builder<>();
+        }
+
+        public void setSemiring(DblSemiring semiring) {
+            this.semiring = semiring;
         }
 
         public Builder setName(String name) {
@@ -208,7 +268,7 @@ public class Grammar {
         }
 
         public Grammar build() {
-            return new Grammar(name, rules.build());
+            return new Grammar(name, rules.build(), semiring);
         }
 
         @SuppressWarnings("unused")
@@ -219,46 +279,76 @@ public class Grammar {
     }
 
     /**
-     * Two nonterminals X and Y are said to be in a left-corner relation
-     * X -L> Y iff there exists a production for X that has a RHS starting with Y,
-     * X -> Y ... . This relation is defined as the sum of the probabilities of
-     * all such rules
+     * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
+     * to {@link Category} with some utility functions to deal with probabilities.
      */
-    private static class LeftCornerRelation {
+    public static class LeftCorners {
         private Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
+        private Multimap<Category, Category> nonZeroScores = HashMultimap.create();
+        private DblSemiring semiring;
 
-
-        public LeftCornerRelation() {
+        /**
+         * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
+         * to {@link Category} with some utility functions to deal with probabilities.
+         */
+        LeftCorners(DblSemiring semiring) {
+            this.semiring = semiring;
         }
 
 
-        public void plus(Category x, Category y, double probability) {
+        /**
+         * Adds the given number to the current value of [X, Y]
+         *
+         * @param x           Left hand side
+         * @param y           Right hand side
+         * @param probability number to add
+         */
+        void plus(Category x, Category y, double probability) {
             TObjectDoubleMap<Category> yToProb = getYToProb(x);
-
-            final double newProbability = yToProb.get(y)/*defaults to 0.0*/ + probability;
-            yToProb.put(y, newProbability);
+            final double newProbability = semiring.plus(yToProb.get(y)/*defaults to 0.0*/, probability);
+            set(x, y, yToProb, newProbability);
         }
 
         /**
-         * @return stored value in left-corner relationship, 0.0 by default
+         * @return stored value in left-corner relationship. 0.0 by default
          */
         public double get(Category x, Category y) {
-            TObjectDoubleMap<Category> yToProb = getYToProb(x);
-
-            return yToProb.get(y)/*defaults to 0.0*/;
+            return getYToProb(x).get(y)/*defaults to 0.0*/;
         }
 
+        /**
+         * Will instantiate empty map if it does not exist yet.
+         *
+         * @param x LHS
+         * @return map for given LHS.
+         */
         private TObjectDoubleMap<Category> getYToProb(Category x) {
-            TObjectDoubleMap<Category> yToProb;
-            if (!map.containsKey(x)) {
-                yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, 0.0));
+            if (map.containsKey(x)) return map.get(x);
+            else {
+                TObjectDoubleMap<Category> yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, 0.0));
                 map.put(x, yToProb);
-            } else yToProb = map.get(x);
-            return yToProb;
+                return yToProb;
+            }
         }
 
+        /**
+         * Sets table entry to a given probability. Will instantiate empty map if it does not exist yet.
+         *
+         * @param x   LHS
+         * @param y   RHS
+         * @param val Value to set table entry to
+         */
         public void set(NonTerminal x, NonTerminal y, final double val) {
             TObjectDoubleMap<Category> yToProb = getYToProb(x);
+            set(x, y, yToProb, val);
+        }
+
+        public Collection<Category> getNonZeroScores(Category X) {
+            return nonZeroScores.get(X);
+        }
+
+        private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {
+            if (val > 0.0 || val < 0.0) nonZeroScores.put(x, y);
             yToProb.put(y, val);
         }
     }

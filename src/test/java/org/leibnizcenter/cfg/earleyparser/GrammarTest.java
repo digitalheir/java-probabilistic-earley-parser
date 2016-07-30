@@ -11,14 +11,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
+
 /**
  */
 public class GrammarTest {
 
     private static final Grammar g = new Grammar.Builder("test")
-                .addRule(rule1)
-                .addRule(rule2)
-                .addRule(rule3).build();
+            .addRule(ruleB)
+            .addRule(ruleC)
+            .addRule(ruleD)
+            .addRule(ruleE)
+            .addRule(rule1)
+            .addRule(rule2)
+            .addRule(rule3).build();
 
     @Test
     public final void testContainsRules() {
@@ -26,14 +31,31 @@ public class GrammarTest {
         Assert.assertTrue(g.getRules(rule2.left).contains(rule2));
         Assert.assertFalse(g.getRules(rule3.left).contains(rule2));
     }
-    /* TODO fix
-    @Test public final void testGetPreterminal() {
-		Assert.assertEquals(rule2,
-				g.getPreterminals(rule2, rule2.right[0].name, true));
-		Assert.assertEquals(null,
-				g.getPreterminals(rule2, rule2.right[0].name.toUpperCase(),
-						false));
-	}*/
+
+    @Test
+    public final void testLeftRelation() {
+        Assert.assertEquals(g.getLeftScore(A, B), 1.0, 0.01);
+        Assert.assertEquals(g.getLeftScore(A, D), 0.0, 0.01);
+        Assert.assertEquals(g.getLeftScore(A, X), 0.0, 0.01);
+        Assert.assertEquals(g.getLeftScore(B, C), 0.5, 0.01);
+    }
+
+    @Test
+    public final void testLeftStarRelation() {
+        Assert.assertEquals(g.getLeftStarScore(A, B), 1.0, 0.01);
+        Assert.assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
+        Assert.assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
+        Assert.assertEquals(g.getLeftStarScore(A, D), 0.25, 0.01);
+        Assert.assertEquals(g.getLeftStarScore(A, X), 0.0, 0.01);
+    }
+
+//    @Test public final void testGetPreterminal() {
+//		Assert.assertEquals(rule2,
+//				g.getPreterminals(rule2, rule2.right[0].name, true));
+//		Assert.assertEquals(null,
+//				g.getPreterminals(rule2, rule2.right[0].name.toUpperCase(),
+//						false));
+//}
 
     /**
      * Test method for {@link Grammar#getRules(Category)}.

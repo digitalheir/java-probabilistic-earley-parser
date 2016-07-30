@@ -69,7 +69,9 @@ public class Rule {
 //                .limit(1).count() > 0;
     }
 
+    @Deprecated
     public Rule(NonTerminal left, Category... right) {
+        // TODO one for the semiring we're working with...
         this(1.0, left, right);
     }
 

@@ -97,6 +97,16 @@ public interface DblSemiring {
         return (this.plus(w1, w2) == w1) && (w1 != w2);
     }
 
+    // Remember that the operators are associative
+    default double times(double a, double b, double c) {
+        return times(a, times(b, c));
+    }
+
+    // Remember that the operators are associative
+    default double times(double a, double b, double c, double d) {
+        return times(a, times(times(b, c), d));
+    }
+
 
 // TODO necessary?
 //    /**

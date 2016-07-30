@@ -123,22 +123,19 @@ public class State {
 //        return this;
 //    }
 //
-//    /**
-//     * Creates and returns a new dotted rule exactly like the one provided
-//     * except that its dot position is advanced by
-//     * <code>1</code>.
-//     *
-//     * @throws IndexOutOfBoundsException If the dotted rule's dot position
-//     *                                   is already at the end of its right side.
-//     */
-//    @SuppressWarnings("WeakerAccess")
-//    State advanceDot() {
-//        int position = (ruleDotPosition);
-//        if (position < 0 || position > rule.right.length) throw new IndexOutOfBoundsException(
-//                "illegal position: " + position);
-//        ruleDotPosition++;
-//        return this;
-//    }
+
+    /**
+     * Return dot position advanced by <code>1</code>, or errors if out of bounds.
+     *
+     * @throws IndexOutOfBoundsException If the dotted rule's dot position
+     *                                   is already at the end of its right side.
+     */
+    public int advanceDot() {
+        int position = (ruleDotPosition);
+        if (position < 0 || position > rule.right.length) throw new IndexOutOfBoundsException(
+                "illegal position: " + position);
+        return position + 1;
+    }
 //
 //
 //    /**
@@ -189,13 +186,11 @@ public class State {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         State state = (State) o;
-
-        if (ruleStartPosition != state.ruleStartPosition) return false;
-        if (ruleDotPosition != state.ruleDotPosition) return false;
-        if (positionInInput != state.positionInInput) return false;
-        return rule.equals(state.rule);
+        return ruleStartPosition == state.ruleStartPosition
+                && ruleDotPosition == state.ruleDotPosition
+                && positionInInput == state.positionInInput
+                && rule.equals(state.rule);
 
     }
 
@@ -208,44 +203,28 @@ public class State {
         return result;
     }
 
-    public static class Score {
-        /**
-         * The forward probability <code>α_i</code> of a state is
-         * the sum of the probabilities of
-         * all constrained paths of length i that end in that state, do all
-         * paths from start to position i. So this includes multiple
-         * instances of the same history, which may happen because of recursion.
-         */
-        private double forwardScore;
-        /**
-         * The inner probability <code>γ_{i}</code> of a state
-         * is the sum of the probabilities of all
-         * paths of length (i - k) that start at position k (the rule's start position),
-         * and end at the current state and generate the input the input symbols up to k.
-         * Note that this is conditional on the state happening at position k with
-         * a certain non-terminal X
-         */
-        private double innerScore;
-
-        public Score(double forwardScore, double innerScore) {
-            this.forwardScore = forwardScore;
-            this.innerScore = innerScore;
-        }
-
-        public void incrementForwardScore(double by) {
-            forwardScore += by;
-        }
-
-        public void incrementInnerScore(double by) {
-            innerScore += by;
-        }
-
-        public double getInnerScore() {
-            return innerScore;
-        }
-
-        public double getForwardScore() {
-            return forwardScore;
-        }
-    }
+//    public static class Score {
+//
+//
+//        public Score(double forwardScore, double innerScore) {
+//            this.forwardScore = forwardScore;
+//            this.innerScore = innerScore;
+//        }
+//
+//        public void incrementForwardScore(double by) {
+//            forwardScore += by;
+//        }
+//
+//        public void incrementInnerScore(double by) {
+//            innerScore += by;
+//        }
+//
+//        public double getInnerScore() {
+//            return innerScore;
+//        }
+//
+//        public double getForwardScore() {
+//            return forwardScore;
+//        }
+//    }
 }
