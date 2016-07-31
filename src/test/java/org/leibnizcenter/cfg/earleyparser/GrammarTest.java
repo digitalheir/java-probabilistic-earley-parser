@@ -15,6 +15,10 @@ import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 /**
  */
 public class GrammarTest {
+    private static final Rule ruleB = new Rule(0.5, B, C);
+    private static final Rule ruleC = new Rule(0.5, C, D);
+    private static final Rule ruleD = new Rule(0.5, D, E);
+    private static final Rule ruleE = new Rule(0.5, E, e);
 
     private static final Grammar g = new Grammar.Builder("test")
             .addRule(ruleB)

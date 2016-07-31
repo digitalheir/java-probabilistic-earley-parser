@@ -1,6 +1,8 @@
 
 package org.leibnizcenter.cfg.earleyparser.parse;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -44,7 +46,7 @@ public class Chart {
      * Creates a new chart, initializing its internal data structure.
      */
     public Chart(Grammar grammar) {
-        this(grammar, new StateSets());
+        this(grammar, new StateSets(grammar.getSemiring()));
     }
 
     /**
@@ -84,11 +86,11 @@ public class Chart {
                         Category Y = Y_to_v.getLeft();
                         State s = stateSets.getOrCreate(index, index, 0, Y_to_v); // We might want to increment the probability of an existing state
                         // α' = α * R(Z =*L> Y) * P(Y → v)
-                        stateSets.addForwardScore(sr, s, sr.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_v.getProbability()));
+                        stateSets.addForwardScore(s, sr.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_v.getProbability()));
 
                         // γ' = P(Y → v)
                         double innerScore = stateSets.getInnerScore(s);
-                        if (!(Y_to_v.getProbability() == innerScore || 0.0 == innerScore))
+                        if (!(Y_to_v.getProbability() == innerScore || sr.zero() == innerScore))
                             throw new Error(Y_to_v.getProbability() + " != " + innerScore);
                         stateSets.setInnerScore(s, Y_to_v.getProbability());
                     });
@@ -130,36 +132,44 @@ public class Chart {
                 );
     }
 
-//    /**
-//     * Makes completions in the specified chart at the given index.
-//     *
-//     * @param index The index to make completions at.
-//     */
-//    public void complete(int index) {
-//        // |grammar|
-//        Set<State> completedStates = stateSets.getCompletedStates(index).stream()
-//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → μ·</code>...
-//                // ... Get all unique non-terminals X
-//                .collect(Collectors.toSet());
-//
-//        // And for all states in j <= i, such that <code>j: Y<sub>k</sub> →  λ·Xμ</code>
-//        while (completedStates.size() > 0) {
-//            for (State completedState : completedStates) {
-//                Set<State> completedStatez =
-//                        getStatesWithActiveCategory(completedState.getRuleStartPosition(), completedState.getRule().getLeft())
-//                                // Create the new state <code>i: Y<sub>k</sub> →  λX·μ</code> if it does not exist yet
-//                                .map(state -> new State(state.getRule(),
-//                                        state.getRuleStartPosition(),
-//                                        completedState.getPosition(),
-//                                        state.getRuleDotPosition() + 1))
-//                                .filter(state -> !getCompletedStates(index).anyMatch(state::equals))
-//                                .collect(Collectors.toSet());
-//                completedStatez.forEach(completion -> stateSets.addState(completion.getPosition(), completion));
-//                completedStates = completedStatez.stream().filter(State::isCompleted).collect(Collectors.toSet());
-//            }
-//        }
-//    }
-//
+    /**
+     * Makes completions in the specified chart at the given index.
+     *
+     * @param index The index to make completions at.
+     */
+    public void complete(int index) {
+        final DblSemiring sr = grammar.getSemiring();
+        final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
+        completedStates.stream()
+                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
+                .filter(state -> !state.getRule().isUnitProduction())
+                .forEach(completedState -> {
+                            double completedInner = stateSets.getInnerScore(completedState);
+                            final NonTerminal Y = completedState.getRule().getLeft();
+                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Zμ</code>, where Z =*> Y is non-zero
+                            stateSets.getStatesActiveOnNonTerminal().stream()
+                                    .filter(state -> state.getPosition() <= index)
+                                    .forEach(stateToAdvance -> {
+                                        final Category Z = stateToAdvance.getActiveCategory();
+                                        final double leftStarScore = grammar.getLeftStarScore(Z, Y);
+                                        if (leftStarScore == sr.zero()) return;
+
+                                        double prevForward = stateSets.getForwardScore(stateToAdvance);
+                                        double prevInner = stateSets.getInnerScore(stateToAdvance);
+
+                                        State newState = stateSets.getOrCreate(
+                                                index,
+                                                stateToAdvance.getRuleStartPosition(),
+                                                stateToAdvance.advanceDot(),
+                                                stateToAdvance.getRule()
+                                        );
+                                        stateSets.addForwardScore(newState, sr.times(prevForward, completedInner, leftStarScore));
+                                        stateSets.addInnerScore(newState, sr.times(prevInner, completedInner, leftStarScore));
+                                    });
+                        }
+                );
+    }
+
 //    /**
 //     * Makes predictions (adds states) in the specified chart for a given state
 //     * at a given index. This method also make predictions for any newly added state.
@@ -407,7 +417,7 @@ public class Chart {
          * paths from start to position i. So this includes multiple
          * instances of the same history, which may happen because of recursion.
          */
-        private final TObjectDoubleHashMap<State> forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, 0.0);
+        private final TObjectDoubleHashMap<State> forwardScores;
 
         /**
          * The inner probability <code>γ_{i}</code> of a state
@@ -417,14 +427,19 @@ public class Chart {
          * Note that this is conditional on the state happening at position k with
          * a certain non-terminal X
          */
-        private final TObjectDoubleHashMap<State> innerScores = new TObjectDoubleHashMap<>(500, 0.5F, 0.0);
+        private final TObjectDoubleHashMap<State> innerScores;
 
-        //        private final TObjectDoubleHashMap<Set<State>> completedStates = new TObjectDoubleHashMap<>(500);
+        private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
         private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
         private final TIntObjectHashMap<Set<State>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
+        private final DblSemiring semiring;
+        private Multimap<Category, State> statesActiveOn = HashMultimap.create();
 
 
-        public StateSets() {
+        public StateSets(DblSemiring sr) {
+            this.semiring = sr;
+            this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
+            this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
         }
 
         //TODO remove
@@ -487,9 +502,9 @@ public class Chart {
 //            return stateSets.get(index);
 //        }
 //
-//        public Set<State> getCompletedStates(int index) {
-//            return completedStates.get(index);
-//        }
+        public Set<State> getCompletedStates(int index) {
+            return completedStates.get(index);
+        }
 
         public Set<State> getStatesActiveOnNonTerminals(int index) {
             return statesActiveOnNonTerminals.get(index);
@@ -501,7 +516,7 @@ public class Chart {
         }
 
         /**
-         * Default 0.0
+         * Default zero
          *
          * @param s state
          * @return forward score so far
@@ -525,12 +540,13 @@ public class Chart {
                 add(byIndex, index, state);
                 forInd.put(dotPosition, state);
 
-                //if(state.isCompleted()) completedStates.put()
-
-                if (state.isActive())
+                if (state.isCompleted()) add(completedStates, index, state);
+                if (state.isActive()) {
+                    statesActiveOn.put(state.getActiveCategory(), state);
                     if (state.getActiveCategory() instanceof NonTerminal) add(statesActiveOnNonTerminals, index, state);
                     else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
                     else throw new Error("Neithor Terminal nor NonTerminal...?");
+                }
             }
 
             return forInd.get(dotPosition);
@@ -541,8 +557,12 @@ public class Chart {
             states.get(index).add(state);
         }
 
-        public void addForwardScore(DblSemiring sr, State state, double increment) {
-            forwardScores.put(state, sr.plus(getForwardScore(state)/*default 0.0*/, increment));
+        public void addForwardScore(State state, double increment) {
+            forwardScores.put(state, semiring.plus(getForwardScore(state)/*default zero*/, increment));
+        }
+
+        public void addInnerScore(State state, double increment) {
+            innerScores.put(state, semiring.plus(getInnerScore(state)/*default zero*/, increment));
         }
 
         public void setForwardScore(State s, double probability) {
@@ -554,7 +574,7 @@ public class Chart {
         }
 
         /**
-         * Default 0.0
+         * Default zero
          *
          * @param s
          * @return inner score so far
@@ -565,6 +585,14 @@ public class Chart {
 
         public Set<State> getStates(int index) {
             return byIndex.get(index);
+        }
+
+        public Collection<State> getStatesActiveOnNonTerminal(NonTerminal nonTerminal) {
+            return statesActiveOn.get(nonTerminal);
+        }
+
+        public Collection<State> getStatesActiveOnNonTerminal() {
+            return statesActiveOn.values();
         }
 
     }

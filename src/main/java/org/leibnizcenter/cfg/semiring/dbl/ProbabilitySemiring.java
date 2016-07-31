@@ -47,4 +47,14 @@ public class ProbabilitySemiring implements DblSemiring {
     public EnumSet<Property> properties() {
         return properties;
     }
+
+    @Override
+    public double fromProbability(double x) {
+        return x;
+    }
+
+    @Override
+    public double toProbability(double x) {
+        return x;
+    }
 }

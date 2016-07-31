@@ -100,23 +100,26 @@ public class Grammar {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private void setLeftStarCorners() {
+        // TODO make this method robust to any semiring, instead of converting to/from probability and risking double underflow
+
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
             NonTerminal X = nonterminalz[row];
             for (int col = 0; col < nonterminalz.length; col++) {
                 NonTerminal Y = nonterminalz[col];
-                final double prob = leftCorners.get(X, Y);
+                final double prob = semiring.toProbability(leftCorners.get(X, Y));
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
         }
         final Matrix R_L = R_L_inverse.inverse();
+
         /**
          * Copy all matrix values into our {@link LeftCorners} object
          */
         IntStream.range(0, R_L.getRowDimension()).forEach(row ->
                 IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        leftStarCorners.set(nonterminalz[row], nonterminalz[col], R_L.get(row, col))
+                        leftStarCorners.set(nonterminalz[row], nonterminalz[col], semiring.fromProbability(R_L.get(row, col)))
                 )
         );
     }
@@ -238,8 +241,9 @@ public class Grammar {
             this.rules = new ImmutableMultimap.Builder<>();
         }
 
-        public void setSemiring(DblSemiring semiring) {
+        public Builder setSemiring(DblSemiring semiring) {
             this.semiring = semiring;
+            return this;
         }
 
         public Builder setName(String name) {
@@ -305,15 +309,17 @@ public class Grammar {
          */
         void plus(Category x, Category y, double probability) {
             TObjectDoubleMap<Category> yToProb = getYToProb(x);
-            final double newProbability = semiring.plus(yToProb.get(y)/*defaults to 0.0*/, probability);
+            final double newProbability = semiring.plus(yToProb.get(y)/*defaults to zero*/, probability);
+            if (Double.isNaN(newProbability))
+                throw new Error();
             set(x, y, yToProb, newProbability);
         }
 
         /**
-         * @return stored value in left-corner relationship. 0.0 by default
+         * @return stored value in left-corner relationship. zero by default
          */
         public double get(Category x, Category y) {
-            return getYToProb(x).get(y)/*defaults to 0.0*/;
+            return getYToProb(x).get(y)/*defaults to zero*/;
         }
 
         /**
@@ -325,7 +331,7 @@ public class Grammar {
         private TObjectDoubleMap<Category> getYToProb(Category x) {
             if (map.containsKey(x)) return map.get(x);
             else {
-                TObjectDoubleMap<Category> yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, 0.0));
+                TObjectDoubleMap<Category> yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, semiring.zero()));
                 map.put(x, yToProb);
                 return yToProb;
             }
@@ -348,7 +354,7 @@ public class Grammar {
         }
 
         private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {
-            if (val > 0.0 || val < 0.0) nonZeroScores.put(x, y);
+            if (val != semiring.zero()) nonZeroScores.put(x, y);
             yToProb.put(y, val);
         }
     }

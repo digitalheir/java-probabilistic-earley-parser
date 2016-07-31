@@ -57,4 +57,14 @@ public class LogSemiring implements DblSemiring {
         return (!Double.isNaN(w)) // not a NaN
                 && (w != Double.NEGATIVE_INFINITY); // and different endState -inf
     }
+
+    @Override
+    public double fromProbability(double x) {
+        return -Math.log(x);
+    }
+
+    @Override
+    public double toProbability(double x) {
+        return Math.exp(-x);
+    }
 }

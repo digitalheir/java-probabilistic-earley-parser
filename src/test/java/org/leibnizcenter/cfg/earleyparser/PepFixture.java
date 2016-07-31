@@ -55,10 +55,6 @@ public final class PepFixture {
 
     public final static Rule rule1 = new Rule(A, B, C, D, E);
     public final static Rule rule2 = new Rule(A, a);
-    public final static Rule ruleB = new Rule(0.5, B, C);
-    public final static Rule ruleC = new Rule(0.5, C, D);
-    public final static Rule ruleD = new Rule(0.5, D, E);
-    public final static Rule ruleE = new Rule(0.5, E, e);
     public final static Rule rule3 = new Rule(X, Y, Z);
     public final static Rule rule4 = new Rule(A, X, a);
     public final static Rule rule5 = new Rule(X, a, Z);

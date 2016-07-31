@@ -107,6 +107,10 @@ public interface DblSemiring {
         return times(a, times(times(b, c), d));
     }
 
+    double fromProbability(double x);
+
+    double toProbability(double x);
+
 
 // TODO necessary?
 //    /**

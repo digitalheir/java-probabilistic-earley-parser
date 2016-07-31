@@ -228,4 +228,8 @@ public class Rule {
     public double getProbability() {
         return probability;
     }
+
+    public boolean isUnitProduction() {
+        return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
+    }
 }
