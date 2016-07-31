@@ -93,15 +93,17 @@ public class ChartTest {
         chart.scan(0, new Token<>("a"), index -> semiring.fromProbability(0.5));
         chart.complete(1);
 
-        for (int i = 0; i < 2; i++) {
-            for (State s : chart.getStates(i)) {
-                final double probFw = semiring.toProbability(chart.getForwardScore(s));
-                final double probInn = semiring.toProbability(chart.getInnerScore(s));
-                System.out.println((s) + "[" + probFw + "]" + "[" + probInn + "]");
-                //Assert.assertEquals(0.1, semiring.toProbability(chart.getForwardScore(s)), 0.2);
-                //Assert.assertEquals(0.03125,chart.getForwardScore(s),0.01);
-            }
-        }
+//        for (int i = 0; i < 2; i++) {
+//            for (State s : chart.getStates(i)) {
+//                final double probFw = semiring.toProbability(chart.getForwardScore(s));
+//                final double probInn = semiring.toProbability(chart.getInnerScore(s));
+//                System.out.println((s) + "[" + probFw + "]" + "[" + probInn + "]");
+//            }
+//        }
+
+        // TODO assert some stuff
+        //Assert.assertEquals(0.1, semiring.toProbability(chart.getForwardScore(s)), 0.2);
+        //Assert.assertEquals(0.03125,chart.getForwardScore(s),0.01);
     }
 //
 //    //    @Test
