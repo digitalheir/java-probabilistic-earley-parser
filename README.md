@@ -20,7 +20,7 @@ we define probability as a number between 0 and 1 inclusive, and use common alge
 multiplication.
 
 This code makes it possible to use *any* [semiring](https://en.wikipedia.org/wiki/Semiring) that can have its elements
-represented as doubles. My use for this is to avoid arithmetic underflow: imagine a computation like 0.1*0.1*...*0.1.
+represented as doubles. My use for this is to avoid arithmetic underflow: imagine a computation like 0.1 * 0.1 * ... * 0.1.
 At some point, floating point arithmetic will be unable to represent a number so small. To counter, we use the Log
 semiring which holds the minus log of the probability. So that maps the numbers 0 and 1 to the numbers
 between infinity and zero, skewed towards lower probabilities:
