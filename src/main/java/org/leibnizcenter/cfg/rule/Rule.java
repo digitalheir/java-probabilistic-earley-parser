@@ -4,6 +4,8 @@ package org.leibnizcenter.cfg.rule;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 
 import java.util.Arrays;
 
@@ -26,8 +28,6 @@ import java.util.Arrays;
 public class Rule {
     public final NonTerminal left;
     public final Category[] right;
-    @SuppressWarnings("WeakerAccess")
-//    public final boolean isPreTerminal;
     private final double probability;
 
     /**
@@ -44,7 +44,7 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    public Rule(double probability, NonTerminal left, Category... right) {
+    protected Rule(double probability, NonTerminal left, Category... right) {
         this.probability = probability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
@@ -69,14 +69,37 @@ public class Rule {
 //                .limit(1).count() > 0;
     }
 
+    /**
+     * Instiantiates a new rule with a probability score of 1.0 (assuming we use the Probability semiring, which
+     * has 1.0 for "one")
+     *
+     * @param left  LHS
+     * @param right RHS
+     */
     @Deprecated
-    public Rule(NonTerminal left, Category... right) {
-        // TODO one for the semiring we're working with...
+    protected Rule(NonTerminal left, Category... right) {
         this(1.0, left, right);
     }
 
-    public static Rule startRule(Category seed) {
-        return new Rule(Category.START, seed);
+    /**
+     * Instiantiates a new rule with a probability score of one (whatever that means for the given semiring)
+     *
+     * @param semiring Semiring to query for the probability of "one"
+     * @param left     LHS
+     * @param right    RHS
+     */
+    @Deprecated
+    protected Rule(DblSemiring semiring, NonTerminal left, Category... right) {
+        this(semiring.one(), left, right);
+    }
+
+    @Deprecated
+    public static Rule create(double probability, NonTerminal LHS, Category... RHS) {
+        return new Rule(probability, LHS, RHS);
+    }
+
+    public static Rule create(LogSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
+        return new Rule(semiring.toProbability(probability), LHS, RHS);
     }
 
     /**
@@ -98,7 +121,6 @@ public class Rule {
         } else return null;
     }
 
-
     /**
      * Tests whether this is a completed edge or not. An edge is completed when
      * its dotted rule contains no
@@ -111,21 +133,6 @@ public class Rule {
     public boolean isPassive(int dotPosition) {
         if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
         return dotPosition == right.length;
-    }
-
-
-    /**
-     * Gets the left side category of this rule.
-     */
-    public NonTerminal getLeft() {
-        return left;
-    }
-
-    /**
-     * Gets the series of category on the right side of this rule.
-     */
-    public Category[] getRight() {
-        return right;
     }
 
 //    /**
@@ -150,6 +157,20 @@ public class Rule {
 //    public boolean isSingletonPreterminal() {
 //        return (isPreterminal() && right.length == 1);
 //    }
+
+    /**
+     * Gets the left side category of this rule.
+     */
+    public NonTerminal getLeft() {
+        return left;
+    }
+
+    /**
+     * Gets the series of category on the right side of this rule.
+     */
+    public Category[] getRight() {
+        return right;
+    }
 
     /**
      * Tests whether this rule is equal to another, with the same left and

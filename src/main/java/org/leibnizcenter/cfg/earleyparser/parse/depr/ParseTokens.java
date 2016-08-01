@@ -111,7 +111,7 @@
 //
 //        chart.scan(index, token, predictPreterm, listener); // scan and increment index
 //        index++;
-//        Chart.complete(chart, index, listener); // complete for next index
+//        Chart.completeTruncated(chart, index, listener); // completeTruncated for next index
 //
 //        if (!tokenIterator.hasNext()) {
 //            // finish filling chart by predicting for final index

@@ -10,6 +10,7 @@ import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 
@@ -100,8 +101,7 @@ public class Grammar {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private void setLeftStarCorners() {
-        // TODO make this method robust to any semiring, instead of converting to/from probability and risking double underflow
-
+        // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
@@ -109,6 +109,9 @@ public class Grammar {
             for (int col = 0; col < nonterminalz.length; col++) {
                 NonTerminal Y = nonterminalz[col];
                 final double prob = semiring.toProbability(leftCorners.get(X, Y));
+//                if(prob != 1.0 && prob != 0.0)
+//                    System.out.println(prob);
+                // I - P_L
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
         }
@@ -124,12 +127,20 @@ public class Grammar {
         );
     }
 
+    //TODO
+//    isProper(){
+//    }
+//    isConsistent(){
+//    }
+//    hasNoUselessNonTerminals(){
+//
+//    }
+
     /**
      * Gets the name of this grammar.
      *
      * @return The value specified when this grammar was created.
      */
-
     public String getName() {
         return name;
     }
@@ -231,6 +242,7 @@ public class Grammar {
         private final ImmutableMultimap.Builder<Category, Rule> rules;
         private String name;
         private DblSemiring semiring = new ProbabilitySemiring();
+        private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {
             this.name = name;
@@ -243,6 +255,7 @@ public class Grammar {
 
         public Builder setSemiring(DblSemiring semiring) {
             this.semiring = semiring;
+            this.rf = new RuleFactory(semiring);
             return this;
         }
 
@@ -264,11 +277,11 @@ public class Grammar {
         }
 
         public Builder addRule(double probability, NonTerminal left, Category... right) {
-            return addRule(new Rule(probability, left, right));
+            return addRule(rf.newRule(probability, left, right));
         }
 
         public Builder addRule(NonTerminal left, Category... right) {
-            return addRule(new Rule(left, right));
+            return addRule(rf.newRule(left, right));
         }
 
         public Grammar build() {

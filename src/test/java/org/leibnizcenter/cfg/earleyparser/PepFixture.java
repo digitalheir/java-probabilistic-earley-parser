@@ -53,14 +53,14 @@ public final class PepFixture {
     public final static Category GirL = new CaseInsenstivieStringTerminal("girl");
     public final static Category LefT = new CaseInsenstivieStringTerminal("left");
 
-    public final static Rule rule1 = new Rule(A, B, C, D, E);
-    public final static Rule rule2 = new Rule(A, a);
-    public final static Rule rule3 = new Rule(X, Y, Z);
-    public final static Rule rule4 = new Rule(A, X, a);
-    public final static Rule rule5 = new Rule(X, a, Z);
-    public final static Rule rule6 = new Rule(Z, b);
-    public final static Rule rule7 = new Rule(X, a);
-    public final static Rule rule8 = new Rule(X, b);
+    public final static Rule rule1 = Rule.create(1.0, A, B, C, D, E);
+    public final static Rule rule2 = Rule.create(1.0, A, a);
+    public final static Rule rule3 = Rule.create(1.0, X, Y, Z);
+    public final static Rule rule4 = Rule.create(1.0, A, X, a);
+    public final static Rule rule5 = Rule.create(1.0, X, a, Z);
+    public final static Rule rule6 = Rule.create(1.0, Z, b);
+    public final static Rule rule7 = Rule.create(1.0, X, a);
+    public final static Rule rule8 = Rule.create(1.0, X, b);
     public static final Grammar mixed = new Grammar.Builder("mixed")
             .addRule(rule4)
             .addRule(rule5)
@@ -75,22 +75,22 @@ public final class PepFixture {
             .map(Token::new)
             .collect(Collectors.toList());
     public static Grammar grammar = new Grammar.Builder("test")
-            .addRule(new Rule(S, NP, VP))
-            .addRule(new Rule(NP, Det, N))
-            .addRule(new Rule(VP, left))
-            .addRule(new Rule(Det, a))
-            .addRule(new Rule(Det, the))
-            .addRule(new Rule(N, boy))
-            .addRule(new Rule(N, girl))
+            .addRule(S, NP, VP)
+            .addRule(NP, Det, N)
+            .addRule(VP, left)
+            .addRule(Det, a)
+            .addRule(Det, the)
+            .addRule(N, boy)
+            .addRule(N, girl)
             .build();
     public static Grammar grammarCaseInsensitive = new Grammar.Builder("test")
-            .addRule(new Rule(S, NP, VP))
-            .addRule(new Rule(NP, Det, N))
-            .addRule(new Rule(VP, LefT))
-            .addRule(new Rule(Det, aA))
-            .addRule(new Rule(Det, ThE))
-            .addRule(new Rule(N, bOy))
-            .addRule(new Rule(N, GirL))
+            .addRule(S, NP, VP)
+            .addRule(NP, Det, N)
+            .addRule(VP, LefT)
+            .addRule(Det, aA)
+            .addRule(Det, ThE)
+            .addRule(N, bOy)
+            .addRule(N, GirL)
             .build();
 
     @Test

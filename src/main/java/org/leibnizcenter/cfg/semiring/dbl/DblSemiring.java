@@ -17,23 +17,28 @@ import java.util.EnumSet;
  * Created by maarten on 19-6-16.
  */
 public interface DblSemiring {
+    @SuppressWarnings("unused")
     static boolean isRightSemiring(DblSemiring semiring) {
         return semiring.properties().contains(Property.RightSemiring);
     }
 
+    @SuppressWarnings("unused")
     static boolean isLeftSemiring(DblSemiring semiring) {
         return semiring.properties().contains(Property.LeftSemiring);
     }
 
-    static boolean Idempotent(DblSemiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isIdempotent(DblSemiring semiring) {
         return semiring.properties().contains(Property.Idempotent);
     }
 
-    static boolean Commutative(DblSemiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isCommutative(DblSemiring semiring) {
         return semiring.properties().contains(Property.Commutative);
     }
 
-    static boolean Path(DblSemiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isPath(DblSemiring semiring) {
         return semiring.properties().contains(Property.Path);
     }
 
@@ -93,6 +98,7 @@ public interface DblSemiring {
      * <p>
      * We define the strict version of this order below.
      */
+    @SuppressWarnings("unused")
     default boolean naturalLess(double w1, double w2) {
         return (this.plus(w1, w2) == w1) && (w1 != w2);
     }
@@ -103,6 +109,7 @@ public interface DblSemiring {
     }
 
     // Remember that the operators are associative
+    @SuppressWarnings("unused")
     default double times(double a, double b, double c, double d) {
         return times(a, times(times(b, c), d));
     }

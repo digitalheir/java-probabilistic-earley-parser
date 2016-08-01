@@ -32,27 +32,27 @@ public class ChartTest {
         double p = 0.6;
         double q = 0.4;
         Grammar grammar = new Grammar.Builder()
-                .addRule(new Rule(p, S, a))
-                .addRule(new Rule(q, S, B))
-                .addRule(new Rule(1, B, S))
+                .addRule(p, S, a)
+                .addRule(q, S, B)
+                .addRule(1, B, S)
                 .build();
         Chart chart = new Chart(grammar);
         DblSemiring sr = grammar.getSemiring();
 
 
-        State initialState = new State(new Rule(sr.one(), Category.START, S), 0);
+        State initialState = new State(Rule.create(sr.one(), Category.START, S), 0);
         chart.addState(0, initialState, sr.one(), sr.one());
 
         chart.predict(0);
 
         Assert.assertTrue(chart.getStates(0).contains(initialState));
-        Assert.assertTrue(chart.getStates(0).contains(new State(new Rule(p, S, a), 0)));
-        Assert.assertTrue(chart.getStates(0).contains(new State(new Rule(q, S, B), 0)));
-        Assert.assertTrue(chart.getStates(0).contains(new State(new Rule(1, B, S), 0)));
-        Assert.assertEquals(chart.getForwardScore(new State(new Rule(1, B, S), 0)), (q / p), 0.01);
-        Assert.assertEquals(chart.getInnerScore(new State(new Rule(1, B, S), 0)), 1, 0.01);
-        Assert.assertEquals(chart.getForwardScore(new State(new Rule(q, S, B), 0)), (q / p), 0.01);
-        Assert.assertEquals(chart.getInnerScore(new State(new Rule(q, S, B), 0)), q, 0.01);
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(p, S, a), 0)));
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(q, S, B), 0)));
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(1, B, S), 0)));
+        Assert.assertEquals(chart.getForwardScore(new State(Rule.create(1, B, S), 0)), (q / p), 0.01);
+        Assert.assertEquals(chart.getInnerScore(new State(Rule.create(1, B, S), 0)), 1, 0.01);
+        Assert.assertEquals(chart.getForwardScore(new State(Rule.create(q, S, B), 0)), (q / p), 0.01);
+        Assert.assertEquals(chart.getInnerScore(new State(Rule.create(q, S, B), 0)), q, 0.01);
 
 //        for (State s : chart.getStates(0)) {
 //            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getInnerScore(s) + "]");
@@ -60,7 +60,7 @@ public class ChartTest {
 //
 //        for (int i = 0; i < 3; i++) {
 //            chart.scan(i, new Token<>("a"));
-//            if (i < 3) chart.complete(i + 1);
+//            if (i < 3) chart.completeTruncated(i + 1);
 //        }
 
     }
@@ -68,13 +68,13 @@ public class ChartTest {
     @Test
     public final void parse() {
         final LogSemiring semiring = new LogSemiring();
-        final Rule ruleB = new Rule(semiring.fromProbability(0.5), B, C);
-        final Rule ruleC = new Rule(semiring.fromProbability(0.5), C, D);
-        final Rule ruleD = new Rule(semiring.fromProbability(0.5), D, E);
-        final Rule ruleE = new Rule(semiring.fromProbability(0.5), E, e);
-        final Rule rule1 = new Rule(semiring.one(), A, B, C, D, E);
-        final Rule ruleAa = new Rule(semiring.one(), A, a);
-        final Rule rule3 = new Rule(semiring.one(), X, Y, Z);
+        final Rule ruleB = Rule.create(semiring.fromProbability(0.5), B, C);
+        final Rule ruleC = Rule.create(semiring.fromProbability(0.5), C, D);
+        final Rule ruleD = Rule.create(semiring.fromProbability(0.5), D, E);
+        final Rule ruleE = Rule.create(semiring.fromProbability(0.5), E, e);
+        final Rule rule1 = Rule.create(semiring.one(), A, B, C, D, E);
+        final Rule ruleAa = Rule.create(semiring.one(), A, a);
+        final Rule rule3 = Rule.create(semiring.one(), X, Y, Z);
 
         Grammar grammar = new Grammar.Builder("test")
                 .setSemiring(semiring)
@@ -88,10 +88,10 @@ public class ChartTest {
         DblSemiring sr = grammar.getSemiring();
         Chart chart = new Chart(grammar);
 
-        chart.addState(0, new State(new Rule(sr.one(), Category.START, A), 0), sr.one(), sr.one());
+        chart.addState(0, new State(Rule.create(sr.one(), Category.START, A), 0), sr.one(), sr.one());
         chart.predict(0);
         chart.scan(0, new Token<>("a"), index -> semiring.fromProbability(0.5));
-        chart.complete(1);
+        chart.completeTruncated(1);
 
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {

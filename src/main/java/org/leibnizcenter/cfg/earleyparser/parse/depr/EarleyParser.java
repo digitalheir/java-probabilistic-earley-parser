@@ -278,7 +278,7 @@
 //
 //        scan(chart, index, token); // scan and increment index
 //        index++;
-//        complete(chart, index); // complete for next index
+//        completeTruncated(chart, index); // completeTruncated for next index
 //
 //        if (!tokenIterator.hasNext())
 //            // finish filling chart by predicting for final index

@@ -14,23 +14,28 @@ import java.util.EnumSet;
  * Created by maarten on 19-6-16.
  */
 public interface Semiring<T> {
+    @SuppressWarnings("unused")
     static boolean isRighSemiring(Semiring semiring) {
         return semiring.properties().contains(Property.RightSemiring);
     }
 
+    @SuppressWarnings("unused")
     static boolean isLefSemiring(Semiring semiring) {
         return semiring.properties().contains(Property.LeftSemiring);
     }
 
-    static boolean Idempotent(Semiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isIdempotent(Semiring semiring) {
         return semiring.properties().contains(Property.Idempotent);
     }
 
-    static boolean Commutative(Semiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isCommutative(Semiring semiring) {
         return semiring.properties().contains(Property.Commutative);
     }
 
-    static boolean Path(Semiring semiring) {
+    @SuppressWarnings("unused")
+    static boolean isPath(Semiring semiring) {
         return semiring.properties().contains(Property.Path);
     }
 
@@ -42,6 +47,7 @@ public interface Semiring<T> {
     /**
      * Semiring's times operation
      */
+    @SuppressWarnings("unused")
     T times(T w1, T w2);
 
     /**
@@ -60,6 +66,7 @@ public interface Semiring<T> {
      * @param m candidate member
      * @return whether m belongs to the semiring's set
      */
+    @SuppressWarnings("unused")
     T member(T m);
 
     /**

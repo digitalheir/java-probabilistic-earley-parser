@@ -3,6 +3,8 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
 
+import java.text.DecimalFormat;
+
 /**
  * A chart state, describing a pending derivation.
  * <p>
@@ -28,7 +30,7 @@ import org.leibnizcenter.cfg.rule.Rule;
  * the dot. The dot thus refers to the current position <code>i</code>.</li>
  * </ul>
  * <p>
- * A state with the dot to the right of the entire RHS is called a complete state, since
+ * A state with the dot to the right of the entire RHS is called a completeTruncated state, since
  * it indicates that the left-hand side (LHS) nonterminal has been fully expanded.
  * <p>
  * States are mutable
@@ -112,9 +114,9 @@ public class State {
 //     *                                  </ul>
 //     * @see #advanceDot()
 //     */
-//    public State complete(State basis) {
+//    public State completeTruncated(State basis) {
 //        if (this.isCompleted()) throw new IllegalArgumentException(
-//                "attempt to complete passive State: " + this);
+//                "attempt to completeTruncated passive State: " + this);
 //        if (basis == null) throw new NullPointerException("null basis");
 //        if (!basis.isCompleted()) throw new IllegalArgumentException("basis is not completed: " + basis);
 //        if ((ruleStartPosition + ruleDotPosition) == 0 || !basis.getRule().left.equals(this.getActiveCategory()))
@@ -203,28 +205,42 @@ public class State {
         return result;
     }
 
-//    public static class Score {
-//
-//
-//        public Score(double forwardScore, double innerScore) {
-//            this.forwardScore = forwardScore;
-//            this.innerScore = innerScore;
-//        }
-//
-//        public void incrementForwardScore(double by) {
-//            forwardScore += by;
-//        }
-//
-//        public void incrementInnerScore(double by) {
-//            innerScore += by;
-//        }
-//
-//        public double getInnerScore() {
-//            return innerScore;
-//        }
-//
-//        public double getForwardScore() {
-//            return forwardScore;
-//        }
-//    }
+    public static class StateWithScore {
+        private final double forwardScore;
+        private final double innerScore;
+        private final State state;
+        private final State origin;
+
+        public StateWithScore(State state, double forwardScore, double innerScore, State origin) {
+            this.forwardScore = forwardScore;
+            this.state = state;
+            this.innerScore = innerScore;
+            this.origin = origin;
+        }
+
+        public double getInnerScore() {
+            return innerScore;
+        }
+
+        public double getForwardScore() {
+            return forwardScore;
+        }
+
+        public State getState() {
+            return state;
+        }
+
+        @Override
+        public String toString() {
+            DecimalFormat df = new DecimalFormat("#.00");
+
+            return "StateWithScore{" +
+                    "forwardScore=" + df.format(forwardScore) +
+                    ", innerScore=" + df.format(innerScore) +
+                    ", state=" + state +
+                    ", origin=" + origin +
+                    '}';
+        }
+    }
+
 }
