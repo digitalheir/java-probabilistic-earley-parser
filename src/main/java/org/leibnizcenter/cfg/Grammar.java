@@ -51,6 +51,11 @@ public class Grammar {
      */
     private final LeftCorners leftStarCorners;
 
+    /**
+     * Reflexive, transitive closure of unit production relations, with the probabilities summed
+     */
+    private final LeftCorners unitStarScores;
+
     private final Set<NonTerminal> nonTerminals;
     private final DblSemiring semiring;
 
@@ -65,7 +70,7 @@ public class Grammar {
      *
      * @param name     The mnemonic name for this grammar.
      * @param rules    Rules for the grammar
-     * @param semiring
+     * @param semiring Semiring
      */
     public Grammar(String name, ImmutableMultimap<Category, Rule> rules, DblSemiring semiring) {
         this.name = name;
@@ -76,12 +81,58 @@ public class Grammar {
         this.semiring = semiring;
         leftCorners = new LeftCorners(semiring);
         setLeftCorners();
-        leftStarCorners = new LeftCorners(semiring);
-        setLeftStarCorners();
+        leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
+        unitStarScores = getUnitStarCorners();
+    }
+
+    /**
+     * Uses a trick to compute left*Corners (R_L), the reflexive transitive closure of leftCorners:
+     * <p>
+     * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
+     */
+    private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
+        // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
+        NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
+        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
+        for (int row = 0; row < nonterminalz.length; row++) {
+            NonTerminal X = nonterminalz[row];
+            for (int col = 0; col < nonterminalz.length; col++) {
+                NonTerminal Y = nonterminalz[col];
+                final double prob = semiring.toProbability(P.get(X, Y));
+//                if(prob != 1.0 && prob != 0.0)
+//                    System.out.println(prob);
+                // I - P_L
+                R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
+            }
+        }
+        final Matrix R_L = R_L_inverse.inverse();
+
+        LeftCorners R__L = new LeftCorners(semiring);
+        /**
+         * Copy all matrix values into our {@link LeftCorners} object
+         */
+        IntStream.range(0, R_L.getRowDimension()).forEach(row ->
+                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
+                        R__L.set(nonterminalz[row], nonterminalz[col], semiring.fromProbability(R_L.get(row, col)))
+                )
+        );
+        return R__L;
     }
 
     public DblSemiring getSemiring() {
         return semiring;
+    }
+
+    private LeftCorners getUnitStarCorners() {
+        // Sum all probabilities for unit relations
+        LeftCorners P_U = new LeftCorners(semiring);
+        nonTerminals.stream()
+                .forEach(X -> getRules(X).stream()
+                        .filter(yRule -> yRule.getRight().length == 1 && yRule.getRight()[0] instanceof NonTerminal)
+                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
+
+        // R_U = (I - P_U)
+        return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);
     }
 
     /**
@@ -93,38 +144,6 @@ public class Grammar {
                 .forEach(X -> getRules(X).stream()
                         .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
                         .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
-    }
-
-    /**
-     * Uses a trick to compute left*Corners (R_L), the reflexive transitive closure of leftCorners:
-     * <p>
-     * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
-     */
-    private void setLeftStarCorners() {
-        // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
-        NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
-        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
-        for (int row = 0; row < nonterminalz.length; row++) {
-            NonTerminal X = nonterminalz[row];
-            for (int col = 0; col < nonterminalz.length; col++) {
-                NonTerminal Y = nonterminalz[col];
-                final double prob = semiring.toProbability(leftCorners.get(X, Y));
-//                if(prob != 1.0 && prob != 0.0)
-//                    System.out.println(prob);
-                // I - P_L
-                R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
-            }
-        }
-        final Matrix R_L = R_L_inverse.inverse();
-
-        /**
-         * Copy all matrix values into our {@link LeftCorners} object
-         */
-        IntStream.range(0, R_L.getRowDimension()).forEach(row ->
-                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        leftStarCorners.set(nonterminalz[row], nonterminalz[col], semiring.fromProbability(R_L.get(row, col)))
-                )
-        );
     }
 
     //TODO
@@ -236,6 +255,10 @@ public class Grammar {
 
     public LeftCorners getLeftStarCorners() {
         return leftStarCorners;
+    }
+
+    public double getUnitStarScore(Category LHS, NonTerminal RHS) {
+        return unitStarScores.get(LHS, RHS);
     }
 
     public static class Builder {

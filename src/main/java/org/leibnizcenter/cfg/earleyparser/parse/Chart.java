@@ -17,6 +17,7 @@ import org.leibnizcenter.cfg.token.Token;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -110,6 +111,7 @@ public class Chart {
                                 Y_to_v), fw, Y_to_vProbability, null));
                     });
         }
+
         newStates.forEach(ss -> {
             final State state = ss.getState();
             stateSets.add(state);
@@ -162,8 +164,12 @@ public class Chart {
     public void completeTruncated(int index) {
         final DblSemiring sr = grammar.getSemiring();
         final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
+        completeTruncated(index, sr, new HashSet<>(), completedStates.stream());
+    }
+
+    private void completeTruncated(int index, DblSemiring sr, Set<Category> doneSoFar, Stream<State> completedStates) {
         final List<State.StateWithScore> newStates = new ArrayList<>();
-        completedStates.stream()
+        completedStates
                 // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
                 .filter(state -> !state.getRule().isUnitProduction())
                 .forEach(completedState -> {
@@ -173,15 +179,16 @@ public class Chart {
                             stateSets.getStatesActiveOnNonTerminal().stream()
                                     .filter(state -> state.getPosition() <= index)
                                     .forEach(stateToAdvance -> {
+                                        doneSoFar.add(Y);
                                         final Category Z = stateToAdvance.getActiveCategory();
-                                        final double leftStarScore = grammar.getLeftStarScore(Z, Y);
-                                        if (leftStarScore == sr.zero()) return;
+                                        final double unitStarScore = grammar.getUnitStarScore(Z, Y);
+                                        if (unitStarScore == sr.zero()) return;
 
                                         double prevForward = stateSets.getForwardScore(stateToAdvance);
                                         double prevInner = stateSets.getInnerScore(stateToAdvance);
 
-                                        final double fw = sr.times(prevForward, completedInner, leftStarScore);
-                                        final double inner = sr.times(prevInner, completedInner, leftStarScore);
+                                        final double fw = sr.times(prevForward, completedInner, unitStarScore);
+                                        final double inner = sr.times(prevInner, completedInner, unitStarScore);
                                         State existingState = stateSets.get(
                                                 index,
                                                 stateToAdvance.getRuleStartPosition(),
@@ -189,8 +196,9 @@ public class Chart {
                                                 stateToAdvance.getRule()
                                         );
                                         if (existingState != null) {
-                                            stateSets.addForwardScore(existingState, fw);
-                                            stateSets.addInnerScore(existingState, inner);
+                                            System.out.println("??? " + existingState);
+//                                            stateSets.addForwardScore(existingState, fw);
+//                                            stateSets.addInnerScore(existingState, inner);
                                         } else newStates.add(new State.StateWithScore(stateSets.create(index,
                                                 stateToAdvance.getRuleStartPosition(),
                                                 stateToAdvance.advanceDot(),
@@ -205,6 +213,18 @@ public class Chart {
             stateSets.addForwardScore(state, ss.getForwardScore());
             stateSets.addInnerScore(state, ss.getInnerScore());
         });
+
+        // TODO only for truly new states or sth...
+        if (newStates.size() > 0) {
+            completeTruncated(
+                    index,
+                    sr,
+                    doneSoFar,
+                    newStates.stream()
+                            .map(State.StateWithScore::getState)
+                            .filter(s -> s.isCompleted() && !doneSoFar.contains(s.getRule().getLeft()))
+            );
+        }
     }
 
     /**
