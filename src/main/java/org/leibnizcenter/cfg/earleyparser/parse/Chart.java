@@ -164,12 +164,12 @@ public class Chart {
     public void completeTruncated(int index) {
         final DblSemiring sr = grammar.getSemiring();
         final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
-        completeTruncated(index, sr, new HashSet<>(), completedStates.stream().map(state ->
+        completeTruncated(index, sr, completedStates.stream().map(state ->
                 new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null)
         ));
     }
 
-    private void completeTruncated(int index, DblSemiring sr, Set<State> doneSoFar, Stream<State.StateWithScore> completedStates) {
+    private void completeTruncated(int index, DblSemiring sr, Stream<State.StateWithScore> completedStates) {
         final List<State.StateWithScore> newStates = new ArrayList<>();
         final List<State.StateWithScore> incrementScoresForStates = new ArrayList<>();
         completedStates
@@ -199,16 +199,6 @@ public class Chart {
                                                 stateToAdvance.advanceDot(),
                                                 stateToAdvance.getRule()
                                         );
-                                        if (index == 3 && completedState.getState().getRule().getLeft().equals(new NonTerminal("S"))) {
-                                            System.out.println("\n" +
-                                                    completedState + " [" + "] " + " [" + sr.toProbability(completedInner) + "]\n" +
-                                                    stateToAdvance + " [" + sr.toProbability(prevForward) + "] " + " [" + sr.toProbability(prevInner) + "]" +
-                                                    "\n =>\n" +
-                                                    stateSets.create(index,
-                                                            stateToAdvance.getRuleStartPosition(),
-                                                            stateToAdvance.advanceDot(),
-                                                            stateToAdvance.getRule()) + " [" + sr.toProbability(fw) + "] " + " [" + sr.toProbability(inner) + "]");
-                                        }
                                         if (existingState != null)
                                             incrementScoresForStates.add(new State.StateWithScore(existingState, fw, inner, null));
                                         else {
@@ -236,7 +226,6 @@ public class Chart {
             completeTruncated(
                     index,
                     sr,
-                    doneSoFar,
                     incrementScoresForStates.stream()
                             .filter(s ->
                                     s.getState().isCompleted())
