@@ -64,6 +64,7 @@ public class Grammar {
      * <p>
      * <p>
      * TODO: Ensure that the probabilities in a SCFG are proper and consistent as defined in Booth and Thompson (1973), and that the grammar contains no useless nonterminals (ones that can never appear in a derivation).
+     * TODO: check that no rules are doubled with different probabilities (in which case we either have undefined dehaviour or conflate the rules?)
      * These restrictions ensure that
      * all nonterminals define probability measures over strings; i.e., P(X ~ x) is a proper distribution over x for all
      * X. Formal definitions of these conditions are given in Appendix A of An Efficient Probabilistic .
@@ -125,11 +126,16 @@ public class Grammar {
 
     private LeftCorners getUnitStarCorners() {
         // Sum all probabilities for unit relations
-        LeftCorners P_U = new LeftCorners(semiring);
+        final LeftCorners P_U = new LeftCorners(semiring);
         nonTerminals.stream()
                 .forEach(X -> getRules(X).stream()
-                        .filter(yRule -> yRule.getRight().length == 1 && yRule.getRight()[0] instanceof NonTerminal)
-                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
+                        .filter(Rule::isUnitProduction)
+//                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
+//                        .distinct()
+                        .forEach(Yrule -> {
+                            System.out.println(X + " -> " + Yrule.getRight()[0] + ": " + Yrule.getProbability());
+                            P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability());
+                        }));
 
         // R_U = (I - P_U)
         return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);

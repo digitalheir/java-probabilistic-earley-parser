@@ -5,7 +5,6 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 
 import java.util.Arrays;
 
@@ -98,8 +97,8 @@ public class Rule {
         return new Rule(probability, LHS, RHS);
     }
 
-    public static Rule create(LogSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
-        return new Rule(semiring.toProbability(probability), LHS, RHS);
+    public static Rule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
+        return new Rule(semiring.fromProbability(probability), LHS, RHS);
     }
 
     /**
@@ -172,32 +171,29 @@ public class Rule {
         return right;
     }
 
-    /**
-     * Tests whether this rule is equal to another, with the same left and
-     * right sides.
-     *
-     * @return <code>true</code> iff the specified object is an instance of
-     * <code>Rule</code> and its left and right sides are equal to this rule's
-     * left and right sides.
-     */
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj instanceof Rule) {
-            Rule or = (Rule) obj;
-            return (left.equals(or.left) && Arrays.equals(right, or.right));
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        return false;
+        Rule rule = (Rule) o;
+
+        if (Double.compare(rule.probability, probability) != 0) return false;
+        if (!left.equals(rule.left)) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        return Arrays.equals(right, rule.right);
+
     }
 
-    /**
-     * Compues a hash code for this rule based on its left and right side
-     * category.
-     */
     @Override
     public int hashCode() {
-        return (31 * left.hashCode() * Arrays.hashCode(right));
+        int result;
+        long temp;
+        result = left.hashCode();
+        result = 31 * result + Arrays.hashCode(right);
+        temp = Double.doubleToLongBits(probability);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
     }
 
     /**

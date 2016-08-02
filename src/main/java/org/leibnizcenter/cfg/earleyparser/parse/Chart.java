@@ -167,19 +167,20 @@ public class Chart {
         completeTruncated(index, sr, new HashSet<>(), completedStates.stream());
     }
 
-    private void completeTruncated(int index, DblSemiring sr, Set<Category> doneSoFar, Stream<State> completedStates) {
+    private void completeTruncated(int index, DblSemiring sr, Set<State> doneSoFar, Stream<State> completedStates) {
         final List<State.StateWithScore> newStates = new ArrayList<>();
+        final List<State.StateWithScore> incrementScoresForStates = new ArrayList<>();
         completedStates
                 // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
-                .filter(state -> !state.getRule().isUnitProduction())
+                .filter(completedState ->
+                        !completedState.getRule().isUnitProduction())
                 .forEach(completedState -> {
                             double completedInner = stateSets.getInnerScore(completedState);
                             final NonTerminal Y = completedState.getRule().getLeft();
                             //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Zμ</code>, where Z =*> Y is non-zero
                             stateSets.getStatesActiveOnNonTerminal().stream()
-                                    .filter(state -> state.getPosition() <= index)
+                                    .filter(stateToAdvance -> stateToAdvance.getPosition() == completedState.getRuleStartPosition())
                                     .forEach(stateToAdvance -> {
-                                        doneSoFar.add(Y);
                                         final Category Z = stateToAdvance.getActiveCategory();
                                         final double unitStarScore = grammar.getUnitStarScore(Z, Y);
                                         if (unitStarScore == sr.zero()) return;
@@ -195,34 +196,47 @@ public class Chart {
                                                 stateToAdvance.advanceDot(),
                                                 stateToAdvance.getRule()
                                         );
-                                        if (existingState != null) {
-                                            System.out.println("??? " + existingState);
-//                                            stateSets.addForwardScore(existingState, fw);
-//                                            stateSets.addInnerScore(existingState, inner);
-                                        } else newStates.add(new State.StateWithScore(stateSets.create(index,
-                                                stateToAdvance.getRuleStartPosition(),
-                                                stateToAdvance.advanceDot(),
-                                                stateToAdvance.getRule()), fw, inner, null));
+                                        if (index == 3 && completedState.getRule().getLeft().equals(new NonTerminal("S"))) {
+                                            System.out.println("\n" +
+                                                    completedState + " [" + "] " + " [" + sr.toProbability(completedInner) + "]\n" +
+                                                    stateToAdvance + " [" + sr.toProbability(prevForward) + "] " + " [" + sr.toProbability(prevInner) + "]" +
+                                                    "\n =>\n" +
+                                                    stateSets.create(index,
+                                                            stateToAdvance.getRuleStartPosition(),
+                                                            stateToAdvance.advanceDot(),
+                                                            stateToAdvance.getRule()) + " [" + sr.toProbability(fw) + "] " + " [" + sr.toProbability(inner) + "]");
+                                        }
+                                        if (existingState != null)
+                                            incrementScoresForStates.add(new State.StateWithScore(existingState, fw, inner, null));
+                                        else {
+                                            final State.StateWithScore sws = new State.StateWithScore(stateSets.create(index,
+                                                    stateToAdvance.getRuleStartPosition(),
+                                                    stateToAdvance.advanceDot(),
+                                                    stateToAdvance.getRule()), fw, inner, null);
+                                            newStates.add(sws);
+                                            incrementScoresForStates.add(sws);
+                                        }
                                     });
 
                         }
                 );
-        newStates.forEach(ss -> {
+        newStates.forEach(ss -> stateSets.add(ss.getState()));
+        incrementScoresForStates.forEach(ss -> {
             final State state = ss.getState();
-            stateSets.add(state);
             stateSets.addForwardScore(state, ss.getForwardScore());
             stateSets.addInnerScore(state, ss.getInnerScore());
         });
 
-        // TODO only for truly new states or sth...
-        if (newStates.size() > 0) {
+        // TODO this counts double... maybe only compute the actual scores after resolving?
+        if (incrementScoresForStates.size() > 0) {
             completeTruncated(
                     index,
                     sr,
                     doneSoFar,
-                    newStates.stream()
+                    incrementScoresForStates.stream()
                             .map(State.StateWithScore::getState)
-                            .filter(s -> s.isCompleted() && !doneSoFar.contains(s.getRule().getLeft()))
+                            .filter(s ->
+                                    s.isCompleted())
             );
         }
     }
@@ -236,58 +250,59 @@ public class Chart {
      * @param index The index to make completions at.
      */
     public void completeNonTruncatedNonLooping(int index) {
-        final DblSemiring sr = grammar.getSemiring();
-        final List<State.StateWithScore> newStates = new ArrayList<>(50);
-
-        stateSets.getCompletedStates(index).stream()
-                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
-                .forEach(completedState -> {
-                    double completedInner = stateSets.getInnerScore(completedState);
-                    final NonTerminal Y = completedState.getRule().getLeft();
-                    //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-                    stateSets.getStatesActiveOnNonTerminal(Y).stream()
-                            .filter(stateToAdvance ->
-                                    completedState.getRuleStartPosition() == stateToAdvance.getPosition()
-                                            && stateToAdvance.getPosition() <= index)
-                            .forEach(stateToAdvance -> {
-                                double prevForward = stateSets.getForwardScore(stateToAdvance);
-                                double prevInner = stateSets.getInnerScore(stateToAdvance);
-
-                                        State newState = stateSets.getOrCreate(
-                                                index,
-                                                stateToAdvance.getRuleStartPosition(),
-                                                stateToAdvance.advanceDot(),
-                                                stateToAdvance.getRule()
-                                        );
-                                final State.StateWithScore viterbiState = new State.StateWithScore(newState,
-                                        sr.times(prevForward, completedInner),
-                                        sr.times(prevInner, completedInner),
-                                        completedState
-                                );
-                                newStates.add(viterbiState);
-                                //System.out.println(viterbiState);
-                                    });
-                        }
-                );
-
-        Map<State, State.StateWithScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, stateAndScore) -> {
-            final State s = stateAndScore.getState();
-            if (!map.containsKey(s) ||
-                    sr.toProbability(map.get(s).getInnerScore()) < sr.toProbability(stateAndScore.getInnerScore())) {
-                map.put(s, stateAndScore);
-            }
-            return map;
-        }, (maxMap, map2) -> {
-            map2.entrySet().stream().forEach((entry) -> {
-                final State s = entry.getKey();
-                final State.StateWithScore score = entry.getValue();
-                if ((!maxMap.containsKey(s)) ||
-                        sr.toProbability(maxMap.get(s).getInnerScore()) < sr.toProbability(score.getInnerScore()))
-                    maxMap.put(s, score);
-            });
-            return maxMap;
-        });
-        maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getKey(), score.getValue().getInnerScore()));
+//        final DblSemiring sr = grammar.getSemiring();
+//        final List<State.StateWithScore> newStates = new ArrayList<>(50);
+//
+//        stateSets.getCompletedStates(index).stream()
+//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
+//                .forEach(completedState -> {
+//                            double completedInner = stateSets.getInnerScore(completedState);
+//                            final NonTerminal Y = completedState.getRule().getLeft();
+//                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+//                            stateSets.getStatesActiveOnNonTerminal(Y).stream()
+//                                    .filter(stateToAdvance ->
+//                                            completedState.getRuleStartPosition() == stateToAdvance.getPosition()
+//                                                    && stateToAdvance.getPosition() <= index)
+//                                    .forEach(stateToAdvance -> {
+//                                        double prevForward = stateSets.getForwardScore(stateToAdvance);
+//                                        double prevInner = stateSets.getInnerScore(stateToAdvance);
+//
+//                                        State newState = stateSets.get(
+//                                                index,
+//                                                stateToAdvance.getRuleStartPosition(),
+//                                                stateToAdvance.advanceDot(),
+//                                                stateToAdvance.getRule()
+//                                        );
+//                                        if (newState == null) throw new Error("? "+stateToAdvance);
+//                                        final State.StateWithScore viterbiState = new State.StateWithScore(newState,
+//                                                sr.times(prevForward, completedInner),
+//                                                sr.times(prevInner, completedInner),
+//                                                completedState
+//                                        );
+//                                        newStates.add(viterbiState);
+//                                        //System.out.println(viterbiState);
+//                                    });
+//                        }
+//                );
+//
+//        Map<State, State.StateWithScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, stateAndScore) -> {
+//            final State s = stateAndScore.getState();
+//            if (!map.containsKey(s) ||
+//                    sr.toProbability(map.get(s).getInnerScore()) < sr.toProbability(stateAndScore.getInnerScore())) {
+//                map.put(s, stateAndScore);
+//            }
+//            return map;
+//        }, (maxMap, map2) -> {
+//            map2.entrySet().stream().forEach((entry) -> {
+//                final State s = entry.getKey();
+//                final State.StateWithScore score = entry.getValue();
+//                if ((!maxMap.containsKey(s)) ||
+//                        sr.toProbability(maxMap.get(s).getInnerScore()) < sr.toProbability(score.getInnerScore()))
+//                    maxMap.put(s, score);
+//            });
+//            return maxMap;
+//        });
+//        maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getKey(), score.getValue().getInnerScore()));
 
 //        //Complete recursively // Not necessary because we already ran completeTruncated
 //        if (newStates.size() > 0) completeTruncated(index);
@@ -694,7 +709,7 @@ public class Chart {
                 statesActiveOn.put(state.getActiveCategory(), state);
                 if (state.getActiveCategory() instanceof NonTerminal) add(statesActiveOnNonTerminals, index, state);
                 else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
-                else throw new Error("Neithor Terminal nor NonTerminal...?");
+                else throw new Error("Neither Terminal nor NonTerminal...?");
             }
         }
 

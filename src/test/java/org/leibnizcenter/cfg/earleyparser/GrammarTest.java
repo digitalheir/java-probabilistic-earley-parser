@@ -6,19 +6,20 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
-
 /**
  */
 public class GrammarTest {
-    private static final Rule ruleB = Rule.create(0.5, B, C);
-    private static final Rule ruleC = Rule.create(0.5, C, D);
-    private static final Rule ruleD = Rule.create(0.5, D, E);
-    private static final Rule ruleE = Rule.create(0.5, E, e);
+    private static final ProbabilitySemiring sr = new ProbabilitySemiring();
+    private static final Rule ruleB = Rule.create(sr, 0.5, B, C);
+    private static final Rule ruleC = Rule.create(sr, 0.5, C, D);
+    private static final Rule ruleD = Rule.create(sr, 0.5, D, E);
+    private static final Rule ruleE = Rule.create(sr, 0.5, E, e);
 
     private static final Grammar g = new Grammar.Builder("test")
             .addRule(ruleB)
@@ -34,6 +35,18 @@ public class GrammarTest {
         Assert.assertTrue(g.containsRules(rule1.left));
         Assert.assertTrue(g.getRules(rule2.left).contains(rule2));
         Assert.assertFalse(g.getRules(rule3.left).contains(rule2));
+
+        Assert.assertEquals(ruleB, ruleB);
+        Assert.assertEquals(ruleC, ruleC);
+        Assert.assertEquals(ruleD, ruleD);
+        Assert.assertEquals(ruleE, ruleE);
+        Assert.assertEquals(rule1, rule1);
+        Assert.assertEquals(rule2, rule2);
+        Assert.assertEquals(rule3, rule3);
+
+        Assert.assertNotEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 1.0, A, a));
+        Assert.assertNotEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 0.5, X, a));
+        Assert.assertEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 1.0, X, a));
     }
 
     @Test
