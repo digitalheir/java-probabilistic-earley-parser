@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
 import java.text.DecimalFormat;
 
@@ -203,6 +204,47 @@ public class State {
         result = 31 * result + ruleDotPosition;
         result = 31 * result + positionInInput;
         return result;
+    }
+
+    public static abstract class ScoreRef {
+        final DblSemiring semiring;
+
+        public ScoreRef(DblSemiring sr) {
+            this.semiring = sr;
+        }
+
+        public ScoreRef times(ScoreRef... a) {
+            return new Times(semiring, a);
+        }
+
+        public abstract double resolve();
+
+        private static class Times extends ScoreRef {
+            private final ScoreRef[] vals;
+
+            public Times(DblSemiring semiring, ScoreRef[] a) {
+                super(semiring);
+                this.vals = (a);
+            }
+
+            public double resolve() {
+                double running = semiring.one();
+                for (ScoreRef val : vals) running = semiring.times(running, val.resolve());
+                return running;
+            }
+        }
+    }
+
+    public static class StateWithScoreRef {
+        private final ScoreRef forwardScore;
+        private final ScoreRef innerScore;
+        private final State state;
+
+        public StateWithScoreRef(State state, ScoreRef forwardScore, ScoreRef innerScore) {
+            this.forwardScore = forwardScore;
+            this.state = state;
+            this.innerScore = innerScore;
+        }
     }
 
     public static class StateWithScore {

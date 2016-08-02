@@ -164,22 +164,24 @@ public class Chart {
     public void completeTruncated(int index) {
         final DblSemiring sr = grammar.getSemiring();
         final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
-        completeTruncated(index, sr, new HashSet<>(), completedStates.stream());
+        completeTruncated(index, sr, new HashSet<>(), completedStates.stream().map(state ->
+                new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null)
+        ));
     }
 
-    private void completeTruncated(int index, DblSemiring sr, Set<State> doneSoFar, Stream<State> completedStates) {
+    private void completeTruncated(int index, DblSemiring sr, Set<State> doneSoFar, Stream<State.StateWithScore> completedStates) {
         final List<State.StateWithScore> newStates = new ArrayList<>();
         final List<State.StateWithScore> incrementScoresForStates = new ArrayList<>();
         completedStates
                 // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
                 .filter(completedState ->
-                        !completedState.getRule().isUnitProduction())
+                        !completedState.getState().getRule().isUnitProduction())
                 .forEach(completedState -> {
-                            double completedInner = stateSets.getInnerScore(completedState);
-                            final NonTerminal Y = completedState.getRule().getLeft();
+                            double completedInner = completedState.getInnerScore();
+                            final NonTerminal Y = completedState.getState().getRule().getLeft();
                             //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Zμ</code>, where Z =*> Y is non-zero
                             stateSets.getStatesActiveOnNonTerminal().stream()
-                                    .filter(stateToAdvance -> stateToAdvance.getPosition() == completedState.getRuleStartPosition())
+                                    .filter(stateToAdvance -> stateToAdvance.getPosition() == completedState.getState().getRuleStartPosition())
                                     .forEach(stateToAdvance -> {
                                         final Category Z = stateToAdvance.getActiveCategory();
                                         final double unitStarScore = grammar.getUnitStarScore(Z, Y);
@@ -188,6 +190,7 @@ public class Chart {
                                         double prevForward = stateSets.getForwardScore(stateToAdvance);
                                         double prevInner = stateSets.getInnerScore(stateToAdvance);
 
+//                                        State.ScoreRef scoreRefs = new State.ScoreRef(sr);
                                         final double fw = sr.times(prevForward, completedInner, unitStarScore);
                                         final double inner = sr.times(prevInner, completedInner, unitStarScore);
                                         State existingState = stateSets.get(
@@ -196,7 +199,7 @@ public class Chart {
                                                 stateToAdvance.advanceDot(),
                                                 stateToAdvance.getRule()
                                         );
-                                        if (index == 3 && completedState.getRule().getLeft().equals(new NonTerminal("S"))) {
+                                        if (index == 3 && completedState.getState().getRule().getLeft().equals(new NonTerminal("S"))) {
                                             System.out.println("\n" +
                                                     completedState + " [" + "] " + " [" + sr.toProbability(completedInner) + "]\n" +
                                                     stateToAdvance + " [" + sr.toProbability(prevForward) + "] " + " [" + sr.toProbability(prevInner) + "]" +
@@ -228,15 +231,15 @@ public class Chart {
         });
 
         // TODO this counts double... maybe only compute the actual scores after resolving?
+        // if the state that is
         if (incrementScoresForStates.size() > 0) {
             completeTruncated(
                     index,
                     sr,
                     doneSoFar,
                     incrementScoresForStates.stream()
-                            .map(State.StateWithScore::getState)
                             .filter(s ->
-                                    s.isCompleted())
+                                    s.getState().isCompleted())
             );
         }
     }

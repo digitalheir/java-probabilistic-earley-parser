@@ -142,8 +142,8 @@ public class ParserTest {
 
         final State s33S1 = new State(Rule.create(sr.one(), Category.START, S), 0, 3, 1);
         Assert.assertTrue(chart.getStates(3).contains(s33S1));
-//        Assert.assertEquals(sr.toProbability(chart.getForwardScore(s33S1)), 2 * (Math.pow(p,3)*Math.pow(q,2)), 0.01);
-//        Assert.assertEquals(sr.toProbability(chart.getInnerScore(s33S1)), 2 * (Math.pow(p,3)*Math.pow(q,2)), 0.01);
+        Assert.assertEquals(sr.toProbability(chart.getForwardScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.01);
+        Assert.assertEquals(sr.toProbability(chart.getInnerScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.01);
 
 
         for (int j = 0; j <= chart.length; j++) {
