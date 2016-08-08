@@ -17,7 +17,6 @@ import java.util.Set;
  */
 public class Parser {
 
-
     public static <E> boolean recognize(NonTerminal S,
                                         Grammar grammar,
                                         Iterable<Token<E>> tokens) {
@@ -25,6 +24,34 @@ public class Parser {
         return parse.getCompletedStates(parse.length, S).size() > 0;
     }
 
+      public static <E> Path getViterbiPath(NonTerminal S,
+                                  Grammar grammar,
+                                  Iterable<Token<E>> tokens) {
+        Chart chart = parse(S, grammar, tokens, null);
+        Set<State> endStates = chart.getCompletedStates(i, Category.START);
+        
+        Path best = null;
+        for(State endState:endStates){
+          Path candidate = getViterbiPath(endState, chart);
+          if(best == null || best.score < candidate.score)
+            best = candidate;
+        }
+        return best;
+    }
+            
+             /**
+              * Performs the backward part of the forward-backward algorithm
+              */
+    public static Path getViterbiPath(State endState, Chart chart, Path pathSoFar){
+      //TODO index these relations      
+      while(endState!=null){
+          State bestState = chart.getStatesThatLeadTo(endState).reduce();
+          endState = ((Category.START == bestState.getRule().getLeft()) ? null : bestState);
+          path.push(bestState);
+        }
+      return pathSoFar;
+    }
+  
     public static <E> Chart parse(NonTerminal S,
                                   Grammar grammar,
                                   Iterable<Token<E>> tokens) {
@@ -52,8 +79,8 @@ public class Parser {
             chart.completeNonTruncatedNonLooping(i + 1);
             i++;
         }
-        Set<State> completed = chart.getCompletedStates(i, Category.START);
-        if (completed.size() > 1) throw new Error("This is a bug");
+        //Set<State> completed = chart.getCompletedStates(i, Category.START);
+        //if (completed.size() > 1) throw new Error("This is a bug");
         chart.length = i;
         return chart;
     }

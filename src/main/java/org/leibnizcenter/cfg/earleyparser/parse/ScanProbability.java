@@ -1,7 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser.parse;
 
 /**
- * Allows us to intervene on scan probabilities.
+ * Functional interface to intervene on scan probabilities.
  * <p>
  * Created by Maarten on 31-7-2016.
  */

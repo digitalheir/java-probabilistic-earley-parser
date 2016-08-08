@@ -12,7 +12,13 @@ For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Proba
            Probabilities*](http://www.aclweb.org/anthology/J95-2002).
   
 ## Usage 
-TODO
+Most internal parsing stuff is available through he public API, in case you need a slightly different parser than usual. 
+Most applications will want to interface with the static functions in `Parser`:
+
+```java
+Parser.getViterbiPath(tokens, )
+```
+
 
 ## Some notes on implementation
 The probability of a parse is defined as the product of the probalities all the applied rules. Usually,
