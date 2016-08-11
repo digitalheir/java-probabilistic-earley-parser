@@ -6,15 +6,16 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
 //TODO
 /**
  * A parse tree that represents the derivation of a string based on the
  * rules in a {@link Grammar}. Parse trees recursively contain
  * {@link #getChildren() other parse trees}, so they can be iterated through to
- * find the entire derivation of a category. A parse tree can also be
- * traversed upward by calling {@link #getParent()} for each successive parse
- * tree until it returns <code>null</code>.
+ * find the entire derivation of a category.
  * <p>
  * Parse trees are essentially partial views of a {@link Chart} from a
  * given {@link State} or {@link Category}. They represent the completed
@@ -23,21 +24,17 @@ import java.util.Arrays;
  * (only category that are actually specified in the corresponding grammar
  * are represented).
  *
- * @see Parse#getParseTreesFor(Category, int, int)
  */
 public class ParseTree {
-    Category node;
-    ParseTree parent;
-    ParseTree[] children = null;
+    final Category node;
+    final Deque<ParseTree> children;
 
     /**
      * Creates a new parse tree with the specified category and parent parse
      * tree.
-     *
-     * @see #ParseTree(Category, ParseTree, ParseTree[])
      */
-    public ParseTree(Category node, ParseTree parent) {
-        this(node, parent, null);
+    public ParseTree(Category node) {
+        this(node,  new ArrayDeque<>());
     }
 
     /**
@@ -46,28 +43,12 @@ public class ParseTree {
      *
      * @param node     The category of the {@link #getNode() node} of this parse
      *                 tree.
-     * @param parent   This parse tree's parent tree, or <code>null</code> if
-     *                 this parse tree is the root node.
      * @param children The list of children of this parse tree, in their linear
      *                 order.
      */
-    public ParseTree(Category node, ParseTree parent, ParseTree[] children) {
+    public ParseTree(Category node, Deque<ParseTree> children) {
         this.node = node;
-        this.parent = parent;
         this.children = children;
-    }
-
-    /**
-     * Creates a parse tree based on the specified edge that is the root of the
-     * resulting parse tree.
-     *
-     * @param edge The edge that is to be at the root of the parse tree.
-     * @return The result of calling {@link #newParseTree(State, ParseTree)} with
-     * <code>null</code> as the argument for the parent parse tree.
-     * @see #newParseTree(State, ParseTree)
-     */
-    public static ParseTree newParseTree(State edge) {
-        return ParseTree.newParseTree(edge, null);
     }
 
     /**
@@ -126,18 +107,6 @@ public class ParseTree {
     }
 
     /**
-     * Gets the parent parse tree, if any.
-     *
-     * @return A parse tree containing (for example) <code>S -> NP VP</code>
-     * if this parse tree's {@link #getNode() node} is <code>NP</code> and is
-     * one of the children of <code>S</code>. If this parse tree is the root
-     * node in a series of parse trees, returns <code>null</code>.
-     */
-    public ParseTree getParent() {
-        return parent;
-    }
-
-    /**
      * Gets the child parse trees of this parse tree, retaining their linear
      * ordering.
      *
@@ -146,45 +115,10 @@ public class ParseTree {
      * <code>Det, N</code> in that order, or <code>null</code> if this parse
      * tree has no children.
      */
-    public ParseTree[] getChildren() {
+    public Deque<ParseTree> getChildren() {
         return children;
     }
 
-    /**
-     * Tests whether this parse tree is equal to another by comparing its
-     * node, parent, and child parse trees.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ParseTree) {
-            ParseTree op = (ParseTree) obj;
-
-            return (node.equals(op.node)
-                    && ((parent == null && op.parent == null)
-                    || parent.node.equals(op.parent.node))
-                    && ((children == null && op.children == null)
-                    || Arrays.equals(children, op.children)));
-        }
-
-        return false;
-    }
-
-    /**
-     * Computes a hash code for this parse tree based on its underlying edge
-     * and child parse trees.
-     */
-    @Override
-    public int hashCode() {
-        int hash = (31 * node.hashCode());
-        if (parent != null) {
-            hash *= (17 * parent.node.hashCode());
-        }
-        if (children != null) {
-            hash *= Arrays.hashCode(children);
-        }
-
-        return hash;
-    }
 
     /**
      * Gets a string representation of this parse tree.
@@ -211,4 +145,7 @@ public class ParseTree {
         return sb.toString();
     }
 
+    public void addRightMost(ParseTree tree) {
+        children.addLast(tree);
+    }
 }

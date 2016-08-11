@@ -6,10 +6,13 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
+import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Tokens;
+
+import java.util.Set;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.S;
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.a;
@@ -150,9 +153,19 @@ public class ParserTest {
             chart.getStates(j).forEach(s -> {
                 double probFw = sr.toProbability(chart.getForwardScore(s));
                 double probInn = sr.toProbability(chart.getInnerScore(s));
-                double v = sr.toProbability(chart.getViterbiScore(s));
+                double v = 0.0;
+                if (chart.getViterbiScore(s) == null) {
+                    System.out.println();
+                } else
+                    v = sr.toProbability(chart.getViterbiScore(s).getScore());
+
                 System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
             });
         }
+        Set<State> howMany = chart.getCompletedStates(chart.length, Category.START);
+        Assert.assertEquals(howMany.size(), 1);
+        //if (howMany.size() > 1) throw new Error("Found more than one result sets. This is a nasty bug.");
+        ParseTree viterbi = Parser.getViterbiPath(howMany.iterator().next(), chart);
+        System.out.println(viterbi);
     }
 }

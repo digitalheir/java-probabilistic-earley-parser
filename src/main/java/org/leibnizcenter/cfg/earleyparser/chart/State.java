@@ -1,14 +1,16 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
+import com.sun.istack.internal.NotNull;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.semiring.Semiring;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
 import java.text.DecimalFormat;
 
 /**
  * A chart state, describing a pending derivation.
- * <p>
+ * <p/>
  * A state is of the form <code>i: X<sub>k</sub> → λ·μ</code>
  * where X is a nonterminal of the grammar, λ and μ are strings of nonterminals and/or
  * terminals, and i and k are indices into the input string. States are derived from productions
@@ -30,12 +32,12 @@ import java.text.DecimalFormat;
  * expanded the right-hand side (RHS) <code>λμ</code> up to the position indicated by
  * the dot. The dot thus refers to the current position <code>i</code>.</li>
  * </ul>
- * <p>
+ * <p/>
  * A state with the dot to the right of the entire RHS is called a completeTruncated state, since
  * it indicates that the left-hand side (LHS) nonterminal has been fully expanded.
- * <p>
+ * <p/>
  * States are mutable
- * <p>
+ * <p/>
  * Created by maarten on 24-6-16.
  */
 public class State {
@@ -285,4 +287,34 @@ public class State {
         }
     }
 
+    public static class ViterbiScore implements Comparable<ViterbiScore> {
+        private final State origin;
+        private final double innerScore;
+        private final DblSemiring sr;
+        private final State resultingState;
+
+        public ViterbiScore(double innerScore, State origin, State resultingState, DblSemiring semiring) {
+            this.innerScore = innerScore;
+            this.origin = origin;
+            this.resultingState = resultingState;
+            this.sr = semiring;
+        }
+
+        public double getScore() {
+            return innerScore;
+        }
+
+        public State getOrigin() {
+            return origin;
+        }
+
+        @Override
+        public int compareTo(@NotNull ViterbiScore o) {
+            return Double.compare(sr.toProbability(innerScore), sr.toProbability(o.getScore()));
+        }
+
+        public State getResultingState() {
+            return resultingState;
+        }
+    }
 }

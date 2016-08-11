@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 /**
  * A chart produced by an  Earley parser.
- * <p>
+ * <p/>
  * Charts contain sets of {@link State states} mapped to the string indices where
  * they originate. Since the state sets are {@link Set sets}, an state can only
  * be added at a given index once (as sets do not permit duplicate members).
@@ -66,7 +66,7 @@ public class Chart {
 
     /**
      * Makes predictions in the specified chart at the given index.
-     * <p>
+     * <p/>
      * For each state at position i, look at the the nonterminal at the dot position,
      * add a state that expands that nonterminal at position i, with the dot position at 0
      *
@@ -86,7 +86,7 @@ public class Chart {
             // For all productions Y → v such that R(Z =*L> Y) is nonzero
             grammar.getLeftStarCorners().getNonZeroScores(Z).stream()
                     .flatMap(Y -> grammar.getRules(Y).stream())
-                    // we predict state <code>i: Y<sub>i</sub> → ·v</code>
+                            // we predict state <code>i: Y<sub>i</sub> → ·v</code>
                     .forEach(Y_to_v -> {
                         Category Y = Y_to_v.getLeft();
                         State s = stateSets.get(index, index, 0, Y_to_v); // We might want to increment the probability of an existing state
@@ -103,12 +103,16 @@ public class Chart {
                         if (s != null) {
                             stateSets.addForwardScore(s, fw);
                             stateSets.setInnerScore(s, Y_to_vProbability);
-                            stateSets.setViterbiScore(s, Y_to_vProbability);
-                        } else newStates.add(new State.StateWithScore(stateSets.create(
-                                index,
-                                index,
-                                0,
-                                Y_to_v), fw, Y_to_vProbability, null));
+                            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, s, grammar.getSemiring()));
+                        } else {
+                            s = stateSets.create(
+                                    index,
+                                    index,
+                                    0,
+                                    Y_to_v);
+                            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, s, grammar.getSemiring()));
+                            newStates.add(new State.StateWithScore(s, fw, Y_to_vProbability, null));
+                        }
                     });
         }
 
@@ -139,7 +143,7 @@ public class Chart {
                 // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
                 .filter(state -> ((Terminal) state.getActiveCategory()).hasCategory(token))
 
-                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
+                        // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
                 .forEach(prevState -> {
                             State newState = stateSets.getOrCreate(index + 1, prevState.getRuleStartPosition(), prevState.advanceDot(), prevState.getRule());
 
@@ -151,7 +155,7 @@ public class Chart {
                             double inner = stateSets.getInnerScore(prevState);
                             if (scanProbability != null) inner = sr.times(inner, scanProbability.getProbability(index));
                             stateSets.setInnerScore(newState, inner);
-                    stateSets.setViterbiScore(newState, inner);
+                            stateSets.setViterbiScore(new State.ViterbiScore(inner, prevState, newState, grammar.getSemiring()));
                         }
                 );
     }
@@ -165,7 +169,7 @@ public class Chart {
         final DblSemiring sr = grammar.getSemiring();
         final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
         completeTruncated(index, sr, completedStates.stream().map(state ->
-                new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null)
+                        new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null)
         ));
     }
 
@@ -199,13 +203,16 @@ public class Chart {
                                                 stateToAdvance.advanceDot(),
                                                 stateToAdvance.getRule()
                                         );
-                                        if (existingState != null)
+                                        if (existingState != null) {
                                             incrementScoresForStates.add(new State.StateWithScore(existingState, fw, inner, null));
-                                        else {
-                                            final State.StateWithScore sws = new State.StateWithScore(stateSets.create(index,
+                                            stateSets.setViterbiScore(new State.ViterbiScore(inner, completedState.getState(), existingState, grammar.getSemiring()));
+                                        } else {
+                                            State newState = stateSets.create(index,
                                                     stateToAdvance.getRuleStartPosition(),
                                                     stateToAdvance.advanceDot(),
-                                                    stateToAdvance.getRule()), fw, inner, null);
+                                                    stateToAdvance.getRule());
+                                            final State.StateWithScore sws = new State.StateWithScore(newState, fw, inner, null);
+                                            stateSets.setViterbiScore(new State.ViterbiScore(inner, completedState.getState(), newState, grammar.getSemiring()));
                                             newStates.add(sws);
                                             incrementScoresForStates.add(sws);
                                         }
@@ -241,63 +248,71 @@ public class Chart {
      *
      * @param index The index to make completions at.
      */
-    public void completeNonTruncatedNonLooping(int index) {
-       final DblSemiring sr = grammar.getSemiring();
-       final List<State.StateWithScore> newStates = new ArrayList<>(50);
-//
-       stateSets.getCompletedStates(index).stream()
-               // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
-               .forEach(completedState -> {
-                           double completedInner = stateSets.getInnerScore(completedState);
-                           final NonTerminal Y = completedState.getRule().getLeft();
-                           //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code> 
-                           stateSets.getStatesActiveOnNonTerminal(Y).stream()
-                                   .filter(stateToAdvance ->
-                                           completedState.getRuleStartPosition() == stateToAdvance.getPosition()
-                                                   && stateToAdvance.getPosition() <= index)
-                                   .forEach(stateToAdvance -> {
-                                       double prevForward = stateSets.getForwardScore(stateToAdvance);
-                                       double prevInner = stateSets.getInnerScore(stateToAdvance);
+    public void completeForViterbi(int index, Set<State> completed) {
+        final DblSemiring sr = grammar.getSemiring();
+        final List<State.ViterbiScore> newStates = new ArrayList<>(50);
 
-                                       State newState = stateSets.get(
-                                               index,
-                                               stateToAdvance.getRuleStartPosition(),
-                                               stateToAdvance.advanceDot(),
-                                               stateToAdvance.getRule()
-                                       );
-                                       if (newState == null) throw new Error("? "+stateToAdvance);
-                                       final State.StateWithScore viterbiState = new State.StateWithScore(newState,
-                                               sr.times(prevForward, completedInner),
-                                               sr.times(prevInner, completedInner),
-                                               completedState
-                                       );
-                                       newStates.add(viterbiState);
-                                       //System.out.println(viterbiState);
-                                   });
-                       }
-               );
+        stateSets.getCompletedStates(index).stream()
+                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
+                .forEach(completedState -> {
+                            if (stateSets.getViterbiScore(completedState) == null)
+                                System.out.println("?");
+                            double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
+                            final NonTerminal Y = completedState.getRule().getLeft();
+                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+                            stateSets.getStatesActiveOnNonTerminal(Y).stream()
+                                    .filter(stateToAdvance ->
+                                            completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
+                                                    stateToAdvance.getPosition() <= index &&
+                                                    (!completed.contains(stateToAdvance)))
+                                    .forEach(stateToAdvance -> {
+                                        //double prevForward = stateSets.getForwardScore(stateToAdvance);
+                                        double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
 
-       Map<State, State.StateWithScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, stateAndScore) -> {
-           final State s = stateAndScore.getState();
-           if (!map.containsKey(s) ||
-                   sr.toProbability(map.get(s).getInnerScore()) < sr.toProbability(stateAndScore.getInnerScore())) {
-               map.put(s, stateAndScore);
-           }
-           return map;
-       }, (maxMap, map2) -> {
-           map2.entrySet().stream().forEach((entry) -> {
-               final State s = entry.getKey();
-               final State.StateWithScore score = entry.getValue();
-               if ((!maxMap.containsKey(s)) ||
-                       sr.toProbability(maxMap.get(s).getInnerScore()) < sr.toProbability(score.getInnerScore()))
-                   maxMap.put(s, score);
-           });
-           return maxMap;
-       });
-       maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getKey(), score.getValue().getInnerScore()));
+                                        State newState = stateSets.get(
+                                                index,
+                                                stateToAdvance.getRuleStartPosition(),
+                                                stateToAdvance.advanceDot(),
+                                                stateToAdvance.getRule()
+                                        );
+                                        if (newState == null) throw new Error("? " + stateToAdvance);
+                                        final State.ViterbiScore viterbiState = new State.ViterbiScore(
+                                                sr.times(prevViterbi, completedViterbi),
+                                                completedState,
+                                                newState,
+                                                grammar.getSemiring()
+                                        );
+                                        // TODO only completions need predecessors...
+                                        //completed.add(stateToAdvance);
+                                        newStates.add(viterbiState);
+                                        //System.out.println(viterbiState);
+                                    });
+                        }
+                );
 
-       //Complete recursively // Not necessary because we already ran completeTruncated
-       //if (newStates.size() > 0) completeTruncated(index);
+        Map<State, State.ViterbiScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, candidate) -> {
+            final State s = candidate.getResultingState();
+            if (!map.containsKey(s) ||
+                    map.get(s).compareTo(candidate) < 0) {
+                map.put(s, candidate);
+            }
+            return map;
+        }, (maxMap, map2) -> {
+            map2.entrySet().stream().forEach((entry) -> {
+                final State s = entry.getKey();
+                final State.ViterbiScore score = entry.getValue();
+                if ((!maxMap.containsKey(s)) ||
+                        sr.toProbability(maxMap.get(s).getScore()) < sr.toProbability(score.getScore()))
+                    maxMap.put(s, score);
+            });
+            return maxMap;
+        });
+
+        // Add new states to viterbi scores
+        maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getValue()));
+
+        //Complete recursively // todo
+        //if (newStates.size() > 0) completeForViterbi(index, completed);
     }
 
 //    /**
@@ -508,9 +523,11 @@ public class Chart {
         stateSets.getOrCreate(index, state.getRuleStartPosition(), state.getRuleDotPosition(), state.getRule());
         stateSets.setInnerScore(state, inner);
         stateSets.setForwardScore(state, forward);
+        if (stateSets.getViterbiScore(state) == null)
+            stateSets.setViterbiScore(new State.ViterbiScore(grammar.getSemiring().one(), null, state, grammar.getSemiring()));
     }
 
-    public Set<State>  getStates(int index) {
+    public Set<State> getStates(int index) {
         return stateSets.getStates(index);
     }
 
@@ -528,11 +545,15 @@ public class Chart {
                 .collect(Collectors.toSet());
     }
 
-    public double getViterbiScore(State s) {
+    public State.ViterbiScore getViterbiScore(State s) {
         return stateSets.getViterbiScore(s);
     }
 
-    static class StateSets {
+    public void completeForViterbi(int i) {
+        completeForViterbi(i, new HashSet<>());
+    }
+
+    public static class StateSets {
         private static final TIntObjectMap<TIntObjectMap<State>> EMPTY = new TIntObjectHashMap<>();
 
         private final Map<Rule,
@@ -568,7 +589,7 @@ public class Chart {
          * a certain non-terminal X
          */
         private final TObjectDoubleHashMap<State> innerScores;
-        private final TObjectDoubleHashMap<State> viterbiScores;
+        private final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>(500);
 
         private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
         private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
@@ -581,7 +602,6 @@ public class Chart {
             this.semiring = sr;
             this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
             this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
-            this.viterbiScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
         }
 
         //TODO remove
@@ -725,8 +745,8 @@ public class Chart {
         }
 
 
-        public void setViterbiScore(State state, double v) {
-            viterbiScores.put(state, v);
+        public void setViterbiScore(State.ViterbiScore v) {
+            viterbiScores.put(v.getResultingState(), v);
         }
 
         /**
@@ -751,7 +771,7 @@ public class Chart {
             return statesActiveOn.values();
         }
 
-        public double getViterbiScore(State s) {
+        public State.ViterbiScore getViterbiScore(State s) {
             return viterbiScores.get(s);
         }
 

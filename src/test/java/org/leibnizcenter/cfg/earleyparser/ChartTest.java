@@ -55,7 +55,7 @@ public class ChartTest {
         Assert.assertEquals(chart.getInnerScore(new State(Rule.create(q, S, B), 0)), q, 0.01);
 
 //        for (State s : chart.getStates(0)) {
-//            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getInnerScore(s) + "]");
+//            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getScore(s) + "]");
 //        }
 //
 //        for (int i = 0; i < 3; i++) {
@@ -96,7 +96,7 @@ public class ChartTest {
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {
 //                final double probFw = semiring.toProbability(chart.getForwardScore(s));
-//                final double probInn = semiring.toProbability(chart.getInnerScore(s));
+//                final double probInn = semiring.toProbability(chart.getScore(s));
 //                System.out.println((s) + "[" + probFw + "]" + "[" + probInn + "]");
 //            }
 //        }
