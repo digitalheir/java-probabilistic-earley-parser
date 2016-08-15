@@ -11,6 +11,17 @@ For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Proba
            Parsing Algorithm that Computes Prefix
            Probabilities*](http://www.aclweb.org/anthology/J95-2002).
   
+## Motivation
+I made this library because I could not find an existing Java 
+implementation of the Probabilistic Earley Parser. 
+
+I have made a stochastic CYK parser before, but I wanted something
+more top down that makes it easier to intervene in the parsing process,
+for instance when an unexpected token is encountered.
+ 
+Furthermore, I needed a efficient parser that does not limit token types 
+to strings.
+   
 ## Usage 
 Most internal parsing stuff is available through he public API, in case you need a slightly different parser than usual. 
 Most applications will want to interface with the static functions in `Parser`:
@@ -50,7 +61,8 @@ For a faster parser that work on non-probabilistic grammars, look into [Marpa](h
 ### Limitations
 * I have not provisioned for ε-rules
 * Rule probability estimation may be performed using the inside-outside algorithm, but is not currently implemented
-* Higher level concepts such as wildcards, * and + are not currently implemented
+* Higher level concepts such as wildcards, * and + are not implemented
+* Viterbi parsing only returns one single parse. In the case of an ambiguous sentence, the returned parse is not guaranteed the left-most parse.
 * Behavior for strangely defined grammars is not defined, such as when the same rule is defined multiple times with
   a different probability
 
