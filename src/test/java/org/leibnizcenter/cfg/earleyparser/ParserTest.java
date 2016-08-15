@@ -10,11 +10,19 @@ import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
+import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.S;
+import static org.leibnizcenter.cfg.earleyparser.PepFixture.A;
+import static org.leibnizcenter.cfg.earleyparser.PepFixture.B;
+import static org.leibnizcenter.cfg.earleyparser.PepFixture.C;
+import static org.leibnizcenter.cfg.earleyparser.PepFixture.D;
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.a;
 
 /**
@@ -33,7 +41,9 @@ public class ParserTest {
                 .addRule(q, S, S, S)
                 .build();
 
-        Chart chart = Parser.parse(S, grammar, Tokens.tokenize("a", "a", "a"), null);
+        List<Token<String>> tokens = IntStream.range(0, 3).mapToObj(i -> new Token<>("a")).collect(Collectors.toList());
+
+        Chart chart = Parser.parse(S, grammar, tokens, null);
 
         // State set 0
         final State s00Sa = new State(Rule.create(sr, p, S, a), 0, 0, 0);
@@ -149,7 +159,7 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.01);
 
 
-        for (int j = 0; j <= chart.length; j++) {
+        for (int j = 0; j <= tokens.size(); j++) {
             chart.getStates(j).forEach(s -> {
                 double probFw = sr.toProbability(chart.getForwardScore(s));
                 double probInn = sr.toProbability(chart.getInnerScore(s));
@@ -159,13 +169,55 @@ public class ParserTest {
                 } else
                     v = sr.toProbability(chart.getViterbiScore(s).getScore());
 
-                System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
+                //System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
             });
         }
-        Set<State> howMany = chart.getCompletedStates(chart.length, Category.START);
+        Set<State> howMany = chart.getCompletedStates(tokens.size(), Category.START);
         Assert.assertEquals(howMany.size(), 1);
         //if (howMany.size() > 1) throw new Error("Found more than one result sets. This is a nasty bug.");
-        ParseTree viterbi = Parser.getViterbiPath(howMany.iterator().next(), chart);
+        State finalState = howMany.iterator().next();
+        ParseTree viterbi = Parser.getViterbiParse(finalState, chart);
         System.out.println(viterbi);
+        System.out.println(chart.getViterbiScore(finalState));
+    }
+
+    @Test
+    public void viterbi() throws Exception {
+        final LogSemiring sr = new LogSemiring();
+        Grammar grammar = new Grammar.Builder()
+                .setSemiring(sr)
+                .addRule(1.0, S, A)
+                .addRule(0.5, S, S, S)
+                .addRule(0.5, A, a)
+                .build();
+
+        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
+        ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
+
+        // TODO assert some stuff
+        System.out.println(parse);
+    }
+
+    @Test
+    public void viterbi2() throws Exception {
+        final LogSemiring sr = new LogSemiring();
+        Grammar grammar = new Grammar.Builder()
+                .setSemiring(sr)
+                .addRule(1.0, S, A)
+                .addRule(0.1, S, S, S)
+                .addRule(1.0, A, B)
+                .addRule(0.5, A, D)
+                .addRule(0.5, B, C)
+                .addRule(1.0, B, a)
+                .addRule(0.5, C, D)
+                .addRule(0.5, C, a)
+                .addRule(0.5, D, a)
+                .build();
+
+        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
+        ParseTree parse = Parser.getViterbiParse(S, grammar, tokens);
+
+        // TODO assert some stuff
+        System.out.println(parse);
     }
 }

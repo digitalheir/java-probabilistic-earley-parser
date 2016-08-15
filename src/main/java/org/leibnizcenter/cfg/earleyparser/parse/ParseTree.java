@@ -134,11 +134,7 @@ public class ParseTree {
         sb.append(node.toString());
 
         // recursively append children
-        if (children != null) {
-            for (ParseTree child : children) {
-                sb.append(child.toString());
-            }
-        }
+        if (children != null)  for (ParseTree child : children) sb.append(child.toString());
 
         sb.append(']');
 

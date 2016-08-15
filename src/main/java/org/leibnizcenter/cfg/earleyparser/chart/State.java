@@ -83,6 +83,10 @@ public class State {
         return !isCompleted();
     }
 
+    /**
+     *
+     * @return Active category for this state. May be null.
+     */
     public Category getActiveCategory() {
         return rule.getActiveCategory(ruleDotPosition);
     }
@@ -309,12 +313,47 @@ public class State {
         }
 
         @Override
-        public int compareTo(@NotNull ViterbiScore o) {
-            return Double.compare(sr.toProbability(innerScore), sr.toProbability(o.getScore()));
+        public int compareTo(@NotNull ViterbiScore other) {
+            return Double.compare(sr.toProbability(innerScore), sr.toProbability(other.getScore()));
         }
 
         public State getResultingState() {
             return resultingState;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ViterbiScore that = (ViterbiScore) o;
+
+            if (Double.compare(that.innerScore, innerScore) != 0) return false;
+            if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
+            if (sr != null ? !sr.equals(that.sr) : that.sr != null) return false;
+            return !(resultingState != null ? !resultingState.equals(that.resultingState) : that.resultingState != null);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result;
+            long temp;
+            result = origin != null ? origin.hashCode() : 0;
+            temp = Double.doubleToLongBits(innerScore);
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            result = 31 * result + (sr != null ? sr.hashCode() : 0);
+            result = 31 * result + (resultingState != null ? resultingState.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "ViterbiScore{" +
+                    "origin=" + origin +
+                    ", score=" + sr.toProbability(innerScore) +
+                    ", resultingState=" + resultingState +
+                    '}';
         }
     }
 }

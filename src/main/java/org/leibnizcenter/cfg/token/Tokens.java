@@ -58,7 +58,8 @@ public final class Tokens {
         return Category.isTerminal(category) && ((Terminal) category).hasCategory(token);
     }
 
-    public static <T> Iterable<Token<T>> tokenize(T... objs) {
+    @SafeVarargs
+    public static <T> List<Token<T>> tokenize(T... objs) {
         return Arrays.stream(objs).map(Token::new).collect(Collectors.toList());
     }
 }

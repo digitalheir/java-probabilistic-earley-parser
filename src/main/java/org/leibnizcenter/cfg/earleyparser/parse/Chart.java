@@ -1,8 +1,7 @@
 
 package org.leibnizcenter.cfg.earleyparser.parse;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -43,7 +42,6 @@ public class Chart {
 
     public final StateSets stateSets;
     private final Grammar grammar;
-    public int length;
 
     /**
      * Creates a new chart, initializing its internal data structure.
@@ -203,32 +201,40 @@ public class Chart {
                                                 stateToAdvance.advanceDot(),
                                                 stateToAdvance.getRule()
                                         );
-                                        if (existingState != null) {
+//                                        System.out.println("-----");
+//                                        System.out.println(completedState.getState());
+//                                        System.out.println(stateToAdvance);
+//                                        System.out.println("->");
+//                                        System.out.println(stateSets.create(index,
+//                                                stateToAdvance.getRuleStartPosition(),
+//                                                stateToAdvance.advanceDot(),
+//                                                stateToAdvance.getRule()));
+//                                        System.out.println("-----");
+                                        if (existingState != null)
                                             incrementScoresForStates.add(new State.StateWithScore(existingState, fw, inner, null));
-                                            stateSets.setViterbiScore(new State.ViterbiScore(inner, completedState.getState(), existingState, grammar.getSemiring()));
-                                        } else {
+                                        else {
+                                            // TODO error?
+                                            //System.out.println("State did not exist");
                                             State newState = stateSets.create(index,
                                                     stateToAdvance.getRuleStartPosition(),
                                                     stateToAdvance.advanceDot(),
                                                     stateToAdvance.getRule());
                                             final State.StateWithScore sws = new State.StateWithScore(newState, fw, inner, null);
-                                            stateSets.setViterbiScore(new State.ViterbiScore(inner, completedState.getState(), newState, grammar.getSemiring()));
                                             newStates.add(sws);
                                             incrementScoresForStates.add(sws);
                                         }
                                     });
-
                         }
                 );
-        newStates.forEach(ss -> stateSets.add(ss.getState()));
+        newStates.forEach(ss -> {
+            stateSets.add(ss.getState());
+        });
         incrementScoresForStates.forEach(ss -> {
             final State state = ss.getState();
             stateSets.addForwardScore(state, ss.getForwardScore());
             stateSets.addInnerScore(state, ss.getInnerScore());
         });
 
-        // TODO this counts double... maybe only compute the actual scores after resolving?
-        // if the state that is
         if (incrementScoresForStates.size() > 0) {
             completeTruncated(
                     index,
@@ -244,75 +250,232 @@ public class Chart {
      * For finding the Viterbi path, we can't conflate production recursions (ie can't use the left star corner),
      * exactly because we need to find the unique Viterbi path.
      * Luckily, we can avoid looping over unit productions because it only ever lowers probability
-     * (assuming p = [0,1] and Occam's razor).
+     * (assuming p = [0,1] and Occam's razor). This method does not guarantee a left most parse.
      *
-     * @param index The index to make completions at.
      */
-    public void completeForViterbi(int index, Set<State> completed) {
-        final DblSemiring sr = grammar.getSemiring();
-        final List<State.ViterbiScore> newStates = new ArrayList<>(50);
+    public void viterbi(State completedState, Set<State> originPathTo, DblSemiring sr) {
+        // = stateSets.getCompletedStates(index);
+        List<State> newStates = new ArrayList<>();
+        List<State> newResultingStates = new ArrayList<>();
 
-        stateSets.getCompletedStates(index).stream()
-                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
-                .forEach(completedState -> {
-                            if (stateSets.getViterbiScore(completedState) == null)
-                                System.out.println("?");
-                            double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
-                            final NonTerminal Y = completedState.getRule().getLeft();
-                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-                            stateSets.getStatesActiveOnNonTerminal(Y).stream()
-                                    .filter(stateToAdvance ->
-                                            completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
-                                                    stateToAdvance.getPosition() <= index &&
-                                                    (!completed.contains(stateToAdvance)))
-                                    .forEach(stateToAdvance -> {
-                                        //double prevForward = stateSets.getForwardScore(stateToAdvance);
-                                        double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
+        if (stateSets.getViterbiScore(completedState) == null) System.out.println("?");
+        double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
+        System.out.println("" + completedState + " (" + sr.toProbability(completedViterbi) + ")");
+        final NonTerminal Y = completedState.getRule().getLeft();
+        //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+        stateSets.getStatesActiveOnNonTerminal(Y).stream()
+                .filter(stateToAdvance ->
+                        completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
+                                stateToAdvance.getPosition() <= completedState.getPosition())
+                .forEach(stateToAdvance -> {
+                    double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
 
-                                        State newState = stateSets.get(
-                                                index,
-                                                stateToAdvance.getRuleStartPosition(),
-                                                stateToAdvance.advanceDot(),
-                                                stateToAdvance.getRule()
-                                        );
-                                        if (newState == null) throw new Error("? " + stateToAdvance);
-                                        final State.ViterbiScore viterbiState = new State.ViterbiScore(
-                                                sr.times(prevViterbi, completedViterbi),
-                                                completedState,
-                                                newState,
-                                                grammar.getSemiring()
-                                        );
-                                        // TODO only completions need predecessors...
-                                        //completed.add(stateToAdvance);
-                                        newStates.add(viterbiState);
-                                        //System.out.println(viterbiState);
-                                    });
-                        }
-                );
+                    State resultingState = stateSets.get(
+                            completedState.getPosition(),
+                            stateToAdvance.getRuleStartPosition(),
+                            stateToAdvance.advanceDot(),
+                            stateToAdvance.getRule()
+                    );
+                    if (resultingState == null) {
+                        resultingState = stateSets.create(
+                                completedState.getPosition(),
+                                stateToAdvance.getRuleStartPosition(),
+                                stateToAdvance.advanceDot(),
+                                stateToAdvance.getRule()
+                        );
+                        newStates.add(resultingState);
+                    }
+                    if (originPathTo.contains(resultingState)) {
+                        System.out.println("Already went past " + resultingState);
+                        return;
+                    }
+                    State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
+                    State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prevViterbi), completedState, resultingState, sr);
+                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getScore()) + ")");
+                    if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
+                        stateSets.setViterbiScore(newViterbiScore);
+                        newResultingStates.add(resultingState);
+//                    } else {
+//                        System.out.println("(dropped, this seems to be a cycle)");
+                    }
+                });
 
-        Map<State, State.ViterbiScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, candidate) -> {
-            final State s = candidate.getResultingState();
-            if (!map.containsKey(s) ||
-                    map.get(s).compareTo(candidate) < 0) {
-                map.put(s, candidate);
-            }
-            return map;
-        }, (maxMap, map2) -> {
-            map2.entrySet().stream().forEach((entry) -> {
-                final State s = entry.getKey();
-                final State.ViterbiScore score = entry.getValue();
-                if ((!maxMap.containsKey(s)) ||
-                        sr.toProbability(maxMap.get(s).getScore()) < sr.toProbability(score.getScore()))
-                    maxMap.put(s, score);
-            });
-            return maxMap;
+        newStates.forEach(stateSets::add);
+        newResultingStates.stream().filter(State::isCompleted).forEach(resultingState -> {
+            Set<State> path = new HashSet<>(originPathTo);
+            path.add(resultingState);
+            viterbi(resultingState, path, sr);
         });
+    }
 
-        // Add new states to viterbi scores
-        maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getValue()));
 
-        //Complete recursively // todo
-        //if (newStates.size() > 0) completeForViterbi(index, completed);
+    public void computeViterbi(int index, Set<Category> completed) {
+        final DblSemiring sr = grammar.getSemiring();
+
+//        final List<State.ViterbiScore> newStates = new ArrayList<>(50);
+//
+//        System.out.println(index + " ---------------------");
+//        // todo   cycle thru completed states (we already have all)
+//        // todo     foreach:
+//
+//        // Make dictionary for all completions (including those that do not have a Viterbi score yet)
+//        ArrayListMultimap<Category, State> multimap = ArrayListMultimap.create();
+//        stateSets.getCompletedStates(index).stream().forEach(state -> multimap.put(state.getRule().getLeft(), state));
+//
+//        stateSets.getStates(index).forEach(state -> {
+//            State.ViterbiScore viterbiScore = stateSets.getViterbiScore(state);
+//            //System.out.println(viterbiScore);
+//            if (viterbiScore == null) {
+//                // need to compute viterbi score
+//                if (state.getRuleDotPosition() == 0)
+//                    throw new Error("Did not expect predicted states to not have a Viterbi score. This is a bug.");
+//                Category advancedPast = state.getRule().getRight()[state.getRuleDotPosition() - 1];
+//                if (!(advancedPast instanceof NonTerminal))
+//                    throw new Error("Expected state with no Viterbi score to come after completion of a non-terminal. This is a bug.");
+//
+//                State.ViterbiScore newViterbiScore = getMaxViterbiScore(grammar.getSemiring(), state, multimap, new HashSet<>());
+//                stateSets.setViterbiScore(newViterbiScore);
+//            }
+//        });
+
+
+//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>, that have a Viterbi score set
+//                .filter(state -> stateSets.getViterbiScore(state) != null)
+//                .forEach(completedState -> {
+//                    System.out.println("Completed: " + completedState);
+//                    if (stateSets.getViterbiScore(completedState) == null) {
+//                        System.out.println("^ Need to set viterbi score");
+//                    }
+//                    final NonTerminal Y = completedState.getRule().getLeft();
+////                    completed.add(Y);
+//
+//                    //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+//                    stateSets.getStatesActiveOnNonTerminal(Y).stream()
+//                            .filter(stateToAdvance ->
+//                                    completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
+//                                            stateToAdvance.getPosition() <= index &&
+//                                            (!completed.contains(stateToAdvance)))
+//                            .forEach(stateToAdvance -> {// todo this one may not have a viterbi score
+//                                //double prevForward = stateSets.getForwardScore(stateToAdvance);
+//                                double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
+//
+//                                State newState = stateSets.create(
+//                                        index,
+//                                        stateToAdvance.getRuleStartPosition(),
+//                                        stateToAdvance.advanceDot(),
+//                                        stateToAdvance.getRule()
+//                                );
+//                                if (stateSets.get(index, stateToAdvance.getRuleStartPosition(), stateToAdvance.advanceDot(), stateToAdvance.getRule()) != null)
+//                                    throw new Error("This is a bug");
+//                                System.out.println("Created: " + newState);
+//                            });
+//                });
+
+
+//        stateSets.getCompletedStates(index).stream()
+//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>j</sub> → v·</code>
+//                .forEach(completedState -> {
+//                            System.out.println("Completed: " + completedState);
+//                            if (stateSets.getViterbiScore(completedState) == null) System.out.println("?");
+//                            double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
+//                            final NonTerminal Y = completedState.getRule().getLeft();
+//                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+//                            stateSets.getStatesActiveOnNonTerminal(Y).stream()
+//                                    .filter(stateToAdvance ->
+//                                            completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
+//                                                    stateToAdvance.getPosition() <= index &&
+//                                                    (!completed.contains(stateToAdvance)))
+//                                    .forEach(stateToAdvance -> {
+//                                        //double prevForward = stateSets.getForwardScore(stateToAdvance);
+//                                        double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
+//
+//                                        State newState = stateSets.getOrCreate(
+//                                                index,
+//                                                stateToAdvance.getRuleStartPosition(),
+//                                                stateToAdvance.advanceDot(),
+//                                                stateToAdvance.getRule()
+//                                        );
+////                                        if (newState == null) newState = stateSets.create(index,
+////                                                stateToAdvance.getRuleStartPosition(),
+////                                                stateToAdvance.advanceDot(),
+////                                                stateToAdvance.getRule());
+//
+//                                        final State.ViterbiScore viterbiState = new State.ViterbiScore(
+//                                                sr.times(prevViterbi, completedViterbi),
+//                                                completedState,
+//                                                newState,
+//                                                grammar.getSemiring()
+//                                        );
+//                                        // TODO fix this: completes first A-B-C-D-a, then A-B, then A-B-a
+//
+//                                        // TODO only completions need predecessors...
+//                                        //completed.add(stateToAdvance);
+//                                        newStates.add(viterbiState);
+//                                        //System.out.println(viterbiState);
+//                                    });
+//                        }
+//                );
+//
+//        Map<State, State.ViterbiScore> maxStates = newStates.stream().reduce(new HashMap<>(), (map, candidate) -> {
+//            final State s = candidate.getResultingState();
+//            if (!map.containsKey(s) ||
+//                    map.get(s).compareTo(candidate) < 0) {
+//                System.out.println(" Replacing " + map.get(s) + " with " + candidate);
+//                map.put(s, candidate);
+//            }
+//            return map;
+//        }, (maxMap, map2) -> {
+//            map2.entrySet().stream().forEach((entry) -> {
+//                final State s = entry.getKey();
+//                final State.ViterbiScore score = entry.getValue();
+//                if ((!maxMap.containsKey(s)) || maxMap.get(s).compareTo(score) < 0)
+//                    maxMap.put(s, score);
+//            });
+//            return maxMap;
+//        });
+//
+//        // Add new states to viterbi scores // Not necessary because we already did completion
+//        maxStates.entrySet().forEach(score -> stateSets.setViterbiScore(score.getValue()));
+//
+//        //Complete recursively
+////        if (newStates.size() > 0) computeViterbi(index, completed);
+    }
+
+    private State.ViterbiScore getMaxViterbiScore(DblSemiring sr, State state, ArrayListMultimap<Category, State> originCandidates, Set<State> alreadyChecking) {
+
+        List<State> originCandidatez = originCandidates.get(state.getRule().getRight()[state.getRuleDotPosition() - 1]);
+        State.ViterbiScore maxOrigin = originCandidatez.stream().filter(s -> !alreadyChecking.contains(s))
+                .map(originCandidate -> {
+                    State.ViterbiScore viterbiScore = stateSets.getViterbiScore(originCandidate);
+                    if (viterbiScore != null) {
+//                        System.out.println(viterbiScore);
+                        return viterbiScore;
+                    } else {
+//                        System.out.println(originCandidate + " || Need to compute max Viterbi for ");
+                        alreadyChecking.add(originCandidate);
+                        State.ViterbiScore newViterbiScore = getMaxViterbiScore(sr, originCandidate, originCandidates, alreadyChecking);
+//                        System.out.println(originCandidate + " || " + newViterbiScore);
+                        if (newViterbiScore == null) return null;
+                        stateSets.setViterbiScore(newViterbiScore);
+                        return newViterbiScore;
+                    }
+                }).reduce(null, (max1, max2) -> {
+//                    if (max1 == null && max2 == null) throw new Error("This is a bug.");
+                    if (max2 == null) return max1;
+                    if (max1 == null || max1.compareTo(max2) < 0) return max2;
+                    else return max1;
+                });
+        if (maxOrigin == null) return null;
+
+        State originState = maxOrigin.getResultingState();
+        State prevState = stateSets.get(originState.getRuleStartPosition(), state.getRuleStartPosition(), state.getRuleDotPosition() - 1, state.getRule());
+        double prevViterbi = stateSets.getViterbiScore(prevState).getScore();
+        return new State.ViterbiScore(
+                sr.times(prevViterbi, maxOrigin.getScore()),
+                originState,
+                state,
+                grammar.getSemiring()
+        );
     }
 
 //    /**
@@ -549,8 +712,8 @@ public class Chart {
         return stateSets.getViterbiScore(s);
     }
 
-    public void completeForViterbi(int i) {
-        completeForViterbi(i, new HashSet<>());
+    public void computeViterbi(int i) {
+        computeViterbi(i, new HashSet<>());
     }
 
     public static class StateSets {
