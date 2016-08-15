@@ -132,10 +132,7 @@ public class Grammar {
                         .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
-                        .forEach(Yrule -> {
-                            System.out.println(X + " -> " + Yrule.getRight()[0] + ": " + Yrule.getProbability());
-                            P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability());
-                        }));
+                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
 
         // R_U = (I - P_U)
         return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);

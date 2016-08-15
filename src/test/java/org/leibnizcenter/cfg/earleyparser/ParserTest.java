@@ -165,7 +165,7 @@ public class ParserTest {
                 double probInn = sr.toProbability(chart.getInnerScore(s));
                 double v = 0.0;
                 if (chart.getViterbiScore(s) == null) {
-                    System.out.println();
+                    //System.out.println();
                 } else
                     v = sr.toProbability(chart.getViterbiScore(s).getScore());
 
@@ -194,8 +194,9 @@ public class ParserTest {
         List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
         ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
 
-        // TODO assert some stuff
         System.out.println(parse);
+        Assert.assertEquals(parse.getProbability(), Math.pow(0.5,5), 0.0001);
+        // TODO assert some stuff
     }
 
     @Test
@@ -215,9 +216,10 @@ public class ParserTest {
                 .build();
 
         List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
-        ParseTree parse = Parser.getViterbiParse(S, grammar, tokens);
+        ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
 
-        // TODO assert some stuff
         System.out.println(parse);
+        Assert.assertEquals(parse.getProbability(), 0.01, 0.0001);
+        // TODO assert some stuff
     }
 }

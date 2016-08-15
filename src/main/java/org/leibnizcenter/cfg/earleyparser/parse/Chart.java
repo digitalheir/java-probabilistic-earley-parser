@@ -258,9 +258,10 @@ public class Chart {
         List<State> newStates = new ArrayList<>();
         List<State> newResultingStates = new ArrayList<>();
 
-        if (stateSets.getViterbiScore(completedState) == null) System.out.println("?");
+        if (stateSets.getViterbiScore(completedState) == null) throw new Error("Expected Viterbi score to be set on completed state. This is an error.");
+
         double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
-        System.out.println("" + completedState + " (" + sr.toProbability(completedViterbi) + ")");
+//        System.out.println("" + completedState + " (" + sr.toProbability(completedViterbi) + ")");
         final NonTerminal Y = completedState.getRule().getLeft();
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
         stateSets.getStatesActiveOnNonTerminal(Y).stream()
@@ -291,7 +292,7 @@ public class Chart {
                     }
                     State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
                     State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prevViterbi), completedState, resultingState, sr);
-                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getScore()) + ")");
+//                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getScore()) + ")");
                     if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
                         stateSets.setViterbiScore(newViterbiScore);
                         newResultingStates.add(resultingState);
