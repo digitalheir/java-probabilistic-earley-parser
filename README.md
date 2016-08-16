@@ -1,6 +1,6 @@
 # Probabilistic Earley parser
-[![GitHub version](https://badge.fury.io/gh/digitalheir%2Fjava-rechtspraak-library.svg)](http://badge.fury.io/gh/digitalheir%2Fjava-rechtspraak-library)
-[![Build Status](https://travis-ci.org/digitalheir/java-rechtspraak-library.svg?branch=master)](https://travis-ci.org/digitalheir/java-rechtspraak-library)
+[![GitHub version](https://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser.svg)](http://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser)
+[![Build Status](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser.svg?branch=master)](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser)
 
 This is an implementation of a probabilistic Earley parsing algorithm
 in Java, which can parse any Probabilistic Context Free Grammar (PCFG) (also
