@@ -3,6 +3,7 @@ package org.leibnizcenter.cfg.earleyparser.parse;
 
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.earleyparser.chart.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 
 import java.util.LinkedList;
@@ -22,39 +23,39 @@ import java.util.List;
  * (only category that are actually specified in the corresponding grammar
  * are represented).
  */
-public class ParseTree {
-    final Category node;
+public abstract class ParseTree {
+    final Category category;
     final LinkedList<ParseTree> children;
 
     /**
      * Creates a new parse tree with the specified category and parent parse
      * tree.
      */
-    public ParseTree(Category node) {
-        this(node, new LinkedList<>());
+    public ParseTree(Category category) {
+        this(category, new LinkedList<>());
     }
 
     /**
      * Creates a new parse tree with the specified category, parent, and
      * child trees.
      *
-     * @param node     The category of the {@link #getNode() node} of this parse
+     * @param category The category of the {@link #getCategory() category} of this parse
      *                 tree.
      * @param children The list of children of this parse tree, in their linear
      *                 order.
      */
-    public ParseTree(Category node, LinkedList<ParseTree> children) {
-        this.node = node;
+    public ParseTree(Category category, LinkedList<ParseTree> children) {
+        this.category = category;
         this.children = children;
     }
 
     /**
-     * Gets the node category of this parse tree.
+     * Gets the category category of this parse tree.
      *
      * @return <code>NP</code> for a subtree <code>NP -> Det N</code>.
      */
-    public Category getNode() {
-        return node;
+    public Category getCategory() {
+        return category;
     }
 
     /**
@@ -62,7 +63,7 @@ public class ParseTree {
      * ordering.
      *
      * @return For a subtree <code>NP -> Det N</code>, returns an array
-     * that contains parse trees whose {@link #getNode() node} is
+     * that contains parse trees whose {@link #getCategory() node} is
      * <code>Det, N</code> in that order, or <code>null</code> if this parse
      * tree has no children.
      */
@@ -82,7 +83,7 @@ public class ParseTree {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
-        sb.append(node.toString());
+        sb.append(category.toString());
 
         // recursively append children
         if (children != null) for (ParseTree child : children) sb.append(child.toString());
@@ -101,12 +102,12 @@ public class ParseTree {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ParseTree parseTree = (ParseTree) o;
-        return node.equals(parseTree.node) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
+        return category.equals(parseTree.category) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
     }
 
     @Override
     public int hashCode() {
-        int result = node.hashCode();
+        int result = category.hashCode();
         result = 31 * result + (children != null ? children.hashCode() : 0);
         return result;
     }
@@ -116,9 +117,9 @@ public class ParseTree {
 //        if (!hasChildren()) throw new IssueRequest("This is a bug.");
 //        ArrayList<TokenParseTree> newChildren = new ArrayList<>(children.size());
 //        for (ParseTree child : children)
-//            if (!child.hasChildren()) newChildren.add(new TokenParseTree<>(child.node, tokens.pop()));
+//            if (!child.hasChildren()) newChildren.add(new TokenParseTree<>(child.category, tokens.pop()));
 //            else newChildren.add(child.mapTokensToLeafnodes(tokens));
-//        return new TokenParseTree(this.node, newChildren);
+//        return new TokenParseTree(this.category, newChildren);
 //    }
 
     private boolean hasChildren() {
@@ -129,8 +130,22 @@ public class ParseTree {
         public final org.leibnizcenter.cfg.token.Token<E> token;
 
         public Token(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
-            super(category);
+            super(category, null);
             this.token = scannedToken;
+        }
+
+        public Token(ScannedTokenState<E> scannedState) {
+            this(scannedState.scannedToken, scannedState.scannedCategory);
+        }
+    }
+
+    public static class NonToken extends ParseTree {
+        public NonToken(Category node) {
+            super(node);
+        }
+
+        public NonToken(Category node, LinkedList<ParseTree> children) {
+            super(node, children);
         }
     }
 

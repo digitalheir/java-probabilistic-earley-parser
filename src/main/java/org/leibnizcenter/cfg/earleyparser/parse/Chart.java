@@ -672,7 +672,7 @@ public class Chart {
                 statesActiveOn.put(state.getActiveCategory(), state);
                 if (state.getActiveCategory() instanceof NonTerminal) add(statesActiveOnNonTerminals, index, state);
                 else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
-                else throw new Error("Neither Terminal nor NonTerminal...?");
+                else throw new Error("Neither Terminal nor NonToken...?");
             }
         }
 

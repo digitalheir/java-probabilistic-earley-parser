@@ -93,13 +93,13 @@ public class ParseTreeTest {
 //        ParseTree sSubTree = sSubTrees.iterator().next();
 //        ParseTree[] sChildren = sSubTree.getChildren();
 //        //Iterator<ParseTree> sci = sChildren.iterator();
-//        Assert.assertEquals(NP, sChildren[0].getNode());
+//        Assert.assertEquals(NP, sChildren[0].getCategory());
 //        ParseTree sVPSubTree = sChildren[1];
-//        Assert.assertEquals(VP, sVPSubTree.getNode());
+//        Assert.assertEquals(VP, sVPSubTree.getCategory());
 //        ParseTree viSubTree = sVPSubTree.getChildren()[0];
-//        Assert.assertEquals(VI, viSubTree.getNode());
+//        Assert.assertEquals(VI, viSubTree.getCategory());
 //        ParseTree duckSubTree = viSubTree.getChildren()[0];
-//        Assert.assertEquals(duck, duckSubTree.getNode());
+//        Assert.assertEquals(duck, duckSubTree.getCategory());
 //
 //        // back up
 //        Assert.assertEquals(viSubTree, duckSubTree.getParent());
@@ -116,18 +116,18 @@ public class ParseTreeTest {
     public final void testNewParseTree() {
         LinkedList<ParseTree> children1 = new LinkedList<>();
         LinkedList<ParseTree> children2 = new LinkedList<>();
-        final ParseTree tree1 = new ParseTree(S, children1);
-        final ParseTree tree2 = new ParseTree(S, children2);
+        final ParseTree tree1 = new ParseTree.NonToken(S, children1);
+        final ParseTree tree2 = new ParseTree.NonToken(S, children2);
 
         Assert.assertEquals(tree1, tree2);
-        children1.add(new ParseTree(VS));
-        children1.add(new ParseTree(VT));
+        children1.add(new ParseTree.NonToken(VS));
+        children1.add(new ParseTree.NonToken(VT));
         Assert.assertNotEquals(tree1, tree2);
-        children2.add(new ParseTree(VS));
-        children2.add(new ParseTree(VT));
+        children2.add(new ParseTree.NonToken(VS));
+        children2.add(new ParseTree.NonToken(VT));
         Assert.assertEquals(tree1, tree2);
 
-        Assert.assertEquals(tree1.getNode(), S);
+        Assert.assertEquals(tree1.getCategory(), S);
         Assert.assertEquals(tree1.getChildren(), children2);
     }
 }

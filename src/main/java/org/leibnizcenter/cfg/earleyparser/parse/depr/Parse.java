@@ -177,7 +177,7 @@
 //
 //    /**
 //     * Gets the parse trees derived during this parse with the specified
-//     * category as their {@link ParseTree#getNode() parent}'s left side. This
+//     * category as their {@link ParseTree#getCategory() parent}'s left side. This
 //     * parse's chart must contain a completed edge at the specified index that
 //     * starts at the specified origin with the correct category as its left
 //     * side.
@@ -195,7 +195,7 @@
 //     * </p>
 //     *
 //     * @param category The category of the parse tree's
-//     *                 {@link ParseTree#getNode() parent}. This is the left side of the
+//     *                 {@link ParseTree#getCategory() parent}. This is the left side of the
 //     *                 edge's dotted rule.
 //     * @param origin   The origin position of the edge to find parse trees for.
 //     * @param index    The string index position of the edge to find parse trees

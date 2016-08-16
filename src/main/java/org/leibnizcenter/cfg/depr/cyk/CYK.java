@@ -27,8 +27,8 @@
 //     *
 //     * @return Parse with the highest score, null if none found
 //     */
-//    public static ScoreChart.ParseTreeContainer getBestParseTree(List<Terminal> words, Grammar grammar, NonTerminal goal) {
-//        MutableMatrix<Map<NonTerminal, ScoreChart.ParseTreeContainer>> scoreMap = getParseTrees(words, grammar);
+//    public static ScoreChart.ParseTreeContainer getBestParseTree(List<Terminal> words, Grammar grammar, NonToken goal) {
+//        MutableMatrix<Map<NonToken, ScoreChart.ParseTreeContainer>> scoreMap = getParseTrees(words, grammar);
 //
 //        return scoreMap
 //                .get(0, words.size() - 1)
@@ -36,11 +36,11 @@
 //    }
 //
 //    @SuppressWarnings("WeakerAccess")
-//    public static MutableMatrix<Map<NonTerminal, ScoreChart.ParseTreeContainer>> getParseTrees(List<Terminal> words, Grammar grammar) {
+//    public static MutableMatrix<Map<NonToken, ScoreChart.ParseTreeContainer>> getParseTrees(List<Terminal> words, Grammar grammar) {
 //        if (!grammar.isInChomskyNormalFormWithUnaries())
 //            throw new InvalidParameterException("Given grammar should be in Chomsky normal form (unaries are allowed)");
 //
-//        MutableMatrix<Map<NonTerminal, ScoreChart.ParseTreeContainer>> mutable = new MutableMatrix<>(words.size(), words.size());
+//        MutableMatrix<Map<NonToken, ScoreChart.ParseTreeContainer>> mutable = new MutableMatrix<>(words.size(), words.size());
 //        for (int i = 0; i < words.size(); i++)
 //            for (int j = i; j >= i && j < words.size(); j++)
 //                mutable.set(i, j, new LinkedHashMap<>(grammar.variableSet.size()));
@@ -52,9 +52,9 @@
 //
 //    private static void handleTerminals(List<Terminal> words,
 //                                        Grammar grammar,
-//                                        MutableMatrix<Map<NonTerminal, ScoreChart.ParseTreeContainer>> scoreMap) {
+//                                        MutableMatrix<Map<NonToken, ScoreChart.ParseTreeContainer>> scoreMap) {
 //        // Init score keeper
-//        Vector<Map<NonTerminal, ScoreChart.ParseTreeContainer>> scoresToAdd = new Vector<>(words.size());
+//        Vector<Map<NonToken, ScoreChart.ParseTreeContainer>> scoresToAdd = new Vector<>(words.size());
 //        for (int i = 0; i < words.size(); i++) scoresToAdd.add(new LinkedHashMap<>(grammar.variableSet.size()));
 //
 //        ////////////
@@ -63,9 +63,9 @@
 //            Terminal terminal = words.get(i);
 //            for (Rule nt : grammar.terminals.get(terminal)) {
 //                // Add all terminals that can be made, IF they are higher than the current score
-//                NonTerminal result = nt.getLHS();
+//                NonToken result = nt.getLHS();
 //                ScoreChart.ParseTreeContainer score = new ScoreChart.ParseTreeContainer(nt, terminal);
-//                Map<NonTerminal, ScoreChart.ParseTreeContainer> cell = scoresToAdd.get(i);
+//                Map<NonToken, ScoreChart.ParseTreeContainer> cell = scoresToAdd.get(i);
 //                ScoreChart.ParseTreeContainer alreadyPresent = cell.get(result);
 //                if ((alreadyPresent == null || score.logProbability > alreadyPresent.logProbability )) {
 ////                    if(alreadyPresent!=null) System.out.println(score.logProbability +">"+ alreadyPresent.logProbability );
@@ -88,7 +88,7 @@
 //
 //    private static void handleNonTerminals(final List<Terminal> words,
 //                                           Grammar grammar,
-//                                           MutableMatrix<Map<NonTerminal, ScoreChart.ParseTreeContainer>> builder) {
+//                                           MutableMatrix<Map<NonToken, ScoreChart.ParseTreeContainer>> builder) {
 //        for (int span = 2; span <= words.size(); span++) {
 //            // int numberOfSpans = words.size() - span + 1;
 //            // System.out.println(span + " / " + words.size() + " : " + numberOfSpans);
@@ -109,7 +109,7 @@
 //                         * Iteration over a HashMap is likely to be more expensive, requiring time proportional to its
 //                         * capacity."
 //                         */
-//                        final Map<NonTerminal, ScoreChart.ParseTreeContainer> cell = new LinkedHashMap<>(grammar.variableSet.size());
+//                        final Map<NonToken, ScoreChart.ParseTreeContainer> cell = new LinkedHashMap<>(grammar.variableSet.size());
 //                        // try out each possible split between [begin, end]
 //
 //                        for (int splitAtIndex = begin + 1; splitAtIndex < end; splitAtIndex++) {
@@ -143,22 +143,22 @@
 //     * @param cell      cell at scoreChart[begin,end]
 //     */
 //    private static void fillCellAtSplit(final Grammar grammar,
-//                                        final Map<NonTerminal, ScoreChart.ParseTreeContainer> cellLeft,
-//                                        final Map<NonTerminal, ScoreChart.ParseTreeContainer> cellRight,
-//                                        final Map<NonTerminal, ScoreChart.ParseTreeContainer> cell) {
+//                                        final Map<NonToken, ScoreChart.ParseTreeContainer> cellLeft,
+//                                        final Map<NonToken, ScoreChart.ParseTreeContainer> cellRight,
+//                                        final Map<NonToken, ScoreChart.ParseTreeContainer> cell) {
 //        // Try out all rules; add those that stick
 //
 //        //System.out.println("|B| = " + possibleBValues.size());
 //
-//        for (Map.Entry<NonTerminal, ScoreChart.ParseTreeContainer> possibleB : cellLeft.entrySet()) {
+//        for (Map.Entry<NonToken, ScoreChart.ParseTreeContainer> possibleB : cellLeft.entrySet()) {
 //            //System.out.println("|C| = " + possibleCValues.size());
 //
 //
-//            for (Map.Entry<NonTerminal, ScoreChart.ParseTreeContainer> possibleC : cellRight.entrySet()) {
+//            for (Map.Entry<NonToken, ScoreChart.ParseTreeContainer> possibleC : cellRight.entrySet()) {
 //                for (Rule r : grammar.getBinaryProductionRules(possibleB.getKey(), possibleC.getKey())) {
 //
 //                    // Add rule score, IF it is better than any existing production with the same LHS (if any)
-//                    NonTerminal result = r.getLHS();
+//                    NonToken result = r.getLHS();
 //                    ScoreChart.ParseTreeContainer alreadyPresent = cell.get(result);
 //                    ScoreChart.ParseTreeContainer[] inputs = new ScoreChart.ParseTreeContainer[]{possibleB.getValue(), possibleC.getValue()};
 //                    double logProb = r.getLogProbability(inputs);
@@ -171,16 +171,16 @@
 //        }
 //    }
 //
-//    private static void handleUnaryRules(final Grammar grammar, final Map<NonTerminal, ScoreChart.ParseTreeContainer> cell) {
+//    private static void handleUnaryRules(final Grammar grammar, final Map<NonToken, ScoreChart.ParseTreeContainer> cell) {
 //        boolean addedNewResultType;
 //        do {
 //            addedNewResultType = false;
-//            Map<NonTerminal, ScoreChart.ParseTreeContainer> toAdd = null;
+//            Map<NonToken, ScoreChart.ParseTreeContainer> toAdd = null;
 //
-//            Set<Map.Entry<NonTerminal, ScoreChart.ParseTreeContainer>> entries = cell.entrySet();
+//            Set<Map.Entry<NonToken, ScoreChart.ParseTreeContainer>> entries = cell.entrySet();
 //
 //            // Find all applicable unary rules
-//            for (Map.Entry<NonTerminal, ScoreChart.ParseTreeContainer> B : entries) {
+//            for (Map.Entry<NonToken, ScoreChart.ParseTreeContainer> B : entries) {
 //                Set<Rule> unaryProductionRules = grammar.getUnaryProductionRules(B.getKey());
 //                for (Rule r : unaryProductionRules) {
 //                    double logProbCandidateRule = r.getLogProbability(B.getValue());
@@ -202,9 +202,9 @@
 //    }
 //
 //    private static boolean ruleGivesBetterLikelihoodThanExisting(
-//            Map<NonTerminal, ScoreChart.ParseTreeContainer> map1,
-//            Map<NonTerminal, ScoreChart.ParseTreeContainer> map2,
-//            NonTerminal candidateResult,
+//            Map<NonToken, ScoreChart.ParseTreeContainer> map1,
+//            Map<NonToken, ScoreChart.ParseTreeContainer> map2,
+//            NonToken candidateResult,
 //            double logProbCandidateRule) {
 //        if (map2 != null) {
 //            ScoreChart.ParseTreeContainer inMap2 = map2.get(candidateResult);

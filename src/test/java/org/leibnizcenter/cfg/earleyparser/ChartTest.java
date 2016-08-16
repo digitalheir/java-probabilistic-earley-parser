@@ -19,7 +19,6 @@ import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
@@ -86,7 +85,6 @@ public class ChartTest {
 
         final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with a stick");
         ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
-        ParseTree.TokenParseTree parseTreeWithTokensAsLeaves = parseTree.mapTokensToLeafnodes(new LinkedList<>(tokens));
         System.out.println(parseTree);
     }
 

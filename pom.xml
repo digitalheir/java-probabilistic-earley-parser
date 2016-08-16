@@ -6,7 +6,7 @@
 
     <groupId>org.leibnizcenter</groupId>
     <artifactId>earley-parser</artifactId>
-    <version>0.0.1</version>
+    <version>0.9.0</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -20,7 +20,7 @@
     <developers>
         <developer>
             <name>Maarten Trompper</name>
-            <email>m.f.a.trompper@uva.nl</email>
+            <email>maarten.trompper@gmail.com</email>
             <organization>Leibniz Center for Law</organization>
             <organizationUrl>http://www.leibnizcenter.org/</organizationUrl>
         </developer>
@@ -31,10 +31,10 @@
     <url>https://github.com/digitalheir/java-cfg-parser</url>
 
     <scm>
-        <connection>scm:git:git@github.com:digitalheir/java-cfg-parser.git</connection>
-        <developerConnection>scm:git:git@github.com:digitalheir/java-cfg-parser.git
+        <connection>scm:git:git@github.com:digitalheir/java-probabilistic-earley-parser</connection>
+        <developerConnection>scm:git:git@github.com:digitalheir/java-probabilistic-earley-parser.git
         </developerConnection>
-        <url>git@github.com:digitalheir/java-cfg-parser.git</url>
+        <url>git@github.com:digitalheir/java-probabilistic-earley-parser.git</url>
     </scm>
 
     <dependencies>

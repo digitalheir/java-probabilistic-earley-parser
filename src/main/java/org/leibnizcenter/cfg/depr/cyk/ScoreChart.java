@@ -1,7 +1,7 @@
 //package org.leibnizcenter.cfg.depr.cyk;
 //
 //import org.leibnizcenter.cfg.category.Category;
-//import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+//import org.leibnizcenter.cfg.category.nonterminal.NonToken;
 //import org.leibnizcenter.cfg.category.terminal.Terminal;
 //import org.leibnizcenter.cfg.rule.Rule;
 //
@@ -17,9 +17,9 @@
 //    public static class Cell {
 //        public final int row;
 //        public final int column;
-//        public final Map<NonTerminal, ParseTreeContainer> cell;
+//        public final Map<NonToken, ParseTreeContainer> cell;
 //
-//        public Cell(int row, int column, Map<NonTerminal, ParseTreeContainer> cell) {
+//        public Cell(int row, int column, Map<NonToken, ParseTreeContainer> cell) {
 //            this.row = row;
 //            this.column = column;
 //            this.cell = cell;
@@ -30,7 +30,7 @@
 //        public final double logProbability;
 //        public final TypeContainer[] inputs;
 //        public final Rule rule;
-//        public final NonTerminal lhs;
+//        public final NonToken lhs;
 //
 //        public ParseTreeContainer(Rule rule, ParseTreeContainer... inputs) {
 //            //            if (inputs.length != rule.getRHS().size()
@@ -56,11 +56,11 @@
 //            lhs = rule.getLHS();
 //        }
 //
-//        public NonTerminal getType() {
+//        public NonToken getType() {
 //            return lhs;
 //        }
 //
-//        public NonTerminal getResult() {
+//        public NonToken getResult() {
 //            return lhs;
 //        }
 //

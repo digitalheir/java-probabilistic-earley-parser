@@ -58,7 +58,7 @@ public class Parser {
     public static ParseTree getViterbiParse(State state, Chart chart) {
         if (state.getRuleDotPosition() <= 0)
             // Prediction state
-            return new ParseTree(state.getRule().getLeft());
+            return new ParseTree.NonToken(state.getRule().getLeft());
         else {
             Category prefixEnd = state.getRule().getRight()[state.getRuleDotPosition() - 1];
             if (prefixEnd instanceof Terminal) {
@@ -71,7 +71,9 @@ public class Parser {
                         chart.stateSets.get(state.getPosition() - 1, state.getRuleStartPosition(), state.getRuleDotPosition() - 1, state.getRule()),
                         chart
                 );
-                T.addRightMost(new ParseTree.Token(((ScannedTokenState) state).scannedToken, state.getRule().getRight()[state.getRuleDotPosition() - 1]));
+                final ScannedTokenState scannedState = (ScannedTokenState) state;
+                //noinspection unchecked
+                T.addRightMost(new ParseTree.Token<>(scannedState));
                 return T;
             } else {
                 if (!(prefixEnd instanceof NonTerminal)) throw new IssueRequest("Something went terribly wrong.");
