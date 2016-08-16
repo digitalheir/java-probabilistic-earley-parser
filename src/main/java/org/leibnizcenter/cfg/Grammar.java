@@ -12,7 +12,7 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
+import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -267,7 +267,7 @@ public class Grammar {
     public static class Builder {
         private final ImmutableMultimap.Builder<Category, Rule> rules;
         private String name;
-        private DblSemiring semiring = new ProbabilitySemiring();
+        private DblSemiring semiring = new LogSemiring();
         private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {
@@ -310,6 +310,7 @@ public class Grammar {
             return addRule(rf.newRule(left, right));
         }
 
+        //TODO verify if grammar is well-formed
         public Grammar build() {
             return new Grammar(name, rules.build(), semiring);
         }

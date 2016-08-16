@@ -5,30 +5,47 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 /**
  */
 public class GrammarTest {
     private static final ProbabilitySemiring sr = new ProbabilitySemiring();
+
+    private final static NonTerminal A = Category.nonTerminal("A");
+    private final static NonTerminal B = Category.nonTerminal("B");
+    private final static NonTerminal C = Category.nonTerminal("C");
+    private final static NonTerminal D = Category.nonTerminal("D");
+    private final static NonTerminal E = Category.nonTerminal("E");
+    private final static NonTerminal X = Category.nonTerminal("X");
+    private final static NonTerminal Y = Category.nonTerminal("Y");
+    private final static NonTerminal Z = Category.nonTerminal("Z");
+    private final static Category e = new ExactStringTerminal("e");
+
+    private final static Rule rule1 = Rule.create(sr, 1.0, A, B, C, D, E);
+    private final static Rule rule2 = Rule.create(sr, 1.0, A, e);
+    private final static Rule rule3 = Rule.create(sr, 1.0, X, Y, Z);
     private static final Rule ruleB = Rule.create(sr, 0.5, B, C);
     private static final Rule ruleC = Rule.create(sr, 0.5, C, D);
     private static final Rule ruleD = Rule.create(sr, 0.5, D, E);
     private static final Rule ruleE = Rule.create(sr, 0.5, E, e);
-
     private static final Grammar g = new Grammar.Builder("test")
+            .setSemiring(sr)
             .addRule(ruleB)
             .addRule(ruleC)
             .addRule(ruleD)
             .addRule(ruleE)
             .addRule(rule1)
             .addRule(rule2)
-            .addRule(rule3).build();
+            .addRule(rule3)
+            .build();
+
 
     @Test
     public final void testContainsRules() {
@@ -44,9 +61,9 @@ public class GrammarTest {
         Assert.assertEquals(rule2, rule2);
         Assert.assertEquals(rule3, rule3);
 
-        Assert.assertNotEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 1.0, A, a));
-        Assert.assertNotEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 0.5, X, a));
-        Assert.assertEquals(Rule.create(sr, 1.0, X, a), Rule.create(sr, 1.0, X, a));
+        Assert.assertNotEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, A, e));
+        Assert.assertNotEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 0.5, X, e));
+        Assert.assertEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, X, e));
     }
 
     @Test
@@ -63,7 +80,7 @@ public class GrammarTest {
         Assert.assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
         Assert.assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
         Assert.assertEquals(g.getLeftStarScore(A, D), 0.25, 0.01);
-        Assert.assertEquals(g.getLeftStarScore(A, X), 0.0, 0.01);
+        Assert.assertEquals(sr.toProbability(g.getLeftStarScore(A, X)), 0.0, 0.01);
     }
 
 //    @Test public final void testGetPreterminal() {

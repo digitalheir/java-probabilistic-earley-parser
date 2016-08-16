@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"WeakerAccess", "SuspiciousNameCombination"})
 public final class PepFixture {
     public static final NonTerminal S = Category.nonTerminal("S");
+    public static final NonTerminal seed = S;
     public static final NonTerminal NP = Category.nonTerminal("NP");
     public static final NonTerminal VP = Category.nonTerminal("VP");
     public static final NonTerminal Det = Category.nonTerminal("Det");
@@ -40,6 +41,10 @@ public final class PepFixture {
     public final static Category c = new ExactStringTerminal("c");
     public final static Category d = new ExactStringTerminal("d");
     public final static Category e = new ExactStringTerminal("e");
+    public final static Category the = new ExactStringTerminal("the");
+    public final static Category boy = new ExactStringTerminal("boy");
+    public final static Category girl = new ExactStringTerminal("girl");
+    public final static Category left = new ExactStringTerminal("left");
 
     public final static Category aA = new CaseInsenstiveStringTerminal("a");
     public final static Category bB = new CaseInsenstiveStringTerminal("b");
@@ -69,6 +74,7 @@ public final class PepFixture {
     public static final List<Token<String>> tokens = Lists.newArrayList("the", "boy", "left").stream()
             .map(Token::new)
             .collect(Collectors.toList());
+
 //    public static Grammar grammarCaseInsensitive = new Grammar.Builder("test")
 //            .addRule(S, NP, VP)
 //            .addRule(NP, Det, N)

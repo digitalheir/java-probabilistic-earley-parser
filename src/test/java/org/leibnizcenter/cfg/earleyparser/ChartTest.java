@@ -6,7 +6,10 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.StringTerminal;
+import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
 import org.leibnizcenter.cfg.rule.Rule;
@@ -21,7 +24,84 @@ import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 /**
  */
 public class ChartTest {
+    // NonTerminals are just wrappers around a string
+    private static final NonTerminal S = Category.nonTerminal("S");
+    private static final NonTerminal NP = Category.nonTerminal("NP");
+    private static final NonTerminal VP = Category.nonTerminal("VP");
+    private static final NonTerminal TV = Category.nonTerminal("TV");
+    private static final NonTerminal Det = Category.nonTerminal("Det");
+    private static final NonTerminal N = Category.nonTerminal("N");
+    private static final NonTerminal Mod = Category.nonTerminal("Mod");
 
+    // Token types are realized by implementing Terminal, and implementing hasCategory. This is a functional interface.
+    private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
+    // Some utility terminal types are pre-defined:
+    private static final Terminal the = new CaseInsenstiveStringTerminal("the");
+    private static final Terminal a = new CaseInsenstiveStringTerminal("a");
+    private static final Terminal man = new ExactStringTerminal("man");
+    private static final Terminal stick = new ExactStringTerminal("stick");
+    private static final Terminal with = new ExactStringTerminal("with");
+
+    private static final Grammar grammar = new Grammar.Builder("test")
+            .setSemiring(new LogSemiring()) // If not set, defaults to Log semiring which is probably what you want
+            .addRule(
+                    1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
+                    S,     // Left hand side of the rule
+                    NP, VP // Right hand side of the rule
+            )
+            .addRule(
+                    NP,
+                    Det, N // eg. The man
+            )
+            .addRule(
+                    NP,
+                    Det, N, Mod // eg. The man (with a stick)
+            )
+            .addRule(
+                    0.4,
+                    VP,
+                    TV, NP, Mod // eg. (chased) (the man) (with a stick)
+            )
+            .addRule(
+                    0.6,
+                    VP,
+                    TV, NP // eg. (chased) (the man with a stick)
+            )
+            .addRule(Det, a)
+            .addRule(Det, the)
+            .addRule(N, man)
+            .addRule(N, stick)
+            .addRule(TV, transitiveVerb)
+            .addRule(Mod, with, NP) // eg. with a stick
+            .build();
+
+    @Test
+    public final void readmeExample() {
+        System.out.println(
+                Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick"))
+        );
+        System.out.println(
+                Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man"))
+        );
+
+
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl left")), PSVP, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the wrong right")), PSNP, 0.0001); // ambiguous
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right")), PSNP, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl")), PSNP, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right right")), PSNP, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the left right")), PSNP, 0.0001);
+//
+//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left girl")), 1.0, 0.0001);
+//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left left")), 1.0, 0.0001);
+//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("wrong left")), 1.0, 0.0001);
+//
+//        // Unparsable
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("girl left")), 0.0, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the")), 0.0, 0.0001);
+//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+    }
 
     @Test
     public final void ambiguous() {
@@ -96,13 +176,13 @@ public class ChartTest {
         chart.predict(0);
 
         Assert.assertTrue(chart.getStates(0).contains(initialState));
-        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(p, S, a), 0)));
-        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(q, S, B), 0)));
-        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(1, B, S), 0)));
-        Assert.assertEquals(chart.getForwardScore(new State(Rule.create(1, B, S), 0)), (q / p), 0.01);
-        Assert.assertEquals(chart.getInnerScore(new State(Rule.create(1, B, S), 0)), 1, 0.01);
-        Assert.assertEquals(chart.getForwardScore(new State(Rule.create(q, S, B), 0)), (q / p), 0.01);
-        Assert.assertEquals(chart.getInnerScore(new State(Rule.create(q, S, B), 0)), q, 0.01);
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, p, S, a), 0)));
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, q, S, B), 0)));
+        Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, 1, B, S), 0)));
+        Assert.assertEquals(sr.toProbability(chart.getForwardScore(new State(Rule.create(sr, 1, B, S), 0))), (q / p), 0.01);
+        Assert.assertEquals(sr.toProbability(chart.getInnerScore(new State(Rule.create(sr, 1, B, S), 0))), 1, 0.01);
+        Assert.assertEquals(sr.toProbability(chart.getForwardScore(new State(Rule.create(sr, q, S, B), 0))), (q / p), 0.01);
+        Assert.assertEquals(sr.toProbability(chart.getInnerScore(new State(Rule.create(sr, q, S, B), 0))), q, 0.01);
 
 //        for (State s : chart.getStates(0)) {
 //            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getScore(s) + "]");
