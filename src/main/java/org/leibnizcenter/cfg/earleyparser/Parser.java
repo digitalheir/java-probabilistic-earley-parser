@@ -4,9 +4,9 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.earleyparser.chart.ScannedTokenState;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
-import org.leibnizcenter.cfg.earleyparser.parse.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
@@ -20,8 +20,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * Helper function for parsing
+ * <p>
  * Created by Maarten on 31-7-2016.
  */
+@SuppressWarnings("WeakerAccess")
 public class Parser {
 
     /**
@@ -132,7 +135,7 @@ public class Parser {
         DblSemiring sr = grammar.getSemiring();
 
         // Initial state
-        State initialState = new State(Rule.create(sr.one(), Category.START, S), 0);
+        State initialState = new State(Rule.create(sr, 1.0, Category.START, S), 0);
         chart.addState(0, initialState, sr.one(), sr.one());
 
         // Cycle through input

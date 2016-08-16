@@ -98,9 +98,22 @@ public class Rule {
         this(semiring.one(), left, right);
     }
 
+
     @Deprecated
     public static Rule create(double probability, NonTerminal LHS, Category... RHS) {
         return new Rule(probability, LHS, RHS);
+    }
+
+    /**
+     * Defaults to rule probability 1.0
+     *
+     * @param semiring Semiring to use, for example LogSemiring
+     * @param LHS      LHS
+     * @param RHS      RHS
+     * @return Rule with p=1.0
+     */
+    public static Rule create(DblSemiring semiring, NonTerminal LHS, Category... RHS) {
+        return new Rule(semiring.one(), LHS, RHS);
     }
 
     public static Rule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
@@ -259,4 +272,5 @@ public class Rule {
     public boolean isUnitProduction() {
         return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
     }
+
 }

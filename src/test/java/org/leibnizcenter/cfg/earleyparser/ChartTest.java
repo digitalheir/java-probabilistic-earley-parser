@@ -10,8 +10,8 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
-import org.leibnizcenter.cfg.earleyparser.parse.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
@@ -155,7 +155,7 @@ public class ChartTest {
         Chart chart = new Chart(grammar);
         DblSemiring sr = grammar.getSemiring();
 
-        State initialState = new State(Rule.create(sr.one(), Category.START, S), 0);
+        State initialState = new State(Rule.create(sr, Category.START, S), 0);
         chart.addState(0, initialState, sr.one(), sr.one());
 
         chart.predict(0);
@@ -184,13 +184,13 @@ public class ChartTest {
     @Test
     public final void parse() {
         final LogSemiring semiring = new LogSemiring();
-        final Rule ruleB = Rule.create(semiring.fromProbability(0.5), B, C);
-        final Rule ruleC = Rule.create(semiring.fromProbability(0.5), C, D);
-        final Rule ruleD = Rule.create(semiring.fromProbability(0.5), D, E);
-        final Rule ruleE = Rule.create(semiring.fromProbability(0.5), E, e);
-        final Rule rule1 = Rule.create(semiring.one(), A, B, C, D, E);
-        final Rule ruleAa = Rule.create(semiring.one(), A, a);
-        final Rule rule3 = Rule.create(semiring.one(), X, Y, Z);
+        final Rule ruleB = Rule.create(semiring, 0.5, B, C);
+        final Rule ruleC = Rule.create(semiring, 0.5, C, D);
+        final Rule ruleD = Rule.create(semiring, 0.5, D, E);
+        final Rule ruleE = Rule.create(semiring, 0.5, E, e);
+        final Rule rule1 = Rule.create(semiring, 1.0, A, B, C, D, E);
+        final Rule ruleAa = Rule.create(semiring, 1.0, A, a);
+        final Rule rule3 = Rule.create(semiring, 1.0, X, Y, Z);
 
         Grammar grammar = new Grammar.Builder("test")
                 .setSemiring(semiring)
@@ -204,7 +204,7 @@ public class ChartTest {
         DblSemiring sr = grammar.getSemiring();
         Chart chart = new Chart(grammar);
 
-        chart.addState(0, new State(Rule.create(sr.one(), Category.START, A), 0), sr.one(), sr.one());
+        chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         chart.predict(0);
         chart.scan(0, new Token<>("a"), index -> semiring.fromProbability(0.5));
         chart.completeTruncated(1);

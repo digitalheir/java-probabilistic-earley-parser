@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.earleyparser.chart;
+package org.leibnizcenter.cfg.earleyparser.chart.state;
 
 import com.sun.istack.internal.NotNull;
 import org.leibnizcenter.cfg.category.Category;
@@ -42,18 +42,20 @@ import java.text.DecimalFormat;
 public class State {
     public final Rule rule;
     public final int ruleStartPosition;
+    @SuppressWarnings("WeakerAccess")
     public final int ruleDotPosition;
+    @SuppressWarnings("WeakerAccess")
     public final int positionInInput;
 
     /**
      * Makes a predicted State based on the specified rule, with the specified
      * origin position.
+     * A new State whose {@link #getRule() dotted rule} is the
+     * specified rule at position <code>0</code>. The new State's origin is the
+     * specified <code>origin</code>.
      *
      * @param rule              The rule to construct a predicted State for.
      * @param ruleStartPosition The origin position of the newly predicted State.
-     * @return A new State whose {@link #getRule() dotted rule} is the
-     * specified rule at position <code>0</code>. The new State's origin is the
-     * specified <code>origin</code>.
      * @throws NullPointerException If <code>rule</code> is <code>null</code>.
      */
     public State(Rule rule, int ruleStartPosition) {
@@ -83,7 +85,6 @@ public class State {
     }
 
     /**
-     *
      * @return Active category for this state. May be null.
      */
     public Category getActiveCategory() {
@@ -211,47 +212,6 @@ public class State {
         return result;
     }
 
-    public static abstract class ScoreRef {
-        final DblSemiring semiring;
-
-        public ScoreRef(DblSemiring sr) {
-            this.semiring = sr;
-        }
-
-        public ScoreRef times(ScoreRef... a) {
-            return new Times(semiring, a);
-        }
-
-        public abstract double resolve();
-
-        private static class Times extends ScoreRef {
-            private final ScoreRef[] vals;
-
-            public Times(DblSemiring semiring, ScoreRef[] a) {
-                super(semiring);
-                this.vals = (a);
-            }
-
-            public double resolve() {
-                double running = semiring.one();
-                for (ScoreRef val : vals) running = semiring.times(running, val.resolve());
-                return running;
-            }
-        }
-    }
-
-    public static class StateWithScoreRef {
-        private final ScoreRef forwardScore;
-        private final ScoreRef innerScore;
-        private final State state;
-
-        public StateWithScoreRef(State state, ScoreRef forwardScore, ScoreRef innerScore) {
-            this.forwardScore = forwardScore;
-            this.state = state;
-            this.innerScore = innerScore;
-        }
-    }
-
     public static class StateWithScore {
         private final double forwardScore;
         private final double innerScore;
@@ -324,13 +284,8 @@ public class State {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-
             ViterbiScore that = (ViterbiScore) o;
-
-            if (Double.compare(that.innerScore, innerScore) != 0) return false;
-            if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
-            if (sr != null ? !sr.equals(that.sr) : that.sr != null) return false;
-            return !(resultingState != null ? !resultingState.equals(that.resultingState) : that.resultingState != null);
+            return Double.compare(that.innerScore, innerScore) == 0 && (origin != null ? origin.equals(that.origin) : that.origin == null && (sr != null ? sr.equals(that.sr) : that.sr == null && !(resultingState != null ? !resultingState.equals(that.resultingState) : that.resultingState != null)));
 
         }
 

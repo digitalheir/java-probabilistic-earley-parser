@@ -1,5 +1,4 @@
-
-package org.leibnizcenter.cfg.earleyparser.parse;
+package org.leibnizcenter.cfg.earleyparser.chart;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -10,8 +9,9 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.earleyparser.chart.ScannedTokenState;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.token.Token;
@@ -30,18 +30,6 @@ import java.util.stream.Stream;
  * State sets are not guaranteed to maintain states in their order of insertion.
  */
 public class Chart {
-    //private static final Integer NULL_INDEX = -1;
-//    /**
-//     * Creates a new chart based on the specified chart. The newly created
-//     * chart contains all the states as the specified chart at all the same
-//     * indices.
-//     *
-//     * @param chart The chart to base the newly created chart upon.
-//     */
-//    public Chart(Chart chart) {
-//        this(chart.grammar, chart.stateSets.copy());
-//    }
-
     public final StateSets stateSets;
     private final Grammar grammar;
 
@@ -419,6 +407,7 @@ public class Chart {
      *
      * @return The total number of states contained.
      */
+    @SuppressWarnings("unused")
     public int countStates() {
         return stateSets.countStates();
     }
@@ -479,6 +468,7 @@ public class Chart {
             stateSets.setViterbiScore(new State.ViterbiScore(grammar.getSemiring().one(), null, state, grammar.getSemiring()));
     }
 
+    @SuppressWarnings("unused")
     public Set<State> getStates(int index) {
         return stateSets.getStates(index);
     }
@@ -487,6 +477,7 @@ public class Chart {
         return stateSets.getForwardScore(s);
     }
 
+    @SuppressWarnings("unused")
     public double getInnerScore(State s) {
         return stateSets.getInnerScore(s);
     }
@@ -502,9 +493,8 @@ public class Chart {
     }
 
 
+    @SuppressWarnings("WeakerAccess")
     public static class StateSets {
-        private static final TIntObjectMap<TIntObjectMap<State>> EMPTY = new TIntObjectHashMap<>();
-
         private final Map<Rule,
                 /*index*/
                 TIntObjectMap<
@@ -547,7 +537,7 @@ public class Chart {
         private Multimap<Category, State> statesActiveOn = HashMultimap.create();
 
 
-        public StateSets(DblSemiring sr) {
+        StateSets(DblSemiring sr) {
             this.semiring = sr;
             this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
             this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
@@ -622,6 +612,7 @@ public class Chart {
             if (!statesActiveOnNonTerminals.containsKey(index)) statesActiveOnNonTerminals.put(index, new HashSet<>());
             return statesActiveOnNonTerminals.get(index);
         }
+
 
 
         public Set<State> getStatesActiveOnTerminals(int index) {
@@ -705,11 +696,11 @@ public class Chart {
         /**
          * Default zero
          *
-         * @param s
+         * @param state State for which to get inner score
          * @return inner score so far
          */
-        public double getInnerScore(State s) {
-            return innerScores.get(s);
+        public double getInnerScore(State state) {
+            return innerScores.get(state);
         }
 
         public Set<State> getStates(int index) {

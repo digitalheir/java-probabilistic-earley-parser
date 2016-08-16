@@ -3,8 +3,8 @@ package org.leibnizcenter.cfg.earleyparser.parse;
 
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.earleyparser.chart.ScannedTokenState;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  * {@link #getChildren() other parse trees}, so they can be iterated through to
  * find the entire derivation of a category.
  * <p>
- * Parse trees are essentially partial views of a {@link Chart} from a
+ * Parse trees are essentially partial views of a Chart from a
  * given {@link State} or {@link Category}. They represent the completed
  * category at a given string index and origin position. The special
  * {@link Category#START} category is not included in a parse tree at the root
@@ -24,13 +24,15 @@ import java.util.List;
  * are represented).
  */
 public abstract class ParseTree {
-    final Category category;
-    final LinkedList<ParseTree> children;
+    public final Category category;
+    @SuppressWarnings("WeakerAccess")
+    public final LinkedList<ParseTree> children;
 
     /**
      * Creates a new parse tree with the specified category and parent parse
      * tree.
      */
+    @SuppressWarnings("WeakerAccess")
     public ParseTree(Category category) {
         this(category, new LinkedList<>());
     }
@@ -44,6 +46,7 @@ public abstract class ParseTree {
      * @param children The list of children of this parse tree, in their linear
      *                 order.
      */
+    @SuppressWarnings("WeakerAccess")
     public ParseTree(Category category, LinkedList<ParseTree> children) {
         this.category = category;
         this.children = children;
@@ -101,8 +104,11 @@ public abstract class ParseTree {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         ParseTree parseTree = (ParseTree) o;
+
         return category.equals(parseTree.category) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
+
     }
 
     @Override
@@ -112,17 +118,8 @@ public abstract class ParseTree {
         return result;
     }
 
-//    @Deprecated
-//    public <E> TokenParseTree mapTokensToLeafnodes(final LinkedList<Token<E>> tokens) {
-//        if (!hasChildren()) throw new IssueRequest("This is a bug.");
-//        ArrayList<TokenParseTree> newChildren = new ArrayList<>(children.size());
-//        for (ParseTree child : children)
-//            if (!child.hasChildren()) newChildren.add(new TokenParseTree<>(child.category, tokens.pop()));
-//            else newChildren.add(child.mapTokensToLeafnodes(tokens));
-//        return new TokenParseTree(this.category, newChildren);
-//    }
-
-    private boolean hasChildren() {
+    @SuppressWarnings("unused")
+    public boolean hasChildren() {
         return children == null || children.size() > 0;
     }
 
@@ -137,6 +134,17 @@ public abstract class ParseTree {
         public Token(ScannedTokenState<E> scannedState) {
             this(scannedState.scannedToken, scannedState.scannedCategory);
         }
+
+
+        @Override
+        public int hashCode() {
+            return super.hashCode() + token.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Token && super.equals(o) && token.equals(((Token) o).token);
+        }
     }
 
     public static class NonToken extends ParseTree {
@@ -147,24 +155,10 @@ public abstract class ParseTree {
         public NonToken(Category node, LinkedList<ParseTree> children) {
             super(node, children);
         }
-    }
 
-//    @Deprecated
-//    public class TokenParseTree<E> {
-//        public final Token<E> token;
-//        public final List<TokenParseTree> children;
-//        private final Category category;
-//
-//        public TokenParseTree(Category category, Token<E> token) {
-//            this.token = token;
-//            this.category = category;
-//            this.children = null;
-//        }
-//
-//        public TokenParseTree(Category category, ArrayList<TokenParseTree> children) {
-//            this.token = null;
-//            this.category = category;
-//            this.children = Collections.unmodifiableList(children);
-//        }
-//    }
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof NonToken && super.equals(o);
+        }
+    }
 }

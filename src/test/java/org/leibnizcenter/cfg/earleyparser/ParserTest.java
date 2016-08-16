@@ -4,11 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
-import org.leibnizcenter.cfg.earleyparser.parse.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
@@ -21,13 +20,11 @@ import java.util.stream.IntStream;
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 
 /**
- * Created by Maarten on 31-7-2016.
  */
 public class ParserTest {
     @Test
     public void simpleRecursiveGrammar() throws Exception {
         final LogSemiring sr = new LogSemiring();
-        RuleFactory rf = new RuleFactory(sr);
         double p = (0.6);
         double q = (0.4);
         Grammar grammar = new Grammar.Builder()

@@ -1,7 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import com.sun.istack.internal.NotNull;
-import org.leibnizcenter.cfg.earleyparser.chart.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
