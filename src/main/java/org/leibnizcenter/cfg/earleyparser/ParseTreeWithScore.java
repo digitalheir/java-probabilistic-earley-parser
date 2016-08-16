@@ -1,6 +1,4 @@
 package org.leibnizcenter.cfg.earleyparser;
-
-import com.sun.istack.internal.NotNull;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
@@ -13,7 +11,7 @@ public class ParseTreeWithScore {
     public final State.ViterbiScore score;
     public final DblSemiring semiring;
 
-    public ParseTreeWithScore(@NotNull ParseTree parseTree, @NotNull State.ViterbiScore score, @NotNull DblSemiring semiring) {
+    public ParseTreeWithScore( ParseTree parseTree,  State.ViterbiScore score,  DblSemiring semiring) {
         this.parseTree = parseTree;
         this.score = score;
         this.semiring = semiring;
@@ -23,7 +21,7 @@ public class ParseTreeWithScore {
         return semiring.toProbability(score.getScore());
     }
 
-    @NotNull
+    
     public ParseTree getParseTree() {
         return parseTree;
     }

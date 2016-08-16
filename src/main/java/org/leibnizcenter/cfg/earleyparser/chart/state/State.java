@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart.state;
 
-import com.sun.istack.internal.NotNull;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
@@ -272,7 +271,7 @@ public class State {
         }
 
         @Override
-        public int compareTo(@NotNull ViterbiScore other) {
+        public int compareTo(ViterbiScore other) {
             return Double.compare(sr.toProbability(innerScore), sr.toProbability(other.getScore()));
         }
 
