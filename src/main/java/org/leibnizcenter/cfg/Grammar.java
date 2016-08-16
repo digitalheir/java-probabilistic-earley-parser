@@ -132,7 +132,7 @@ public class Grammar {
                         .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
-                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
+                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore())));
 
         // R_U = (I - P_U)
         return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);
@@ -146,7 +146,7 @@ public class Grammar {
         nonTerminals.stream()
                 .forEach(X -> getRules(X).stream()
                         .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
-                        .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getProbability())));
+                        .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore())));
     }
 
     //TODO

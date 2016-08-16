@@ -9,7 +9,7 @@
 //import org.leibnizcenter.cfg.earleyparser.event.ParseErrorEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParseEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParserListener;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.earleyparser.parse.*;
 //import org.leibnizcenter.cfg.rule.Rule;
 //import org.leibnizcenter.cfg.token.Token;
@@ -599,7 +599,7 @@
 //        }
 //
 //        /**
-//         * Does nothing because an exception are generated. Present for
+//         * Does nothing because an errors are generated. Present for
 //         * binary compatibility with ErrorHandler.
 //         */
 //        @SuppressWarnings("unused")
@@ -608,7 +608,7 @@
 //        }
 //
 //        /**
-//         * Does nothing because an exception are generated. Present for
+//         * Does nothing because an errors are generated. Present for
 //         * binary compatibility with ErrorHandler.
 //         */
 //        @SuppressWarnings("unused")

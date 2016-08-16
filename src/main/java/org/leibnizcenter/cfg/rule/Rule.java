@@ -27,15 +27,21 @@ import java.util.Arrays;
 public class Rule {
     public final NonTerminal left;
     public final Category[] right;
-    private final double probability;
+    /**
+     * Double that reflects the probability of this rule according to some semiring
+     * (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
+     */
+    private final double rawProbability;
 
     /**
      * Creates a new rule with the specified left side category and series of
      * category on the right side.
      *
-     * @param left  The left side (trigger) for this production rule.
-     * @param right The right side (productions) licensed for this rule's
-     *              left side.
+     * @param left           The left side (trigger) for this production rule.
+     * @param right          The right side (productions) licensed for this rule's
+     *                       left side.
+     * @param rawProbability Double that reflects the probability of this rule according to some semiring
+     *                       (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
      * @throws IllegalArgumentException If
      *                                  <ol>
      *                                  <li>the specified left or right category are <code>null</code>,</li>
@@ -43,8 +49,8 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    protected Rule(double probability, NonTerminal left, Category... right) {
-        this.probability = probability;
+    protected Rule(double rawProbability, NonTerminal left, Category... right) {
+        this.rawProbability = rawProbability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
 
@@ -69,7 +75,7 @@ public class Rule {
     }
 
     /**
-     * Instiantiates a new rule with a probability score of 1.0 (assuming we use the Probability semiring, which
+     * Instiantiates a new rule with a rawProbability score of 1.0 (assuming we use the Probability semiring, which
      * has 1.0 for "one")
      *
      * @param left  LHS
@@ -81,9 +87,9 @@ public class Rule {
     }
 
     /**
-     * Instiantiates a new rule with a probability score of one (whatever that means for the given semiring)
+     * Instiantiates a new rule with a rawProbability score of one (whatever that means for the given semiring)
      *
-     * @param semiring Semiring to query for the probability of "one"
+     * @param semiring Semiring to query for the rawProbability of "one"
      * @param left     LHS
      * @param right    RHS
      */
@@ -178,7 +184,7 @@ public class Rule {
 
         Rule rule = (Rule) o;
 
-        if (Double.compare(rule.probability, probability) != 0) return false;
+        if (Double.compare(rule.rawProbability, rawProbability) != 0) return false;
         if (!left.equals(rule.left)) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         return Arrays.equals(right, rule.right);
@@ -191,7 +197,7 @@ public class Rule {
         long temp;
         result = left.hashCode();
         result = 31 * result + Arrays.hashCode(right);
-        temp = Double.doubleToLongBits(probability);
+        temp = Double.doubleToLongBits(rawProbability);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }
@@ -242,8 +248,12 @@ public class Rule {
         return sb.toString();
     }
 
-    public double getProbability() {
-        return probability;
+    /**
+     * @return Double that reflects the probability of this rule according to some semiring
+     * (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
+     */
+    public double getScore() {
+        return rawProbability;
     }
 
     public boolean isUnitProduction() {

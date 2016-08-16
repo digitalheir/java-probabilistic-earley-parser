@@ -3,7 +3,7 @@
 //import org.leibnizcenter.cfg.Grammar;
 //import org.leibnizcenter.cfg.category.Category;
 //import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.earleyparser.parse.ParserOptions;
 //import org.leibnizcenter.cfg.rule.Rule;
 //import org.leibnizcenter.cfg.token.Token;

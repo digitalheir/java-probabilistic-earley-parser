@@ -4,11 +4,8 @@ package org.leibnizcenter.cfg.earleyparser.parse;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 //TODO
 /**
@@ -27,14 +24,14 @@ import java.util.List;
  */
 public class ParseTree {
     final Category node;
-    final Deque<ParseTree> children;
+    final LinkedList<ParseTree> children;
 
     /**
      * Creates a new parse tree with the specified category and parent parse
      * tree.
      */
     public ParseTree(Category node) {
-        this(node,  new ArrayDeque<>());
+        this(node, new LinkedList<>());
     }
 
     /**
@@ -46,55 +43,9 @@ public class ParseTree {
      * @param children The list of children of this parse tree, in their linear
      *                 order.
      */
-    public ParseTree(Category node, Deque<ParseTree> children) {
+    public ParseTree(Category node, LinkedList<ParseTree> children) {
         this.node = node;
         this.children = children;
-    }
-
-    /**
-     * Creates a new parse tree based on the specified edge and parent tree.
-     *
-     * @param edge   The edge to use to create a parse tree. For a parse tree
-     *               that is the root, this should be <code>null</code>.
-     * @param parent The parent tree of the new parse tree.
-     * @return A new parse tree whose {@link #getNode() node} is the
-     * specified edge's dotted rule's left side and whose children are based
-     * on the {@link State#getBases() bases} of the specified edge.
-     */
-    public static ParseTree newParseTree(State edge, ParseTree parent) {
-//        State e;
-//        ParseTree parentTree;
-//
-//        if (edge.rule.left.equals(START)) { // first child if START
-//            e = edge.bases.iterator().next();
-//            parentTree = null;
-//        } else {
-//            e = edge;
-//            parentTree = (parent != null && parent.node.equals(START))
-//                    ? null : parent;
-//        }
-//
-//        Rule dr = e.rule;
-//        ParseTree newTree;
-//
-//        Optional<Category> activeCategory = e.getActiveCategory();
-//        if (!activeCategory.isPresent()) { // basis from a completion?
-//            int basisCount = e.bases.size();
-//            newTree = new ParseTree(dr.left, parentTree, (basisCount == 0) ? null : new ParseTree[basisCount]);
-//
-//            if (basisCount > 0) {
-//                int i = 0;
-//                for (State base : e.bases) {
-//                    newTree.children[i] = ParseTree.newParseTree(base, newTree);
-//                    i++;
-//                }
-//            }
-//        } else { // from a scan
-//            newTree = new ParseTree(activeCategory.get(), parentTree, null);
-//        }
-//
-//        return newTree;
-        throw new NotImplementedException();
     }
 
     /**
@@ -115,7 +66,7 @@ public class ParseTree {
      * <code>Det, N</code> in that order, or <code>null</code> if this parse
      * tree has no children.
      */
-    public Deque<ParseTree> getChildren() {
+    public List<ParseTree> getChildren() {
         return children;
     }
 
@@ -143,5 +94,20 @@ public class ParseTree {
 
     public void addRightMost(ParseTree tree) {
         children.addLast(tree);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ParseTree parseTree = (ParseTree) o;
+        return node.equals(parseTree.node) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = node.hashCode();
+        result = 31 * result + (children != null ? children.hashCode() : 0);
+        return result;
     }
 }

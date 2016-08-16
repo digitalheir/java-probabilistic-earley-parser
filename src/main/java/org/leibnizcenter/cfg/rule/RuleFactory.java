@@ -23,7 +23,7 @@ public class RuleFactory {
      * Instantiates a new rule with a probability score of one (whatever that means for the given semiring)
      */
     public Rule newRule(NonTerminal LHS, Category... RHS) {
-        return newRule(semiring.one(), LHS, RHS);
+        return newRuleWithRawProbability(semiring.one(), LHS, RHS);
     }
 
     /**

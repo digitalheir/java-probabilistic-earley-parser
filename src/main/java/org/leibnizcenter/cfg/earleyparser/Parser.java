@@ -8,6 +8,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
+import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.token.Token;
@@ -22,11 +23,29 @@ import java.util.stream.Collectors;
  */
 public class Parser {
 
-    public static <E> boolean recognize(NonTerminal S,
-                                        Grammar grammar,
-                                        Iterable<Token<E>> tokens) {
-        final ChartWithInputPosition parse = parseAndCountTokens(S, grammar, tokens, null);
-        return parse.chart.getCompletedStates(parse.index, S).size() > 0;
+    /**
+     * Parses the given list of tokens and returns he parse probability
+     *
+     * @param goal    Goal category, typically S for Sentence
+     * @param grammar Grammar to apply to tokens
+     * @param tokens  list of tokens to parse
+     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     */
+    public static <E> double recognize(NonTerminal goal,
+                                       Grammar grammar,
+                                       Iterable<Token<E>> tokens) {
+        final ChartWithInputPosition parse = parseAndCountTokens(goal, grammar, tokens, null);
+        final Set<State> completedStates = parse.chart.getCompletedStates(parse.index, Category.START);
+        if (completedStates.size() > 0) {
+            if (completedStates.size() > 1)
+                throw new IssueRequest("Multiple final states found. This is likely an error.");
+            return completedStates.stream().mapToDouble(finalState ->
+                    grammar.getSemiring().toProbability(
+                            parse.chart.getForwardScore(finalState)
+                    )).sum();
+        } else {
+            return 0.0;
+        }
     }
 
 
@@ -78,7 +97,7 @@ public class Parser {
 
         List<ParseTreeWithScore> parses = chart.chart.getCompletedStates(chart.index, Category.START).stream()
                 .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.getSemiring()))
-        .collect(Collectors.toList());
+                .collect(Collectors.toList());
         if (parses.size() > 1) throw new Error("Found more than one Viterbi parses. This is a bug.");
         return parses.size() == 0 ? null : parses.get(0);
     }

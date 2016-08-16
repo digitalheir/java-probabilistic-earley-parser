@@ -5,13 +5,15 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
-import org.leibnizcenter.cfg.earleyparser.exception.ParseException;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.Tokens;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 
@@ -19,16 +21,65 @@ import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 /**
  */
 public class ChartTest {
-    private static final Chart chart = new Chart(grammar);
 
-    //    static {
-//        chart.addState(0, edge1);
-//        chart.addState(0, edge2);
-//        chart.addState(1, edge3);
-//    }
-//
+
     @Test
-    public final void example() throws ParseException {
+    public final void ambiguous() {
+        final NonTerminal BV = new NonTerminal("BV");
+        final Category a = new ExactStringTerminal("a");
+        final Category the = new ExactStringTerminal("the");
+        final Category right = new ExactStringTerminal("right");
+        final Category wrong = new ExactStringTerminal("wrong");
+        final Category girl = new ExactStringTerminal("girl");
+        final Category left = new ExactStringTerminal("left");
+        final NonTerminal S = Category.nonTerminal("S");
+        final NonTerminal NP = Category.nonTerminal("NP");
+        final NonTerminal VP = Category.nonTerminal("VP");
+        final NonTerminal Det = Category.nonTerminal("Det");
+        final NonTerminal N = Category.nonTerminal("N");
+
+        double PSVP = 0.9;
+        double PSNP = 1 - PSVP;
+        Grammar grammar = new Grammar.Builder("test")
+                .setSemiring(new LogSemiring())
+                .addRule(PSVP, S, NP, VP)
+                .addRule(PSNP, S, NP)
+                .addRule(NP, Det, N)
+                .addRule(N, BV, N)
+                .addRule(VP, left)
+                .addRule(BV, left)
+                .addRule(BV, wrong)
+                .addRule(BV, right)
+                .addRule(Det, a)
+                .addRule(Det, the)
+                .addRule(N, right)
+                .addRule(N, left)
+                .addRule(N, girl)
+                .build();
+
+        // Parsable
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl left")), PSVP, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the wrong right")), PSNP, 0.0001); // ambiguous
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right")), PSNP, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl")), PSNP, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right right")), PSNP, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the left right")), PSNP, 0.0001);
+
+        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left girl")), 1.0, 0.0001);
+        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left left")), 1.0, 0.0001);
+        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("wrong left")), 1.0, 0.0001);
+
+        // Unparsable
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("girl left")), 0.0, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the")), 0.0, 0.0001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+
+    }
+
+
+    @Test
+    public final void paper_example() {
         double p = 0.6;
         double q = 0.4;
         Grammar grammar = new Grammar.Builder()
@@ -38,7 +89,6 @@ public class ChartTest {
                 .build();
         Chart chart = new Chart(grammar);
         DblSemiring sr = grammar.getSemiring();
-
 
         State initialState = new State(Rule.create(sr.one(), Category.START, S), 0);
         chart.addState(0, initialState, sr.one(), sr.one());

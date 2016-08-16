@@ -2,7 +2,7 @@
 //package org.leibnizcenter.cfg.earleyparser.event;
 //
 //import org.leibnizcenter.cfg.Grammar;
-//import org.leibnizcenter.cfg.earleyparser.exception.ParseException;
+//import org.leibnizcenter.cfg.errors.ParseException;
 //import org.leibnizcenter.cfg.earleyparser.parse.Parse;
 //
 //import java.util.EventListener;
@@ -74,7 +74,7 @@
 //     * @param parseErrorEvent An error event containing the parse that was
 //     *                        in progress and the error that occurred.
 //     * @throws ParseException If the listener does not wish to handle the
-//     *                      exception, it can re-throw the cause of the parse error event.
+//     *                      errors, it can re-throw the cause of the parse error event.
 //     */
 //    public void parseError(ParseErrorEvent parseErrorEvent) throws ParseException;
 //}

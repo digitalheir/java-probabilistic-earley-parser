@@ -10,7 +10,7 @@
 //import org.leibnizcenter.cfg.earleyparser.event.ParseErrorEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParseEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParserListener;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.earleyparser.parse.*;
 //import org.leibnizcenter.cfg.token.Token;
 //import org.leibnizcenter.cfg.token.Tokens;
@@ -101,7 +101,7 @@
 ////            parse = earleyParser.parse(
 ////                    Arrays.asList(new String[]{"the", "", "left"}), S);
 ////        } catch (PepException pe) {
-////            Assert.fail("parsing for empty token threw exception: " + pe);
+////            Assert.fail("parsing for empty token threw errors: " + pe);
 ////        }
 ////
 ////        Assert.assertEquals(REJECT, parse.getStatus());
@@ -123,7 +123,7 @@
 ////            parse = earleyParser.parse(
 ////                    Arrays.asList(new String[]{"the", "", "left"}), S);
 ////        } catch (PepException pe) {
-////            Assert.fail("parsing for empty token threw exception: " + pe);
+////            Assert.fail("parsing for empty token threw errors: " + pe);
 ////        }
 ////
 ////        Assert.assertEquals(ACCEPT, parse.getStatus());
@@ -134,7 +134,7 @@
 ////            try {
 ////                parse = earleyParser.parse(Tokens.tokenize(s, " "), A);
 ////            } catch (PepException pe) {
-////                Assert.fail("parsing " + s + " threw exception: " + pe);
+////                Assert.fail("parsing " + s + " threw errors: " + pe);
 ////            }
 ////
 ////            Assert.assertEquals(ACCEPT, parse.getStatus());
@@ -143,7 +143,7 @@
 ////        try {
 ////            parse = earleyParser.parse(Tokens.tokenize("a b", " "), A);
 ////        } catch (PepException pe) {
-////            Assert.fail("parsing a b threw exception: " + pe);
+////            Assert.fail("parsing a b threw errors: " + pe);
 ////        }
 ////
 ////        Assert.assertEquals(REJECT, parse.getStatus());

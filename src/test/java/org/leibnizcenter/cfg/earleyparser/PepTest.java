@@ -2,7 +2,7 @@
 //package org.leibnizcenter.cfg.earleyparser;
 //
 //import org.junit.Test;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.earleyparser.parse.ParserOptions;
 //
 //import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;

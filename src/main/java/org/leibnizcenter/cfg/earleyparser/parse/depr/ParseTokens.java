@@ -7,7 +7,7 @@
 //import org.leibnizcenter.cfg.earleyparser.event.ParseEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParserEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParserListener;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.rule.Rule;
 //import org.leibnizcenter.cfg.token.Token;
 //

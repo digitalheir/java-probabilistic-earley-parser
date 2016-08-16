@@ -18,12 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.S;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.A;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.B;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.C;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.D;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.a;
+import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 
 /**
  * Created by Maarten on 31-7-2016.
@@ -195,7 +190,7 @@ public class ParserTest {
         ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
 
         System.out.println(parse);
-        Assert.assertEquals(parse.getProbability(), Math.pow(0.5,5), 0.0001);
+        Assert.assertEquals(parse.getProbability(), Math.pow(0.5, 5), 0.0001);
         // TODO assert some stuff
     }
 
@@ -220,6 +215,30 @@ public class ParserTest {
 
         System.out.println(parse);
         Assert.assertEquals(parse.getProbability(), 0.01, 0.0001);
+        // TODO assert some stuff
+    }
+
+
+    @Test
+    public void viterbi3() throws Exception {
+        final LogSemiring sr = new LogSemiring();
+        Grammar grammar = new Grammar.Builder()
+                .setSemiring(sr)
+                .addRule(1.0, S, A, A)
+                .addRule(1.0, A, B)
+                .addRule(0.1, A, D)
+                .addRule(1.0, B, C)
+                .addRule(0.9, D, a, a)
+                .addRule(0.9, C, D)
+                .addRule(0.9, B, a)
+                .addRule(0.5, C, a, a)
+                .build();
+
+        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a", "a");
+        ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
+
+        System.out.println(parse);
+        Assert.assertEquals(parse.getProbability(), 0.6561, 0.0001);
         // TODO assert some stuff
     }
 }

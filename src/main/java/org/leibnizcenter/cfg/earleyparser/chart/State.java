@@ -3,7 +3,6 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 import com.sun.istack.internal.NotNull;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.Semiring;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
 import java.text.DecimalFormat;
@@ -109,7 +108,7 @@ public class State {
 //     * @throws NullPointerException     if <code>this</code> or
 //     *                                  <code>basis</code> is <code>null</code>.
 //     * @throws IllegalArgumentException If the specified basis is not a
-//     *                                  suitable State for completing this State. Reasons for this exception are
+//     *                                  suitable State for completing this State. Reasons for this errors are
 //     *                                  that the basis State:
 //     *                                  <ul>
 //     *                                  <li>has a {@link #getRule() dotted rule} whose

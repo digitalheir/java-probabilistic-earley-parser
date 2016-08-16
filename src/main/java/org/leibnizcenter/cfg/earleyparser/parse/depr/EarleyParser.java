@@ -4,7 +4,7 @@
 //import com.google.common.collect.Lists;
 //import org.leibnizcenter.cfg.Grammar;
 //import org.leibnizcenter.cfg.earleyparser.event.*;
-//import org.leibnizcenter.cfg.earleyparser.exception.PepException;
+//import org.leibnizcenter.cfg.errors.PepException;
 //import org.leibnizcenter.cfg.category.Category;
 //import org.leibnizcenter.cfg.rule.Rule;
 //import org.leibnizcenter.cfg.token.Token;
@@ -219,7 +219,7 @@
 //     *                      <ul>
 //     *                      <li><code>tokens</code> is <code>null</code> or empty</li>
 //     *                      <li><code>seed</code> is <code>null</code></li>
-//     *                      <li>An exception is thrown in the process of parsing, for example,
+//     *                      <li>An errors is thrown in the process of parsing, for example,
 //     *                      in case the parser is unable to parse one of the input tokens</li>
 //     *                      </ul>
 //     */
@@ -261,7 +261,7 @@
 //                    parseStep(chart, index, parse, tokenIterator);
 //                    index ++;
 //                } catch (PepException pe) {
-//                    fireParseError(parse, index, pe); // may re-throw exception
+//                    fireParseError(parse, index, pe); // may re-throw errors
 //                }
 //            }
 //        }

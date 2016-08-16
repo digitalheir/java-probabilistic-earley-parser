@@ -1,7 +1,9 @@
 
 package org.leibnizcenter.cfg.earleyparser.parse;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -89,7 +91,7 @@ public class Chart {
                         Category Y = Y_to_v.getLeft();
                         State s = stateSets.get(index, index, 0, Y_to_v); // We might want to increment the probability of an existing state
                         // γ' = P(Y → v)
-                        final double Y_to_vProbability = Y_to_v.getProbability();
+                        final double Y_to_vProbability = Y_to_v.getScore();
 
                         // α' = α * R(Z =*L> Y) * P(Y → v)
                         final double fw = sr.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_vProbability);
@@ -133,7 +135,7 @@ public class Chart {
      * @param token The token that was scanned.
      */
     public void scan(int index, Token token, ScanProbability scanProbability) {
-        if (token == null) throw new Error("null token at index " + index);//TODO exception?
+        if (token == null) throw new Error("null token at index " + index);//TODO errors?
 
         // Get all states that are active on a terminal
         //noinspection unchecked
