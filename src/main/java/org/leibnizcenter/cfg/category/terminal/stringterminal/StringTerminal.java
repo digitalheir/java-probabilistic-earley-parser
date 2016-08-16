@@ -1,4 +1,6 @@
-package org.leibnizcenter.cfg.category.terminal;
+package org.leibnizcenter.cfg.category.terminal.stringterminal;
+
+import org.leibnizcenter.cfg.category.terminal.Terminal;
 
 /**
  * Intermediate interface for {@link String} terminals

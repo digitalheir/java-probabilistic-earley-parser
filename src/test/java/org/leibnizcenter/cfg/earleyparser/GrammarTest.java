@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 

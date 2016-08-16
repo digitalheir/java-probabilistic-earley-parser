@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.category.terminal;
+package org.leibnizcenter.cfg.category.terminal.stringterminal;
 
 import org.leibnizcenter.cfg.token.Token;
 
@@ -7,7 +7,7 @@ import org.leibnizcenter.cfg.token.Token;
  * Created by maarten on 11-6-16.
  */
 public class CaseInsenstiveStringTerminal implements StringTerminal {
-    private final String string;
+    public final String string;
 
     public CaseInsenstiveStringTerminal(String s) {
         this.string = s;

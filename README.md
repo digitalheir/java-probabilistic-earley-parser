@@ -22,8 +22,7 @@ for instance when an unexpected token is encountered.
 Furthermore, I needed a efficient parser that does not limit token types 
 to strings.
    
-## Usage 
-Most internal parsing stuff is available through he public API, in case you need a slightly different parser than usual. 
+## Usage  
 Most applications will want to interface with the static functions in `Parser`:
 
 ```java
@@ -37,7 +36,7 @@ public class Example {
     private static final NonTerminal N = Category.nonTerminal("N");
     private static final NonTerminal Mod = Category.nonTerminal("Mod");
 
-    // Token types are realized by implementing Terminal, and implementing hasCategory. This is a functional interface.
+    // Token types are realized by implementing Terminal, specifically the function hasCategory. Terminal is a functional interface.
     private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
     private static final Terminal the = new CaseInsenstiveStringTerminal("the");
@@ -90,6 +89,7 @@ public class Example {
 }
 ```
 
+Most internal parsing stuff is available through he public API, should you need a slightly different parser than usual.
 
 ## Some notes on implementation
 The probability of a parse is defined as the product of the probalities all the applied rules. Usually,

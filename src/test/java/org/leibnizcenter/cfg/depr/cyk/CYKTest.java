@@ -1,4 +1,4 @@
-//package org.leibnizcenter.cfg.cyk;
+//package org.leibnizcenter.cfg.depr.cyk;
 //
 //import com.google.common.collect.Lists;
 //import org.junit.Assert;

@@ -4,6 +4,7 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.earleyparser.chart.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
@@ -52,30 +53,47 @@ public class Parser {
     /**
      * Performs the backward part of the forward-backward algorithm
      * <p/>
-     * TODO make this an iterative algo instead of recursive
+     * TODO make this an iterative algorithm instead of recursive: might be more efficient?
      */
     public static ParseTree getViterbiParse(State state, Chart chart) {
-        //TODO index these relations
-        // state { i: X_k -> \.v }
-        if (state.getRuleDotPosition() <= 0) {
+        if (state.getRuleDotPosition() <= 0)
+            // Prediction state
             return new ParseTree(state.getRule().getLeft());
-        } else {
+        else {
             Category prefixEnd = state.getRule().getRight()[state.getRuleDotPosition() - 1];
             if (prefixEnd instanceof Terminal) {
+                // Scanned terminal state
+                if (!(state instanceof ScannedTokenState))
+                    throw new IssueRequest("Expected state to be a scanned state. This is a bug.");
+
                 // let \'a = \, call
                 ParseTree T = getViterbiParse(
                         chart.stateSets.get(state.getPosition() - 1, state.getRuleStartPosition(), state.getRuleDotPosition() - 1, state.getRule()),
                         chart
                 );
-                T.addRightMost(new ParseTree(state.getRule().getRight()[state.getRuleDotPosition() - 1]));
+                T.addRightMost(new ParseTree.Token(((ScannedTokenState) state).scannedToken, state.getRule().getRight()[state.getRuleDotPosition() - 1]));
                 return T;
             } else {
-                if (!(prefixEnd instanceof NonTerminal)) throw new Error("???");
+                if (!(prefixEnd instanceof NonTerminal)) throw new IssueRequest("Something went terribly wrong.");
+
+                // Completed non-terminal state
                 State.ViterbiScore viterbi = chart.getViterbiScore(state); // must exist
 
+                // Completed state that led to the current state
                 State origin = viterbi.getOrigin();
-                ParseTree T = getViterbiParse(chart.stateSets.get(origin.ruleStartPosition, state.getRuleStartPosition(), state.getRuleDotPosition() - 1, state.getRule()), chart);
+
+                // Recurse for predecessor state (before the completion happened)
+                ParseTree T = getViterbiParse(
+                        chart.stateSets.get(
+                                origin.ruleStartPosition,
+                                state.getRuleStartPosition(),
+                                state.getRuleDotPosition() - 1,
+                                state.getRule()
+                        )
+                        , chart);
+                // Recurse for completed state
                 ParseTree Tprime = getViterbiParse(origin, chart);
+
                 T.addRightMost(Tprime);
                 return T;
             }
@@ -89,7 +107,9 @@ public class Parser {
     }
 
     public static <E> ParseTree getViterbiParse(NonTerminal S, Grammar grammar, Iterable<Token<E>> tokens) {
-        return getViterbiParseWithScore(S, grammar, tokens).getParseTree();
+        final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, grammar, tokens);
+        if (viterbiParseWithScore == null) return null;
+        return viterbiParseWithScore.getParseTree();
     }
 
     public static <E> ParseTreeWithScore getViterbiParseWithScore(NonTerminal S, Grammar grammar, Iterable<Token<E>> tokens) {
@@ -121,7 +141,7 @@ public class Parser {
             chart.scan(i, token, scanProbability);
 
             Set<State> completedStates = new HashSet<>(chart.stateSets.getCompletedStates(i + 1));
-            completedStates.forEach(s -> chart.viterbi(s, new HashSet<>(), grammar.getSemiring()));
+            completedStates.forEach(s -> chart.setViterbiScores(s, new HashSet<>(), grammar.getSemiring()));
 
             chart.completeTruncated(i + 1);
 //            chart.computeViterbi(i + 1);

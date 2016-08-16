@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.category.terminal;
+package org.leibnizcenter.cfg.category.terminal.stringterminal;
 
 import org.leibnizcenter.cfg.token.Token;
 
@@ -8,7 +8,7 @@ import org.leibnizcenter.cfg.token.Token;
  */
 @SuppressWarnings("WeakerAccess")
 public class ExactStringTerminal implements StringTerminal {
-    private final String string;
+    public final String string;
 
     public ExactStringTerminal(String s) {
         if (s == null) throw new NullPointerException();

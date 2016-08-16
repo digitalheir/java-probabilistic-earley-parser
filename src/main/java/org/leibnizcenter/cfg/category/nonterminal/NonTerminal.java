@@ -9,7 +9,6 @@ import org.leibnizcenter.cfg.category.Category;
  * Created by maarten on 10-6-16.
  */
 public class NonTerminal implements Category {
-    @SuppressWarnings("WeakerAccess")
     public final String name;
 
     /**

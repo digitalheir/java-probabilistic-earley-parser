@@ -4,7 +4,7 @@
 //import org.apache.commons.cli.*;
 //import org.leibnizcenter.cfg.Grammar;
 //import org.leibnizcenter.cfg.category.Category;
-//import org.leibnizcenter.cfg.category.terminal.StringTerminal;
+//import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
 //import org.leibnizcenter.cfg.earleyparser.event.StateEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParseErrorEvent;
 //import org.leibnizcenter.cfg.earleyparser.event.ParseEvent;

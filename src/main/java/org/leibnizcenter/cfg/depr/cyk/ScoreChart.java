@@ -1,4 +1,4 @@
-//package org.leibnizcenter.cfg.cyk;
+//package org.leibnizcenter.cfg.depr.cyk;
 //
 //import org.leibnizcenter.cfg.category.Category;
 //import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;

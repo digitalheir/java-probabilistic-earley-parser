@@ -4,7 +4,7 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.A;
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.a;

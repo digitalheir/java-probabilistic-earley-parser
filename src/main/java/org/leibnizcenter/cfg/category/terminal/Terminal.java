@@ -11,7 +11,7 @@ import org.leibnizcenter.cfg.token.Token;
 public interface Terminal<T> extends Category {
 
     /**
-     * Expected to run in O(1)
+     * Expected to run in O(1), or else the complexity analysis does not apply anymore
      *
      * @param token Token to test
      * @return Whether this category conforms to the given token

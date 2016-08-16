@@ -8,6 +8,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.State;
 import java.util.LinkedList;
 import java.util.List;
 //TODO
+
 /**
  * A parse tree that represents the derivation of a string based on the
  * rules in a {@link Grammar}. Parse trees recursively contain
@@ -20,7 +21,6 @@ import java.util.List;
  * {@link Category#START} category is not included in a parse tree at the root
  * (only category that are actually specified in the corresponding grammar
  * are represented).
- *
  */
 public class ParseTree {
     final Category node;
@@ -85,7 +85,7 @@ public class ParseTree {
         sb.append(node.toString());
 
         // recursively append children
-        if (children != null)  for (ParseTree child : children) sb.append(child.toString());
+        if (children != null) for (ParseTree child : children) sb.append(child.toString());
 
         sb.append(']');
 
@@ -110,4 +110,46 @@ public class ParseTree {
         result = 31 * result + (children != null ? children.hashCode() : 0);
         return result;
     }
+
+//    @Deprecated
+//    public <E> TokenParseTree mapTokensToLeafnodes(final LinkedList<Token<E>> tokens) {
+//        if (!hasChildren()) throw new IssueRequest("This is a bug.");
+//        ArrayList<TokenParseTree> newChildren = new ArrayList<>(children.size());
+//        for (ParseTree child : children)
+//            if (!child.hasChildren()) newChildren.add(new TokenParseTree<>(child.node, tokens.pop()));
+//            else newChildren.add(child.mapTokensToLeafnodes(tokens));
+//        return new TokenParseTree(this.node, newChildren);
+//    }
+
+    private boolean hasChildren() {
+        return children == null || children.size() > 0;
+    }
+
+    public static class Token<E> extends ParseTree {
+        public final org.leibnizcenter.cfg.token.Token<E> token;
+
+        public Token(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
+            super(category);
+            this.token = scannedToken;
+        }
+    }
+
+//    @Deprecated
+//    public class TokenParseTree<E> {
+//        public final Token<E> token;
+//        public final List<TokenParseTree> children;
+//        private final Category category;
+//
+//        public TokenParseTree(Category category, Token<E> token) {
+//            this.token = token;
+//            this.category = category;
+//            this.children = null;
+//        }
+//
+//        public TokenParseTree(Category category, ArrayList<TokenParseTree> children) {
+//            this.token = null;
+//            this.category = category;
+//            this.children = Collections.unmodifiableList(children);
+//        }
+//    }
 }

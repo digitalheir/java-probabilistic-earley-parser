@@ -6,17 +6,21 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.CaseInsenstiveStringTerminal;
-import org.leibnizcenter.cfg.category.terminal.ExactStringTerminal;
-import org.leibnizcenter.cfg.category.terminal.StringTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.State;
 import org.leibnizcenter.cfg.earleyparser.parse.Chart;
+import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
 
@@ -55,7 +59,7 @@ public class ChartTest {
             )
             .addRule(
                     NP,
-                    Det, N, Mod // eg. The man (with a stick)
+                    Det, N, Mod // eg. the man (with a stick)
             )
             .addRule(
                     0.4,
@@ -77,30 +81,13 @@ public class ChartTest {
 
     @Test
     public final void readmeExample() {
-        System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick"))
-        );
-        System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man"))
-        );
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick")), 1.0, 0.000001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man")), 0.6, 0.000001);
 
-
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl left")), PSVP, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the wrong right")), PSNP, 0.0001); // ambiguous
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right")), PSNP, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl")), PSNP, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right right")), PSNP, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the left right")), PSNP, 0.0001);
-//
-//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left girl")), 1.0, 0.0001);
-//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left left")), 1.0, 0.0001);
-//        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("wrong left")), 1.0, 0.0001);
-//
-//        // Unparsable
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("girl left")), 0.0, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the")), 0.0, 0.0001);
-//        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+        final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with a stick");
+        ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
+        ParseTree.TokenParseTree parseTreeWithTokensAsLeaves = parseTree.mapTokensToLeafnodes(new LinkedList<>(tokens));
+        System.out.println(parseTree);
     }
 
     @Test
@@ -184,6 +171,7 @@ public class ChartTest {
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(new State(Rule.create(sr, q, S, B), 0))), (q / p), 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(new State(Rule.create(sr, q, S, B), 0))), q, 0.01);
 
+        System.out.println(chart.countStates());
 //        for (State s : chart.getStates(0)) {
 //            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getScore(s) + "]");
 //        }

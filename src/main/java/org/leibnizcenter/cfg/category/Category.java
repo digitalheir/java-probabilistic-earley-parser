@@ -35,7 +35,7 @@ public interface Category {
          */
         @Override
         public boolean equals(Object obj) {
-            return (obj instanceof Category && this == obj);
+            return this == obj;
         }
     };
 
