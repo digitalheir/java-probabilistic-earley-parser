@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
@@ -12,6 +13,7 @@ import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,7 +52,7 @@ public class ParserTest {
 
         // State set 1
         // scanned
-        final State s01Sa1 = new State(Rule.create(sr, p, S, a), 0, 1, 1);
+        final State s01Sa1 = new ScannedTokenState<>(new Token<>("a"), Rule.create(sr, p, S, a), 0, 1, 1);
         Assert.assertTrue(chart.getStates(1).contains(s01Sa1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s01Sa1)), 1, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s01Sa1)), p, 0.01);
@@ -72,12 +74,11 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s11SSS0)), q, 0.01);
 
         Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 0, 1, 1)));
-        Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, p, S, a), 0, 1, 1)));
         Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 1, 1, 0)));
 
         // State set 2
         // scanned
-        final State s12Sa1 = new State(Rule.create(sr, p, S, a), 1, 2, 1);
+        final State s12Sa1 = new ScannedTokenState<>(new Token<>("a"), Rule.create(sr, p, S, a), 1, 2, 1);
         Assert.assertTrue(chart.getStates(2).contains(s12Sa1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s12Sa1)), q, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s12Sa1)), p, 0.01);
@@ -97,8 +98,9 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s02SSS1)), p * q * q, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s02SSS1)), p * p * q * q, 0.01);
 
-        final State s02S1 = new State(Rule.create(sr.one(), Category.START, S), 0, 2, 1);
-        Assert.assertTrue(chart.getStates(2).contains(s02S1));
+        final State s02S1 = new State(Rule.create(sr, Category.START, S), 0, 2, 1);
+        Collection<State> states2 = chart.getStates(2);
+        Assert.assertTrue(states2.contains(s02S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s02S1)), p * p * q, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s02S1)), p * p * q, 0.01);
         // predicted
@@ -114,7 +116,7 @@ public class ParserTest {
 
         // State set 3
         // scanned
-        final State s23Sa1 = new State(Rule.create(sr, p, S, a), 2, 3, 1);
+        final State s23Sa1 = new ScannedTokenState<>(new Token<>("a"), Rule.create(sr, p, S, a), 2, 3, 1);
         Assert.assertTrue(chart.getStates(3).contains(s23Sa1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s23Sa1)), (1 + p) * q * q, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s23Sa1)), p, 0.01);
@@ -145,8 +147,9 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s03S1)), 2 * p * p * q * q * q, 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s03S1)), 2 * p * p * p * q * q * q, 0.01);
 
-        final State s33S1 = new State(Rule.create(sr.one(), Category.START, S), 0, 3, 1);
-        Assert.assertTrue(chart.getStates(3).contains(s33S1));
+        final State s33S1 = new State(Rule.create(sr, Category.START, S), 0, 3, 1);
+        final Set<State> states3s = chart.getStates(3);
+        Assert.assertTrue(states3s.contains(s33S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.01);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.01);
 

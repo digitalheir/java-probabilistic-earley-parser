@@ -194,11 +194,13 @@ public class State {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         State state = (State) o;
-        return ruleStartPosition == state.ruleStartPosition
-                && ruleDotPosition == state.ruleDotPosition
-                && positionInInput == state.positionInInput
-                && rule.equals(state.rule);
+
+        if (ruleStartPosition != state.ruleStartPosition) return false;
+        if (ruleDotPosition != state.ruleDotPosition) return false;
+        if (positionInInput != state.positionInInput) return false;
+        return rule.equals(state.rule);
 
     }
 
@@ -283,8 +285,13 @@ public class State {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
+
             ViterbiScore that = (ViterbiScore) o;
-            return Double.compare(that.innerScore, innerScore) == 0 && (origin != null ? origin.equals(that.origin) : that.origin == null && (sr != null ? sr.equals(that.sr) : that.sr == null && !(resultingState != null ? !resultingState.equals(that.resultingState) : that.resultingState != null)));
+
+            if (Double.compare(that.innerScore, innerScore) != 0) return false;
+            if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
+            if (!sr.equals(that.sr)) return false;
+            return resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null;
 
         }
 
@@ -295,7 +302,7 @@ public class State {
             result = origin != null ? origin.hashCode() : 0;
             temp = Double.doubleToLongBits(innerScore);
             result = 31 * result + (int) (temp ^ (temp >>> 32));
-            result = 31 * result + (sr != null ? sr.hashCode() : 0);
+            result = 31 * result + sr.hashCode();
             result = 31 * result + (resultingState != null ? resultingState.hashCode() : 0);
             return result;
         }

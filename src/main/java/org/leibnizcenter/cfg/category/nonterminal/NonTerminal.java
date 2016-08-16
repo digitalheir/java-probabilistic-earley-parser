@@ -41,13 +41,13 @@ public class NonTerminal implements Category {
 
         NonTerminal that = (NonTerminal) o;
 
-        return name.equals(that.name);
+        return name != null ? name.equals(that.name) : that.name == null;
 
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return name != null ? name.hashCode() : 0;
     }
 
     /**

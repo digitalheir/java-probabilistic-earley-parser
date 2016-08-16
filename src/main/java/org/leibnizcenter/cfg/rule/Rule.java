@@ -50,7 +50,7 @@ public class Rule {
      *                                  </ol>
      */
     protected Rule(double rawProbability, NonTerminal left, Category... right) {
-        this.rawProbability = rawProbability;
+        this.rawProbability = rawProbability == -0.0 ? 0.0 : rawProbability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
 

@@ -35,8 +35,9 @@ public interface Category {
          */
         @Override
         public boolean equals(Object obj) {
-            return this == obj;
+            return obj instanceof NonTerminal && this == obj;
         }
+
     };
 
     /**
