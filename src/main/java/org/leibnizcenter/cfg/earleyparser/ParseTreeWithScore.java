@@ -1,7 +1,8 @@
 package org.leibnizcenter.cfg.earleyparser;
+
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
 /**
  * Created by Maarten on 15/08/2016.

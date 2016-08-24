@@ -1,21 +1,21 @@
 
-package org.leibnizcenter.cfg.earleyparser;
+package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
-import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
@@ -53,10 +53,12 @@ public class ChartTest {
                     NP, VP // Right hand side of the rule
             )
             .addRule(
+                    0.5,
                     NP,
                     Det, N // eg. The man
             )
             .addRule(
+                    0.5,
                     NP,
                     Det, N, Mod // eg. the man (with a stick)
             )
@@ -70,20 +72,19 @@ public class ChartTest {
                     VP,
                     TV, NP // eg. (chased) (the man with a stick)
             )
-            .addRule(Det, a)
             .addRule(Det, the)
             .addRule(N, man)
-            .addRule(N, stick)
             .addRule(TV, transitiveVerb)
             .addRule(Mod, with, NP) // eg. with a stick
             .build();
 
     @Test
     public final void readmeExample() {
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick")), 1.0, 0.000001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man")), 0.6, 0.000001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with the man")), 0.05, 0.000001);
+        Assert.assertEquals(Parser.recognize(NP, grammar, Tokens.tokenize("the man with the man")), 0.25, 0.000001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the", "man", "chased", "the", "man")), 0.15, 0.000001);
 
-        final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with a stick");
+        final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with the stick");
         ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
         System.out.println(parseTree);
     }
@@ -171,12 +172,12 @@ public class ChartTest {
 
         System.out.println(chart.countStates());
 //        for (State s : chart.getStates(0)) {
-//            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getScore(s) + "]");
+//            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getExpression(s) + "]");
 //        }
 //
 //        for (int i = 0; i < 3; i++) {
 //            chart.scan(i, new Token<>("a"));
-//            if (i < 3) chart.completeTruncated(i + 1);
+//            if (i < 3) chart.completeNoViterbi(i + 1);
 //        }
 
     }
@@ -207,12 +208,12 @@ public class ChartTest {
         chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         chart.predict(0);
         chart.scan(0, new Token<>("a"), index -> semiring.fromProbability(0.5));
-        chart.completeTruncated(1);
+        chart.completeNoViterbi(1);
 
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {
 //                final double probFw = semiring.toProbability(chart.getForwardScore(s));
-//                final double probInn = semiring.toProbability(chart.getScore(s));
+//                final double probInn = semiring.toProbability(chart.getExpression(s));
 //                System.out.println((s) + "[" + probFw + "]" + "[" + probInn + "]");
 //            }
 //        }

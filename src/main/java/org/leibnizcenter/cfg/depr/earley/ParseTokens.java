@@ -111,7 +111,7 @@
 //
 //        chart.scan(index, token, predictPreterm, listener); // scan and increment index
 //        index++;
-//        Chart.completeTruncated(chart, index, listener); // completeTruncated for next index
+//        Chart.completeNoViterbi(chart, index, listener); // completeNoViterbi for next index
 //
 //        if (!tokenIterator.hasNext()) {
 //            // finish filling chart by predicting for final index

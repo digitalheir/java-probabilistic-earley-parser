@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.semiring;
+package org.leibnizcenter.cfg.algebra.semiring;
 
 /**
  * Properties that semiring might have

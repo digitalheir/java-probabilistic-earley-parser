@@ -6,6 +6,11 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.Grammar;
+import org.leibnizcenter.cfg.algebra.expression.ScoreRefs;
+import org.leibnizcenter.cfg.algebra.expression.ScoreRefsWithAddition;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.Value;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
@@ -13,7 +18,6 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.token.Token;
 
 import java.util.*;
@@ -32,12 +36,13 @@ import java.util.stream.Stream;
 public class Chart {
     public final StateSets stateSets;
     private final Grammar grammar;
+    private final ExpressionSemiring semiring;
 
     /**
      * Creates a new chart, initializing its internal data structure.
      */
     public Chart(Grammar grammar) {
-        this(grammar, new StateSets(grammar.getSemiring()));
+        this(grammar, new StateSets(grammar));
     }
 
     /**
@@ -50,6 +55,7 @@ public class Chart {
     private Chart(Grammar grammar, StateSets stateSets) {
         this.stateSets = stateSets;
         this.grammar = grammar;
+        this.semiring = grammar.getSemiring();
     }
 
     /**
@@ -72,8 +78,9 @@ public class Chart {
             double prevForward = stateSets.getForwardScore(statePredecessor);
 
             // For all productions Y → v such that R(Z =*L> Y) is nonzero
-            grammar.getLeftStarCorners().getNonZeroScores(Z).stream()
-                    .flatMap(Y -> grammar.getRules(Y).stream())
+            grammar.getLeftStarCorners()
+                    .getNonZeroScores(Z).stream()
+                    .flatMap(Y -> grammar.getRules(Y).stream()) // ?
                     // we predict state <code>i: Y<sub>i</sub> → ·v</code>
                     .forEach(Y_to_v -> {
                         Category Y = Y_to_v.getLeft();
@@ -88,6 +95,7 @@ public class Chart {
                         if (!(Y_to_vProbability == innerScore || sr.zero() == innerScore))
                             throw new Error(Y_to_vProbability + " != " + innerScore);
 
+//                        System.out.println("predict, add " + semiring.toProbability(fw));
                         if (s != null) {
                             stateSets.addForwardScore(s, fw);
                             stateSets.setInnerScore(s, Y_to_vProbability);
@@ -134,18 +142,18 @@ public class Chart {
 
                 // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
                 .forEach(prevState -> {
-                    State newState = stateSets.getOrCreate(
-                            index + 1, prevState.getRuleStartPosition(),
-                            prevState.advanceDot(),
-                            prevState.getRule(),
-                            token
-                    );
+                            State newState = stateSets.getOrCreate(
+                                    index + 1, prevState.getRuleStartPosition(),
+                                    prevState.advanceDot(),
+                                    prevState.getRule(),
+                                    token
+                            );
 
                             double fw = stateSets.getForwardScore(prevState);
                             DblSemiring sr = grammar.getSemiring();
                             if (scanProbability != null) fw = sr.times(fw, scanProbability.getProbability(index));
                             stateSets.setForwardScore(newState, fw);
-
+//                            System.out.println("scan, set " + semiring.toProbability(fw));
                             double inner = stateSets.getInnerScore(prevState);
                             if (scanProbability != null) inner = sr.times(inner, scanProbability.getProbability(index));
                             stateSets.setInnerScore(newState, inner);
@@ -155,90 +163,243 @@ public class Chart {
     }
 
     /**
-     * Makes completions in the specified chart at the given index. Not appropriate for finding a Viterbi path.
+     * Makes completions in the specified chart at the given index.
      *
-     * @param index The index to make completions at.
+     * @param i The index to make completions at.
      */
-    public void completeTruncated(int index) {
-        final DblSemiring sr = grammar.getSemiring();
-        final Set<State> completedStates = new HashSet<>(stateSets.getCompletedStates(index));
-        completeTruncated(index, sr, completedStates.stream().map(state ->
-                new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null)
-        ));
+    public void completeNoViterbi(int i) {
+        final ScoreRefsWithAddition addForwardScores = new ScoreRefsWithAddition(50, semiring);
+        final ScoreRefsWithAddition addInnerScores = new ScoreRefsWithAddition(50, semiring);
+        final ScoreRefs computationsInner = new ScoreRefs(50, semiring);
+        final ScoreRefs computationsForward = new ScoreRefs(50, semiring);
+
+        completeNoViterbi(i, stateSets.getCompletedStatesThatAreNotUnitProductions(i).stream(),
+                new HashSet<State>(),
+                addForwardScores,
+                addInnerScores,
+                computationsForward,
+                computationsInner
+        );
+
+
+        addForwardScores.getStates().forEach((rule, tIntObjectMapTIntObjectMap) -> {
+            tIntObjectMapTIntObjectMap.forEachEntry((index, tIntDoubleMapTIntObjectMap) -> {
+                tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                    tIntDoubleMap.forEachEntry((dot, score) -> {
+                        final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
+//                        double prev = stateSets.getForwardScore(state);
+//                        if (prev != semiring.zero())
+//                            throw new IssueRequest("Expected forward score not to have been set yet");
+//                        System.out.println(state+"a+"+score);
+                        stateSets.setForwardScore(state, score.resolve());
+                        return true;
+                    });
+                    return true;
+                });
+                return true;
+            });
+        });
+        addInnerScores.getStates().forEach((rule, tIntObjectMapTIntObjectMap) -> {
+            tIntObjectMapTIntObjectMap.forEachEntry((index, tIntDoubleMapTIntObjectMap) -> {
+                tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                    tIntDoubleMap.forEachEntry((dot, score) -> {
+                        final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
+//                        double prev = stateSets.getInnerScore(state);
+//                        if (prev != semiring.zero())
+//                            throw new IssueRequest("Expected inner score not to have been set yet");
+                        //System.out.println(state+"y+"+score);
+                        stateSets.setInnerScore(state, score.resolve());
+                        return true;
+                    });
+                    return true;
+                });
+                return true;
+            });
+        });
     }
 
-    private void completeTruncated(int index, DblSemiring sr, Stream<State.StateWithScore> completedStates) {
-        final List<State.StateWithScore> newStates = new ArrayList<>();
-        final List<State.StateWithScore> incrementScoresForStates = new ArrayList<>();
-        completedStates
-                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
-                .filter(completedState ->
-                        !completedState.getState().getRule().isUnitProduction())
-                .forEach(completedState -> {
-                            double completedInner = completedState.getInnerScore();
-                            final NonTerminal Y = completedState.getState().getRule().getLeft();
-                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Zμ</code>, where Z =*> Y is non-zero
-                            stateSets.getStatesActiveOnNonTerminal().stream()
-                                    .filter(stateToAdvance -> stateToAdvance.getPosition() == completedState.getState().getRuleStartPosition())
-                                    .forEach(stateToAdvance -> {
-                                        final Category Z = stateToAdvance.getActiveCategory();
-                                        final double unitStarScore = grammar.getUnitStarScore(Z, Y);
-                                        if (unitStarScore == sr.zero()) return;
+    private void completeNoViterbi(int i, Stream<State> states,
+                                   Set<State> completedStatesAlreadyHandles,
+                                   ScoreRefsWithAddition addForwardScores,
+                                   ScoreRefsWithAddition addInnerScores,
+                                   ScoreRefs computationsForward,
+                                   ScoreRefs computationsInner
+    ) {
+        // For all states
+        //      i: Y<sub>j</sub> → v·    [a",y"]
+        //      j: X<sub>k</suv> → l·Zm  [a',y']
+        //
+        //  such that the R*(Z =*> Y) is nonzero
+        //  and Y → v is not a unit production
+        states.forEach(completedState -> {
+            completedStatesAlreadyHandles.add(completedState);
+            final int j = completedState.getRuleStartPosition();
+            final NonTerminal Y = completedState.getRule().getLeft();
 
-                                        double prevForward = stateSets.getForwardScore(stateToAdvance);
-                                        double prevInner = stateSets.getInnerScore(stateToAdvance);
+            // TODO this one may not yet be completely added, so we need to resolve the actual value LATER
+            Value completedInner = addInnerScores.getOrCreate(completedState, stateSets.getInnerScore(completedState));
 
-//                                        State.ScoreRef scoreRefs = new State.ScoreRef(sr);
-                                        final double fw = sr.times(prevForward, completedInner, unitStarScore);
-                                        final double inner = sr.times(prevInner, completedInner, unitStarScore);
-                                        State existingState = stateSets.get(
-                                                index,
-                                                stateToAdvance.getRuleStartPosition(),
-                                                stateToAdvance.advanceDot(),
-                                                stateToAdvance.getRule()
-                                        );
-//                                        System.out.println("-----");
-//                                        System.out.println(completedState.getState());
-//                                        System.out.println(stateToAdvance);
-//                                        System.out.println("->");
-//                                        System.out.println(stateSets.create(index,
-//                                                stateToAdvance.getRuleStartPosition(),
-//                                                stateToAdvance.advanceDot(),
-//                                                stateToAdvance.getRule()));
-//                                        System.out.println("-----");
-                                        if (existingState != null)
-                                            incrementScoresForStates.add(new State.StateWithScore(existingState, fw, inner, null));
-                                        else {
-                                            // TODO error?
-                                            //System.out.println("State did not exist");
-                                            State newState = stateSets.create(index,
-                                                    stateToAdvance.getRuleStartPosition(),
-                                                    stateToAdvance.advanceDot(),
-                                                    stateToAdvance.getRule());
-                                            final State.StateWithScore sws = new State.StateWithScore(newState, fw, inner, null);
-                                            newStates.add(sws);
-                                            incrementScoresForStates.add(sws);
-                                        }
-                                    });
+            stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(Y).stream()
+                    //todo without filter
+                    .filter(state -> j == state.getPosition())
+                    .forEach(stateToAdvance -> {
+                        // Make i: X_k → lZ·m
+                        Value prevInner = computationsInner.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
+                        Value prevForward = computationsForward.getOrCreate(stateToAdvance, stateSets.getForwardScore(stateToAdvance));
+
+                        final Category Z = stateToAdvance.getActiveCategory();
+
+                        Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
+                        Value fw = unitStarScore.times(prevForward).times(completedInner);
+                        Value inner = unitStarScore.times(prevInner).times(completedInner);
+
+                        if (completedState != null) {
+                        } else {
+//                                    resultingState = stateSets.create(i,
+//                                            stateToAdvance.getRuleStartPosition(),
+//                                            stateToAdvance.advanceDot(),
+//                                            stateToAdvance.getRule());
                         }
-                );
-        newStates.forEach(ss -> stateSets.add(ss.getState()));
-        incrementScoresForStates.forEach(ss -> {
-            final State state = ss.getState();
-            stateSets.addForwardScore(state, ss.getForwardScore());
-            stateSets.addInnerScore(state, ss.getInnerScore());
+                        addForwardScores.add(
+                                stateToAdvance.getRule(),
+                                i,
+                                stateToAdvance.getRuleStartPosition(),
+                                stateToAdvance.advanceDot(),
+                                fw
+                        );
+                        addInnerScores.add(
+                                stateToAdvance.getRule(),
+                                i,
+                                stateToAdvance.getRuleStartPosition(),
+                                stateToAdvance.advanceDot(),
+                                inner);
+                    });
         });
 
-        if (incrementScoresForStates.size() > 0) {
-            completeTruncated(
-                    index,
-                    sr,
-                    incrementScoresForStates.stream()
-                            .filter(s ->
-                                    s.getState().isCompleted())
-            );
-        }
+        final ArrayList<State> newCompletedStates = new ArrayList<>();
+        addForwardScores.getStates().forEach((rule, tIntObjectMapTIntObjectMap) -> {
+            tIntObjectMapTIntObjectMap.forEachEntry((index, tIntDoubleMapTIntObjectMap) -> {
+                tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                    tIntDoubleMap.forEachEntry((dot, score) -> {
+                        boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
+                        final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
+                        if (isnew && state.isCompleted() && !state.rule.isUnitProduction() && !completedStatesAlreadyHandles.contains(state)) {
+                            newCompletedStates.add(state);
+                        }
+                        return true;
+                    });
+                    return true;
+                });
+                return true;
+            });
+        });
+
+        if (newCompletedStates.size() > 0)
+            completeNoViterbi(i,
+                    newCompletedStates.stream(),
+                    completedStatesAlreadyHandles,
+                    addForwardScores,
+                    addInnerScores,
+                    computationsForward,
+                    computationsInner);
+
+//        // For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
+//        final Stream<State.StateWithScore> completedStatez = stateSets.getCompletedStatesThatAreNotUnitProductions(index).stream()
+//                .map(state -> new State.StateWithScore(state, stateSets.getForwardScore(state), stateSets.getInnerScore(state), null));
+//        completeTruncated(index, completedStatez, new HashSet<>());
     }
+
+//    private void completeTruncated(int index, Stream<State.StateWithScore> completedStates, Set<State> alreadyAdded) {
+//        final List<State.StateWithScore> newStates = new ArrayList<>(50);
+//        final List<State.StateWithScore> incrementScoresForStates = new ArrayList<>(50);
+//        final List<State.StateWithScore> completedStatesThatAreNotUnitProductions = new ArrayList<>(50);
+//
+//        final int[] x = {0};
+//        completedStates
+//                // O(|stateset(i)|) = O(|grammar|): For all states <code>i: Y<sub>k</sub> → μ·</code>, such that the production is not a unit production
+//                .forEach(completedState -> {
+//                            double completedInner = completedState.getInnerScore();
+//                            final NonTerminal Y = completedState.getState().getRule().getLeft();
+//
+//                            //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Zμ</code>, where Z =*> Y is non-zero
+//                            final int activeDotPosition = completedState.getState().getRuleStartPosition();
+//                            x[0] += stateSets
+//                                    .getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(activeDotPosition, Y).size();
+//                            stateSets
+//                                    .getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(activeDotPosition, Y)
+//                                    .stream()
+//                                    .forEach(stateToAdvance -> {
+//                                        final Category Z = stateToAdvance.getActiveCategory();
+//
+//                                        final double unitStarScore = grammar.getUnitStarScore(Z, Y);
+//                                        if (unitStarScore == semiring.zero())
+//                                            throw new IssueRequest("This is a bug in completeTruncated()");
+//
+//                                        double prevForward = stateSets.getForwardScore(stateToAdvance);
+//                                        double prevInner = stateSets.getInnerScore(stateToAdvance);
+//
+////                                        State.ScoreRef scoreRefs = new State.ScoreRef(sr);
+//                                        final double fw = semiring.times(prevForward, completedInner, unitStarScore);
+//                                        final double inner = semiring.times(prevInner, completedInner, unitStarScore);
+//                                        State existingState = stateSets.get(
+//                                                index,
+//                                                stateToAdvance.getRuleStartPosition(),
+//                                                stateToAdvance.advanceDot(),
+//                                                stateToAdvance.getRule()
+//                                        );
+////                                        System.out.println("-----");
+////                                        System.out.println(completedState.getState());
+////                                        System.out.println(stateToAdvance);
+////                                        System.out.println("->");
+////                                        System.out.println(stateSets.create(index,
+////                                                stateToAdvance.getRuleStartPosition(),
+////                                                stateToAdvance.advanceDot(),
+////                                                stateToAdvance.getRule()));
+////                                        System.out.println("-----");
+//                                        if (existingState != null) {
+//                                            final State.StateWithScore sws = new State.StateWithScore(existingState, fw, inner, null);
+//                                            incrementScoresForStates.add(sws);
+//                                            if (sws.getState().isCompleted() && !sws.getState().getRule().isUnitProduction())
+//                                                completedStatesThatAreNotUnitProductions.add(sws);
+//                                        } else {
+//                                            // TODO error?
+//                                            //System.out.println(semiring.toProbability(inner));
+//                                            State newState = stateSets.create(index,
+//                                                    stateToAdvance.getRuleStartPosition(),
+//                                                    stateToAdvance.advanceDot(),
+//                                                    stateToAdvance.getRule());
+//                                            final State.StateWithScore sws = new State.StateWithScore(newState, fw, inner, null);
+//                                            newStates.add(sws);
+//                                            incrementScoresForStates.add(sws);
+//                                            if (sws.getState().isCompleted() && !sws.getState().getRule().isUnitProduction())
+//                                                completedStatesThatAreNotUnitProductions.add(sws);
+//                                        }
+//                                    });
+//                        }
+//                );
+////        System.out.println(index+"#getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY: " + x[0]);
+//
+//        addNewScoresAndRecurse(index, newStates, incrementScoresForStates, completedStatesThatAreNotUnitProductions);
+//    }
+//
+//    private void addNewScoresAndRecurse(int index,
+//                                        List<State.StateWithScore> newStates,
+//                                        List<State.StateWithScore> incrementScoresForStates,
+//                                        List<State.StateWithScore> completedStatesThatAreNotUnitProductions
+//    ) {
+//        newStates.forEach(ss -> stateSets.add(ss.getState()));
+//        incrementScoresForStates.forEach(ss -> {
+//            final State state = ss.getState();
+//            stateSets.addForwardScore(state, ss.getForwardScore());
+//            stateSets.addInnerScore(state, ss.getInnerScore());
+//        });
+//
+//        if (completedStatesThatAreNotUnitProductions.size() > 0)
+//            completeTruncated(
+//                    index,
+//                    completedStatesThatAreNotUnitProductions.stream()
+//            );
+//    }
 
     /**
      * For finding the Viterbi path, we can't conflate production recursions (ie can't use the left star corner),
@@ -263,7 +424,6 @@ public class Chart {
                         completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
                                 stateToAdvance.getPosition() <= completedState.getPosition())
                 .forEach(stateToAdvance -> {
-                    double prevViterbi = stateSets.getViterbiScore(stateToAdvance).getScore();
 
                     State resultingState = stateSets.get(
                             completedState.getPosition(),
@@ -284,8 +444,10 @@ public class Chart {
                         return;
                     }
                     State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
-                    State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prevViterbi), completedState, resultingState, sr);
-//                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getScore()) + ")");
+                    State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
+                    double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.zero();
+                    State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
+//                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getExpression()) + ")");
                     if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
                         stateSets.setViterbiScore(newViterbiScore);
                         newResultingStates.add(resultingState);
@@ -495,18 +657,7 @@ public class Chart {
 
     @SuppressWarnings("WeakerAccess")
     public static class StateSets {
-        private final Map<Rule,
-                /*index*/
-                TIntObjectMap<
-                        /*rule start*/
-                        TIntObjectMap<
-                                /*dot position*/
-                                TIntObjectMap<
-                                        State
-                                        >
-                                >
-                        >
-                > states = new HashMap<>(500);
+        private final StateIndex states = new StateIndex(500);
 
         private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
 
@@ -531,88 +682,56 @@ public class Chart {
         private final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>(500);
 
         private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
+        private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
         private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
+        //        private final TIntObjectHashMap<Multimap<NonTerminal, State>> statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY = new TIntObjectHashMap<>(500);
+        private final Multimap<NonTerminal, State> activeOnNonTerminalNonZeroUnitStarToY = HashMultimap.create();
         private final TIntObjectHashMap<Set<State>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
         private final DblSemiring semiring;
+        private final Grammar grammar;
         private Multimap<Category, State> statesActiveOn = HashMultimap.create();
 
 
-        StateSets(DblSemiring sr) {
-            this.semiring = sr;
-            this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
-            this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, sr.zero());
+        StateSets(Grammar grammar) {
+            this.grammar = grammar;
+            this.semiring = grammar.getSemiring();
+            this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
+            this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
         }
 
-        //TODO remove
-//        /**
-//         * Adds an state to this chart at the given index.
-//         *
-//         * @param index The index for <code>state</code>.
-//         * @param state The state to add.
-//         * @throws IndexOutOfBoundsException If <code>index < 0</code>.
-//         * @throws NullPointerException      If <code>index</code> or
-//         *                                   <code>state</code> is <code>null</code>.
-//         */
-//        public void addState(int index, State state, double forward, double inner) {
-//            if (index < 0) throw new IndexOutOfBoundsException("invalid index: " + index);
-//            if (state == null) throw new NullPointerException("null state");
-//
-//            addStateToIndex(stateSets, state, index, forward, inner);
-//
-//            if (state.isCompleted()) completedStates.add(state);
-//        }
-//
-//        private void addStateToIndex(TIntObjectMap<Map<State, State.Score>> map, State state, int index,
-//                                     double forward, double inner) {
-//            Map<State, State.Score> states = map.get(index);
-//            if (states == null) states = new HashMap<>();
-//            if (states.containsKey(state)) {
-//                System.out.println("State already found. Updating forward and inner probabilities.");
-//                states.get(state).incrementForwardScore(forward);
-//                states.get(state).incrementInnerScore(inner);
-//            } else states.put(state, new State.Score(forward, inner));
-//
-//            map.put(index, states); // always true for new state set
-//        }
-//
-//
-//        /**
-//         * Gets the set of indices at which this chart contains states. For any
-//         * member of this set, {@link #getStates(int)} will return a non-empty
-//         * set of states.
-//         *
-//         * @return A set containing every index in this chart where states have
-//         * been added, sorted in ascending order (<code>0 ... <em>n</em></code>).
-//         */
-//        public int[] indices() {
-//            return states.keys();
-//        }
-//
-//        /**
-//         * Tests whether this chart contains any states at a given string index. O(1)
-//         *
-//         * @param index The string index to check for states.
-//         * @return <code>true</code> iff this chart contains an state set at
-//         * <code>index</code>.
-//         */
-//        public boolean containsStates() {
-//            return stateSets.containsKey();
-//        }
-//
-//        public Set<State> getAtIndex(int index) {
-//            return stateSets.get(index);
-//        }
-//
         public Set<State> getCompletedStates(int index) {
-            if (!completedStates.containsKey(index)) completedStates.put(index, new HashSet<>());
-            return completedStates.get(index);
+            return getCompletedStates(index, true);
         }
+
+        public Set<State> getCompletedStatesThatAreNotUnitProductions(int index) {
+            return getCompletedStates(index, false);
+        }
+
+        public Set<State> getCompletedStates(int index, boolean allowUnitProductions) {
+            if (allowUnitProductions) {
+                if (!completedStates.containsKey(index)) completedStates.put(index, new HashSet<>());
+                return completedStates.get(index);
+            } else {
+                if (!completedStatesThatAreNotUnitProductions.containsKey(index))
+                    completedStatesThatAreNotUnitProductions.put(index, new HashSet<>());
+                return completedStatesThatAreNotUnitProductions.get(index);
+            }
+        }
+
+        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(NonTerminal Y) {
+            return activeOnNonTerminalNonZeroUnitStarToY.get(Y);
+        }
+
+//        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int index, NonTerminal Y) {
+//            if (!statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.containsKey(index))
+//                statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, HashMultimap.create());
+//            return statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.get(index).get(Y);
+//        }
 
         public Set<State> getStatesActiveOnNonTerminals(int index) {
             if (!statesActiveOnNonTerminals.containsKey(index)) statesActiveOnNonTerminals.put(index, new HashSet<>());
             return statesActiveOnNonTerminals.get(index);
         }
-
 
 
         public Set<State> getStatesActiveOnTerminals(int index) {
@@ -635,34 +754,40 @@ public class Chart {
         }
 
         public <E> State getOrCreate(int index, int ruleStart, int dotPosition, Rule rule, Token<E> token) {
-            if (!states.containsKey(rule)) states.put(rule, new TIntObjectHashMap<>(30));
-            TIntObjectMap<TIntObjectMap<TIntObjectMap<State>>> forRule = states.get(rule);
-
-            if (!forRule.containsKey(ruleStart)) forRule.put(ruleStart, new TIntObjectHashMap<>(50));
-            TIntObjectMap<TIntObjectMap<State>> forRuleStart = forRule.get(ruleStart);
-
-            if (!forRuleStart.containsKey(index)) forRuleStart.put(index, new TIntObjectHashMap<>(50));
-            TIntObjectMap<State> forInd = forRuleStart.get(index);
-
-            if (!forInd.containsKey(dotPosition)) {
+            TIntObjectMap<State> dotToState = states.getDotToState(rule, index, ruleStart);
+            if (!dotToState.containsKey(dotPosition)) {
                 State state = create(index, ruleStart, dotPosition, rule, token);
-                addState(forInd, state);
+                addState(dotToState, state);
             }
-
-            return forInd.get(dotPosition);
+            return dotToState.get(dotPosition);
         }
 
-        private void addState(TIntObjectMap<State> forInd, State state) {
+        private void addState(TIntObjectMap<State> dotPositionToState, State state) {
             int index = state.getPosition();
             int dotPosition = state.getRuleDotPosition();
             add(byIndex, index, state);
-            forInd.put(dotPosition, state);
+            dotPositionToState.put(dotPosition, state);
 
-            if (state.isCompleted()) add(completedStates, index, state);
+            if (state.isCompleted()) {
+                add(completedStates, index, state);
+                if (!state.getRule().isUnitProduction()) add(completedStatesThatAreNotUnitProductions, index, state);
+            }
             if (state.isActive()) {
                 statesActiveOn.put(state.getActiveCategory(), state);
-                if (state.getActiveCategory() instanceof NonTerminal) add(statesActiveOnNonTerminals, index, state);
-                else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
+                if (state.getActiveCategory() instanceof NonTerminal) {
+                    add(statesActiveOnNonTerminals, index, state);
+
+//                    Multimap<NonTerminal, State> mapp = statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.get(index);
+//                    final Multimap<NonTerminal, State> map = mapp == null ? HashMultimap.create() //We expect this
+//                            : mapp;
+                    Collection<NonTerminal> scores = grammar.getUnitStar().getNonZeroNonTerminals(state.getActiveCategory());
+                    scores.forEach(Y -> {
+//                        map.put(Y, state);
+                        activeOnNonTerminalNonZeroUnitStarToY.put(Y, state);
+                    });
+//                    statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, map);
+
+                } else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
                 else throw new Error("Neither Terminal nor NonToken...?");
             }
         }
@@ -724,29 +849,15 @@ public class Chart {
             int ruleStart = state.getRuleStartPosition();
             int index = state.getPosition();
 
-            if (!states.containsKey(rule)) states.put(rule, new TIntObjectHashMap<>(30));
-            TIntObjectMap<TIntObjectMap<TIntObjectMap<State>>> forRule = states.get(rule);
+            TIntObjectMap<TIntObjectMap<State>> forRuleStart = states.getRuleStartToDotToState(rule, index);
+            if (!forRuleStart.containsKey(ruleStart)) forRuleStart.put(ruleStart, new TIntObjectHashMap<>(50));
+            TIntObjectMap<State> dotToState = forRuleStart.get(ruleStart);
 
-            if (!forRule.containsKey(ruleStart)) forRule.put(ruleStart, new TIntObjectHashMap<>(50));
-            TIntObjectMap<TIntObjectMap<State>> forRuleStart = forRule.get(ruleStart);
-
-            if (!forRuleStart.containsKey(index)) forRuleStart.put(index, new TIntObjectHashMap<>(50));
-            TIntObjectMap<State> forInd = forRuleStart.get(index);
-
-            addState(forInd, state);
+            addState(dotToState, state);
         }
 
         public State get(int index, int ruleStart, int ruleDot, Rule rule) {
-            if (!states.containsKey(rule)) return null;
-            TIntObjectMap<TIntObjectMap<TIntObjectMap<State>>> forRule = states.get(rule);
-
-            if (!forRule.containsKey(ruleStart)) return null;
-            TIntObjectMap<TIntObjectMap<State>> forRuleStart = forRule.get(ruleStart);
-
-            if (!forRuleStart.containsKey(index)) return null;
-            TIntObjectMap<State> forInd = forRuleStart.get(index);
-
-            return forInd.get(ruleDot);
+            return states.getState(rule, index, ruleStart, ruleDot);
         }
 
         public <E> State create(int index, int ruleStart, int dotPosition, Rule rule, Token<E> c) {
@@ -763,5 +874,6 @@ public class Chart {
             return Arrays.stream(byIndex.values(new Set[byIndex.size()]))
                     .mapToInt(Set::size).sum();
         }
+
     }
 }

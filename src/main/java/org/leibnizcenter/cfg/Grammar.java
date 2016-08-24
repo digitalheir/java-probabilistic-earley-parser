@@ -7,12 +7,13 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,7 +58,7 @@ public class Grammar {
     private final LeftCorners unitStarScores;
 
     private final Set<NonTerminal> nonTerminals;
-    private final DblSemiring semiring;
+    private final ExpressionSemiring semiring;
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -73,7 +74,7 @@ public class Grammar {
      * @param rules    Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(String name, ImmutableMultimap<Category, Rule> rules, DblSemiring semiring) {
+    public Grammar(String name, ImmutableMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
         this.nonTerminals = getAllRules().stream()
@@ -120,7 +121,7 @@ public class Grammar {
         return R__L;
     }
 
-    public DblSemiring getSemiring() {
+    public ExpressionSemiring getSemiring() {
         return semiring;
     }
 
@@ -264,10 +265,19 @@ public class Grammar {
         return unitStarScores.get(LHS, RHS);
     }
 
+    public Set<NonTerminal> getNonTerminals() {
+        return nonTerminals;
+    }
+
+    public LeftCorners getUnitStar() {
+        return unitStarScores;
+    }
+
+
     public static class Builder {
         private final ImmutableMultimap.Builder<Category, Rule> rules;
         private String name;
-        private DblSemiring semiring = new LogSemiring();
+        private ExpressionSemiring semiring = new LogSemiring();
         private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {
@@ -279,7 +289,7 @@ public class Grammar {
             this.rules = new ImmutableMultimap.Builder<>();
         }
 
-        public Builder setSemiring(DblSemiring semiring) {
+        public Builder setSemiring(ExpressionSemiring semiring) {
             this.semiring = semiring;
             this.rf = new RuleFactory(semiring);
             return this;
@@ -329,6 +339,7 @@ public class Grammar {
     public static class LeftCorners {
         private Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
         private Multimap<Category, Category> nonZeroScores = HashMultimap.create();
+        private Multimap<Category, NonTerminal> nonZeroNonTerminalScores = HashMultimap.create();
         private DblSemiring semiring;
 
         /**
@@ -382,7 +393,7 @@ public class Grammar {
          *
          * @param x   LHS
          * @param y   RHS
-         * @param val Value to set table entry to
+         * @param val Dbl to set table entry to
          */
         public void set(NonTerminal x, NonTerminal y, final double val) {
             TObjectDoubleMap<Category> yToProb = getYToProb(x);
@@ -393,9 +404,18 @@ public class Grammar {
             return nonZeroScores.get(X);
         }
 
+        public Collection<NonTerminal> getNonZeroNonTerminals(Category X) {
+            return nonZeroNonTerminalScores.get(X);
+        }
+
         private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {
-            if (val != semiring.zero()) nonZeroScores.put(x, y);
+            if (val != semiring.zero()) {
+                nonZeroScores.put(x, y);
+                if (y instanceof NonTerminal) nonZeroNonTerminalScores.put(x, (NonTerminal) y);
+            }
+
             yToProb.put(y, val);
         }
+
     }
 }

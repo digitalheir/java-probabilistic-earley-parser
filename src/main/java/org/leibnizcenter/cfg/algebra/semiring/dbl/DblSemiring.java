@@ -1,7 +1,7 @@
-package org.leibnizcenter.cfg.semiring.dbl;
+package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 
-import org.leibnizcenter.cfg.semiring.Property;
+import org.leibnizcenter.cfg.algebra.semiring.Property;
 
 import java.util.EnumSet;
 
@@ -104,14 +104,23 @@ public interface DblSemiring {
     }
 
     // Remember that the operators are associative
+    default double plus(double a, double b, double... rest) {
+        double runningTotal = plus(a, b);
+        for (double aRest : rest) runningTotal = plus(runningTotal, aRest);
+        return runningTotal;
+    }
+
+    // Remember that the operators are associative
     default double times(double a, double b, double c) {
         return times(a, times(b, c));
     }
 
     // Remember that the operators are associative
     @SuppressWarnings("unused")
-    default double times(double a, double b, double c, double d) {
-        return times(a, times(times(b, c), d));
+    default double times(double a, double b, double... c) {
+        double runningTotal = plus(a, b);
+        for (double aRest : c) runningTotal = times(runningTotal, aRest);
+        return runningTotal;
     }
 
     double fromProbability(double x);

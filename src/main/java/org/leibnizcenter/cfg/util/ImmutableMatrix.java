@@ -15,8 +15,8 @@ public class ImmutableMatrix<T> {
     /**
      * initializes n by m matrix, with null at every cell.
      *
-     * @param width  Number of cells per row
-     * @param height Number of rows in the matrix
+     * @param width  Dbl of cells per row
+     * @param height Dbl of rows in the matrix
      */
     @SuppressWarnings("unused")
     public ImmutableMatrix(int width, int height) {

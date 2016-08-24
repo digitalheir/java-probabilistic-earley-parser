@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.semiring;
+package org.leibnizcenter.cfg.algebra.semiring;
 
 
 import java.util.EnumSet;

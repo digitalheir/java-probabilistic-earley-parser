@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.semiring.dbl;
+package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 import org.junit.Assert;
 import org.junit.Test;

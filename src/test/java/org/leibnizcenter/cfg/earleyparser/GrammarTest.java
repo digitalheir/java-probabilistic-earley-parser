@@ -4,11 +4,11 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ProbabilitySemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.ProbabilitySemiring;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +27,7 @@ public class GrammarTest {
     private final static NonTerminal Y = Category.nonTerminal("Y");
     private final static NonTerminal Z = Category.nonTerminal("Z");
     private final static Category e = new ExactStringTerminal("e");
+    private final static Category a = new ExactStringTerminal("a");
 
     private final static Rule rule1 = Rule.create(sr, 1.0, A, B, C, D, E);
     private final static Rule rule2 = Rule.create(sr, 1.0, A, e);
@@ -34,13 +35,19 @@ public class GrammarTest {
     private static final Rule ruleB = Rule.create(sr, 0.5, B, C);
     private static final Rule ruleC = Rule.create(sr, 0.5, C, D);
     private static final Rule ruleD = Rule.create(sr, 0.5, D, E);
+    private static final Rule ruleDa = Rule.create(sr, 0.5, D, a);
+    private static final Rule ruleEE = Rule.create(sr, 0.5, E, E, E);
     private static final Rule ruleE = Rule.create(sr, 0.5, E, e);
+    private static final Rule ruleEC = Rule.create(sr, 0, E, C);
     private static final Grammar g = new Grammar.Builder("test")
             .setSemiring(sr)
             .addRule(ruleB)
             .addRule(ruleC)
             .addRule(ruleD)
+            .addRule(ruleDa)
             .addRule(ruleE)
+            .addRule(ruleEE)
+            .addRule(ruleEC)
             .addRule(rule1)
             .addRule(rule2)
             .addRule(rule3)
@@ -53,8 +60,8 @@ public class GrammarTest {
         Assert.assertTrue(g.getRules(rule2.left).contains(rule2));
         Assert.assertFalse(g.getRules(rule3.left).contains(rule2));
 
-        Assert.assertEquals(ruleB, ruleB);
-        Assert.assertEquals(ruleC, ruleC);
+        Assert.assertEquals(ruleB, Rule.create(sr, 0.5, B, C));
+        Assert.assertEquals(ruleC, Rule.create(sr, 0.5, C, D));
         Assert.assertEquals(ruleD, ruleD);
         Assert.assertEquals(ruleE, ruleE);
         Assert.assertEquals(rule1, rule1);

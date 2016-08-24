@@ -1,8 +1,8 @@
 package org.leibnizcenter.cfg.earleyparser.chart.state;
 
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 
 import java.text.DecimalFormat;
 
@@ -31,7 +31,7 @@ import java.text.DecimalFormat;
  * the dot. The dot thus refers to the current position <code>i</code>.</li>
  * </ul>
  * <p/>
- * A state with the dot to the right of the entire RHS is called a completeTruncated state, since
+ * A state with the dot to the right of the entire RHS is called a completeNoViterbi state, since
  * it indicates that the left-hand side (LHS) nonterminal has been fully expanded.
  * <p/>
  * States are mutable
@@ -120,9 +120,9 @@ public class State {
 //     *                                  </ul>
 //     * @see #advanceDot()
 //     */
-//    public State completeTruncated(State basis) {
+//    public State completeNoViterbi(State basis) {
 //        if (this.isCompleted()) throw new IllegalArgumentException(
-//                "attempt to completeTruncated passive State: " + this);
+//                "attempt to completeNoViterbi passive State: " + this);
 //        if (basis == null) throw new NullPointerException("null basis");
 //        if (!basis.isCompleted()) throw new IllegalArgumentException("basis is not completed: " + basis);
 //        if ((ruleStartPosition + ruleDotPosition) == 0 || !basis.getRule().left.equals(this.getActiveCategory()))

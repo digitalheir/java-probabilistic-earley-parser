@@ -1,9 +1,9 @@
 package org.leibnizcenter.cfg.rule;
 
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 
 /**
  * Created by Maarten on 31-7-2016.

@@ -15,8 +15,8 @@ public class MutableMatrix<T> {
     /**
      * initializes n by m matrix, with null at every cell.
      *
-     * @param width  Number of cells per row
-     * @param height Number of rows in the matrix
+     * @param width  Dbl of cells per row
+     * @param height Dbl of rows in the matrix
      */
     public MutableMatrix(int width, int height) {
         list = new Vector<>(height);

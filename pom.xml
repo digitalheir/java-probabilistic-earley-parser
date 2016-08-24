@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.leibnizcenter</groupId>
-    <artifactId>earley-parser</artifactId>
+    <artifactId>probabilistic-earley-parser</artifactId>
     <version>0.9.0</version>
     <packaging>jar</packaging>
 

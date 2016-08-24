@@ -44,7 +44,7 @@
 //
 //    /**
 //     * Creates a new parse for the given seed category and
-//     * chart. This constructor is used for parses that completeTruncated without errors.
+//     * chart. This constructor is used for parses that completeNoViterbi without errors.
 //     *
 //     * @see Parse#Parse(Category, Chart, boolean)
 //     */

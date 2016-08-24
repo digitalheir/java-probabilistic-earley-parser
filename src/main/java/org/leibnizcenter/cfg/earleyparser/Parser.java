@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.Grammar;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
@@ -11,7 +12,6 @@ import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.token.Token;
 
 import java.util.HashSet;
@@ -71,7 +71,12 @@ public class Parser {
 
                 // let \'a = \, call
                 ParseTree T = getViterbiParse(
-                        chart.stateSets.get(state.getPosition() - 1, state.getRuleStartPosition(), state.getRuleDotPosition() - 1, state.getRule()),
+                        chart.stateSets.get(
+                                state.getPosition() - 1,
+                                state.getRuleStartPosition(),
+                                state.getRuleDotPosition() - 1,
+                                state.getRule()
+                        ),
                         chart
                 );
                 final ScannedTokenState scannedState = (ScannedTokenState) state;
@@ -146,9 +151,8 @@ public class Parser {
             chart.scan(i, token, scanProbability);
 
             Set<State> completedStates = new HashSet<>(chart.stateSets.getCompletedStates(i + 1));
+            chart.completeNoViterbi(i + 1);
             completedStates.forEach(s -> chart.setViterbiScores(s, new HashSet<>(), grammar.getSemiring()));
-
-            chart.completeTruncated(i + 1);
 //            chart.computeViterbi(i + 1);
             i++;
         }

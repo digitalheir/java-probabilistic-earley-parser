@@ -3,13 +3,13 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.leibnizcenter.cfg.Grammar;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 

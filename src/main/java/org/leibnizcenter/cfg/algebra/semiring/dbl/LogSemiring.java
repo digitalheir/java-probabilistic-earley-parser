@@ -1,13 +1,13 @@
-package org.leibnizcenter.cfg.semiring.dbl;
+package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
-import org.leibnizcenter.cfg.semiring.Property;
+import org.leibnizcenter.cfg.algebra.semiring.Property;
 
 import java.util.EnumSet;
 
 /**
  * Log semiring implementation, used to avoid underflow in probability calculations.
  */
-public class LogSemiring implements DblSemiring {
+public class LogSemiring extends ExpressionSemiring {
     private static final EnumSet<Property> properties = EnumSet.of(
             Property.LeftSemiring,
             Property.RightSemiring,
