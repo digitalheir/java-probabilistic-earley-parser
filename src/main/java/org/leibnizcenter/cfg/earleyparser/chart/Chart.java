@@ -17,12 +17,13 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
+import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.util.ArrayLists;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**
@@ -173,8 +174,8 @@ public class Chart {
         final ScoreRefs computationsInner = new ScoreRefs(50, semiring);
         final ScoreRefs computationsForward = new ScoreRefs(50, semiring);
 
-        completeNoViterbi(i, stateSets.getCompletedStatesThatAreNotUnitProductions(i).stream(),
-                new HashSet<State>(),
+        completeNoViterbi(i, stateSets.getCompletedStatesThatAreNotUnitProductions(i),
+                new HashSet<>(),
                 addForwardScores,
                 addInnerScores,
                 computationsForward,
@@ -218,7 +219,7 @@ public class Chart {
         });
     }
 
-    private void completeNoViterbi(int i, Stream<State> states,
+    private void completeNoViterbi(int i, Collection<State> states,
                                    Set<State> completedStatesAlreadyHandles,
                                    ScoreRefsWithAddition addForwardScores,
                                    ScoreRefsWithAddition addInnerScores,
@@ -231,7 +232,7 @@ public class Chart {
         //
         //  such that the R*(Z =*> Y) is nonzero
         //  and Y → v is not a unit production
-        states.forEach(completedState -> {
+        for (State completedState : states) {
             completedStatesAlreadyHandles.add(completedState);
             final int j = completedState.getRuleStartPosition();
             final NonTerminal Y = completedState.getRule().getLeft();
@@ -239,42 +240,42 @@ public class Chart {
             // TODO this one may not yet be completely added, so we need to resolve the actual value LATER
             Value completedInner = addInnerScores.getOrCreate(completedState, stateSets.getInnerScore(completedState));
 
-            stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(Y).stream()
-                    //todo without filter
-                    .filter(state -> j == state.getPosition())
-                    .forEach(stateToAdvance -> {
-                        // Make i: X_k → lZ·m
-                        Value prevInner = computationsInner.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
-                        Value prevForward = computationsForward.getOrCreate(stateToAdvance, stateSets.getForwardScore(stateToAdvance));
+            //noinspection Convert2streamapi
+            for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y)) {
+                //todo without filter
+                if (j != stateToAdvance.getPosition()) throw new IssueRequest("Index failed. This is a bug.");
+                // Make i: X_k → lZ·m
+                Value prevInner = computationsInner.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
+                Value prevForward = computationsForward.getOrCreate(stateToAdvance, stateSets.getForwardScore(stateToAdvance));
 
-                        final Category Z = stateToAdvance.getActiveCategory();
+                final Category Z = stateToAdvance.getActiveCategory();
 
-                        Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
-                        Value fw = unitStarScore.times(prevForward).times(completedInner);
-                        Value inner = unitStarScore.times(prevInner).times(completedInner);
+                Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
+                Value fw = unitStarScore.times(prevForward).times(completedInner);
+                Value inner = unitStarScore.times(prevInner).times(completedInner);
 
-                        if (completedState != null) {
-                        } else {
+//                    if (completedState != null) {
+//                    } else {
 //                                    resultingState = stateSets.create(i,
 //                                            stateToAdvance.getRuleStartPosition(),
 //                                            stateToAdvance.advanceDot(),
 //                                            stateToAdvance.getRule());
-                        }
-                        addForwardScores.add(
-                                stateToAdvance.getRule(),
-                                i,
-                                stateToAdvance.getRuleStartPosition(),
-                                stateToAdvance.advanceDot(),
-                                fw
-                        );
-                        addInnerScores.add(
-                                stateToAdvance.getRule(),
-                                i,
-                                stateToAdvance.getRuleStartPosition(),
-                                stateToAdvance.advanceDot(),
-                                inner);
-                    });
-        });
+//                    }
+                addForwardScores.add(
+                        stateToAdvance.getRule(),
+                        i,
+                        stateToAdvance.getRuleStartPosition(),
+                        stateToAdvance.advanceDot(),
+                        fw
+                );
+                addInnerScores.add(
+                        stateToAdvance.getRule(),
+                        i,
+                        stateToAdvance.getRuleStartPosition(),
+                        stateToAdvance.advanceDot(),
+                        inner);
+            }
+        }
 
         final ArrayList<State> newCompletedStates = new ArrayList<>();
         addForwardScores.getStates().forEach((rule, tIntObjectMapTIntObjectMap) -> {
@@ -296,7 +297,7 @@ public class Chart {
 
         if (newCompletedStates.size() > 0)
             completeNoViterbi(i,
-                    newCompletedStates.stream(),
+                    newCompletedStates,
                     completedStatesAlreadyHandles,
                     addForwardScores,
                     addInnerScores,
@@ -362,7 +363,6 @@ public class Chart {
 //                                            if (sws.getState().isCompleted() && !sws.getState().getRule().isUnitProduction())
 //                                                completedStatesThatAreNotUnitProductions.add(sws);
 //                                        } else {
-//                                            // TODO error?
 //                                            //System.out.println(semiring.toProbability(inner));
 //                                            State newState = stateSets.create(index,
 //                                                    stateToAdvance.getRuleStartPosition(),
@@ -406,62 +406,65 @@ public class Chart {
      * exactly because we need to find the unique Viterbi path.
      * Luckily, we can avoid looping over unit productions because it only ever lowers probability
      * (assuming p = [0,1] and Occam's razor). This method does not guarantee a left most parse.
-     */
+     *///TODO write tests
     public void setViterbiScores(State completedState, Set<State> originPathTo, DblSemiring sr) {
-        // = stateSets.getCompletedStates(index);
-        List<State> newStates = new ArrayList<>();
-        List<State> newResultingStates = new ArrayList<>();
+        List<State> newStates = null; // init as null to avoid arraylist creation
+        List<State> newCompletedStates = null; // init as null to avoid arraylist creation
 
         if (stateSets.getViterbiScore(completedState) == null)
-            throw new Error("Expected Viterbi score to be set on completed state. This is an error.");
+            throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
 
         double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
 //        System.out.println("" + completedState + " (" + sr.toProbability(completedViterbi) + ")");
         final NonTerminal Y = completedState.getRule().getLeft();
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-        stateSets.getStatesActiveOnNonTerminal(Y).stream()
-                .filter(stateToAdvance ->
-                        completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
-                                stateToAdvance.getPosition() <= completedState.getPosition())
-                .forEach(stateToAdvance -> {
-
-                    State resultingState = stateSets.get(
+        for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminal(Y)) {
+            // TODO Index on this directly instead of filtering
+            if (completedState.getRuleStartPosition() == stateToAdvance.getPosition() &&
+                    stateToAdvance.getPosition() <= completedState.getPosition()) {
+                State resultingState = stateSets.get(
+                        completedState.getPosition(),
+                        stateToAdvance.getRuleStartPosition(),
+                        stateToAdvance.advanceDot(),
+                        stateToAdvance.getRule()
+                );
+                if (resultingState == null) {
+                    resultingState = stateSets.create(
                             completedState.getPosition(),
                             stateToAdvance.getRuleStartPosition(),
                             stateToAdvance.advanceDot(),
-                            stateToAdvance.getRule()
-                    );
-                    if (resultingState == null) {
-                        resultingState = stateSets.create(
-                                completedState.getPosition(),
-                                stateToAdvance.getRuleStartPosition(),
-                                stateToAdvance.advanceDot(),
-                                stateToAdvance.getRule());
-                        newStates.add(resultingState);
-                    }
-                    if (originPathTo.contains(resultingState)) {
-                        System.out.println("Already went past " + resultingState);
-                        return;
-                    }
-                    State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
-                    State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
-                    double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.zero();
-                    State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
+                            stateToAdvance.getRule());
+                    newStates = ArrayLists.add(newStates, resultingState);
+                }
+                if (originPathTo.contains(resultingState)) {
+                    System.out.println("Already went past " + resultingState);
+                    return;
+                }
+                State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
+                State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
+                double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.zero();
+                State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
 //                    System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getExpression()) + ")");
-                    if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
-                        stateSets.setViterbiScore(newViterbiScore);
-                        newResultingStates.add(resultingState);
-//                    } else {
+                if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
+                    stateSets.setViterbiScore(newViterbiScore);
+                    if (resultingState.isCompleted())
+                        newCompletedStates = ArrayLists.add(newCompletedStates, resultingState);
+                    //                    } else {
 //                        System.out.println("(dropped, this seems to be a cycle)");
-                    }
-                });
+                }
+            }
+        }
 
-        newStates.forEach(stateSets::add);
-        newResultingStates.stream().filter(State::isCompleted).forEach(resultingState -> {
-            Set<State> path = new HashSet<>(originPathTo);
-            path.add(resultingState);
-            setViterbiScores(resultingState, path, sr);
-        });
+        // Add new states to chart
+        if (newStates != null) newStates.forEach(stateSets::add);
+
+        // Recurse with new states that are completed
+        if (newCompletedStates != null)
+            newCompletedStates.stream().forEach(resultingState -> {
+                Set<State> path = new HashSet<>(originPathTo);
+                path.add(resultingState);
+                setViterbiScores(resultingState, path, sr);
+            });
     }
 
 //    /**
@@ -645,6 +648,7 @@ public class Chart {
     }
 
     public Set<State> getCompletedStates(int i, NonTerminal s) {
+        // TODO index on this directly to avoid filtering
         return stateSets.getCompletedStates(i).stream()
                 .filter(state -> state.getRule().getLeft().equals(s))
                 .collect(Collectors.toSet());
@@ -685,7 +689,10 @@ public class Chart {
         private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
         private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
         //        private final TIntObjectHashMap<Multimap<NonTerminal, State>> statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY = new TIntObjectHashMap<>(500);
-        private final Multimap<NonTerminal, State> activeOnNonTerminalNonZeroUnitStarToY = HashMultimap.create();
+
+
+        private final TIntObjectHashMap<Multimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
+
         private final TIntObjectHashMap<Set<State>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
         private final DblSemiring semiring;
         private final Grammar grammar;
@@ -718,8 +725,9 @@ public class Chart {
             }
         }
 
-        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(NonTerminal Y) {
-            return activeOnNonTerminalNonZeroUnitStarToY.get(Y);
+        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal Y) {
+            if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j)) return Collections.emptyList();
+            else return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(Y);
         }
 
 //        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int index, NonTerminal Y) {
@@ -783,12 +791,14 @@ public class Chart {
                     Collection<NonTerminal> scores = grammar.getUnitStar().getNonZeroNonTerminals(state.getActiveCategory());
                     scores.forEach(Y -> {
 //                        map.put(Y, state);
-                        activeOnNonTerminalNonZeroUnitStarToY.put(Y, state);
+                        if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(index))
+                            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(index, HashMultimap.create());
+                        nonTerminalActiveAtIWithNonZeroUnitStarToY.get(index).put(Y, state);
                     });
 //                    statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, map);
 
                 } else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
-                else throw new Error("Neither Terminal nor NonToken...?");
+                else throw new IssueRequest("Neither Terminal nor NonToken...?");
             }
         }
 

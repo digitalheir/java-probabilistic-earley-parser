@@ -42,7 +42,7 @@ public class Perf {
             long timeStart = System.currentTimeMillis();
             ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
             long timeEnd = System.currentTimeMillis();
-            System.out.println("" + (timeEnd - timeStart));
+            System.out.println(i + "\t" + (timeEnd - timeStart));
             tokens.add(a);
         }
     }

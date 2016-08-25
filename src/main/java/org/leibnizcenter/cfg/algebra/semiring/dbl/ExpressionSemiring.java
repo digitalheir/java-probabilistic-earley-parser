@@ -1,5 +1,8 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
+import gnu.trove.map.TDoubleObjectMap;
+import gnu.trove.map.hash.TDoubleObjectHashMap;
+
 import java.text.DecimalFormat;
 
 /**
@@ -8,8 +11,31 @@ import java.text.DecimalFormat;
 public abstract class ExpressionSemiring implements DblSemiring {
     private static final DecimalFormat df = new DecimalFormat("0.00");
 
+    private final TDoubleObjectMap<Dbl> cached = new TDoubleObjectHashMap<>(50, 0.5F, Double.NaN);
+
+    {
+        addConvertedToCached(0.00, cached);
+        addConvertedToCached(0.10, cached);
+        addConvertedToCached(0.20, cached);
+        addConvertedToCached(0.25, cached);
+        addConvertedToCached(0.30, cached);
+        addConvertedToCached(0.40, cached);
+        addConvertedToCached(0.50, cached);
+        addConvertedToCached(0.60, cached);
+        addConvertedToCached(0.70, cached);
+        addConvertedToCached(0.75, cached);
+        addConvertedToCached(0.80, cached);
+        addConvertedToCached(0.90, cached);
+        addConvertedToCached(1.00, cached);
+    }
+
+    private void addConvertedToCached(double prob, TDoubleObjectMap<Dbl> cached) {
+        final double v = fromProbability(prob);
+        cached.put(v, new Dbl(v));
+    }
     public Value dbl(double value) {
-        return new Value(new Dbl(value));
+        if (cached.containsKey(value)) return new Value(cached.get(value));
+        else return new Value(new Dbl(value));
     }
 
     public interface Resolvable {
