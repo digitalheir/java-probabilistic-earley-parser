@@ -9,6 +9,8 @@ or equivalently any language described in Backus-Naur Form (BNF),
 where rewrite rules may be non-deterministic and have a probability 
 attached to them.
 
+The parser seems to work correctly and efficiently, but is still < v1.0 because I have not added as much utility functions and tests as I would like.
+
 For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Probabilistic Context-Free
            Parsing Algorithm that Computes Prefix
            Probabilities*](http://www.aclweb.org/anthology/J95-2002).

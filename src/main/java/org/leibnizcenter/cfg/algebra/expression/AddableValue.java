@@ -5,11 +5,13 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.*;
 import org.leibnizcenter.cfg.rule.Rule;
 
 /**
+ * Contains references to deferred computation, supplies with an addition method
+ *
  * Created by Maarten on 23-8-2016.
  */
-public class ScoreRefsWithAddition extends ScoreRefs {
+public class AddableValue extends ScoreRefs {
 
-    public ScoreRefsWithAddition(int capacity, ExpressionSemiring semiring) {
+    public AddableValue(int capacity, ExpressionSemiring semiring) {
         super(capacity, semiring);
     }
 
@@ -19,7 +21,8 @@ public class ScoreRefsWithAddition extends ScoreRefs {
         if (current == null) {
             current = newValue;
             setScore(rule, index, ruleStart, dotPosition, current);
-        } else current.setExpression(newValue.getExpression());
+        } else
+            current.setExpression(newValue.getExpression());
     }
 
 }

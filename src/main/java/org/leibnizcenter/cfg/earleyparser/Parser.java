@@ -14,6 +14,7 @@ import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class Parser {
                                        Grammar grammar,
                                        Iterable<Token<E>> tokens) {
         final ChartWithInputPosition parse = parseAndCountTokens(goal, grammar, tokens, null);
-        final Set<State> completedStates = parse.chart.getCompletedStates(parse.index, Category.START);
+        final Collection<State> completedStates = parse.chart.getCompletedStates(parse.index, Category.START);
         if (completedStates.size() > 0) {
             if (completedStates.size() > 1)
                 throw new IssueRequest("Multiple final states found. This is likely an error.");

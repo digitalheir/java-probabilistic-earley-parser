@@ -60,7 +60,7 @@ public class ChartTest {
             .addRule(
                     0.5,
                     NP,
-                    Det, N, Mod // eg. the man (with a stick)
+                    gDet, N, Mod // eg. the man (with a stick)
             )
             .addRule(
                     0.4,
@@ -80,7 +80,7 @@ public class ChartTest {
 
     @Test
     public final void readmeExample() {
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with the man")), 0.05, 0.000001);
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with the man")), 0.125, 0.000001);
         Assert.assertEquals(Parser.recognize(NP, grammar, Tokens.tokenize("the man with the man")), 0.25, 0.000001);
         Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the", "man", "chased", "the", "man")), 0.15, 0.000001);
 
