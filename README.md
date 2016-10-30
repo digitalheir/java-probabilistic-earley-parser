@@ -26,7 +26,24 @@ for instance when an unexpected token is encountered.
 Furthermore, I needed a efficient parser that does not limit token types 
 to strings.
    
-## Usage  
+## Usage
+Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest) or grab from Maven:
+
+```xml
+<dependencies>
+        <dependency>
+            <groupId>org.leibnizcenter</groupId>
+            <artifactId>probabilistic-earley-parser</artifactId>
+            <version>0.9.6</version>
+        </dependency>
+</dependencies>
+```
+
+or Gradle:
+```groovy
+compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.6'
+```
+
 Most applications will want to interface with the static functions in `Parser`:
 
 ```java
