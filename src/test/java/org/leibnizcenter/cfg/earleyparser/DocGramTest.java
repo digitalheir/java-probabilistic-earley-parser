@@ -247,14 +247,25 @@ public class DocGramTest {
     public void tryGram() {
         List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
-//        for (int i = 0; i < 50; i++) {
-//            s = ((s + 1) % 4);
-//            listSoFar.addAll(s == 0 ? one_doc : s == 1 ? two_doc : s == 2 ? three_doc : four_doc);
-//            long start = System.currentTimeMillis();
-//            Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
-//            long end = System.currentTimeMillis();
-//            System.out.println(listSoFar.size() + "\t" + (end - start));
-//        }
+
+        for (int i = 0; i < 0; i++) {
+            if(i<one_doc.size())
+                listSoFar.add(one_doc.get(i));
+            else if(i<one_doc.size()+two_doc.size())
+                listSoFar.add(two_doc.get(i-one_doc.size()));
+            else if(i<one_doc.size()+two_doc.size()+three_doc.size())
+                listSoFar.add(three_doc.get(i-(one_doc.size()+two_doc.size())));
+            else if(i<one_doc.size()+two_doc.size()+three_doc.size()+four_doc.size())
+                listSoFar.add(four_doc.get(i-(one_doc.size()+two_doc.size()+three_doc.size())));
+            else {
+                s = ((s + 1) % 4);
+                listSoFar.addAll(s == 0 ? one_doc : s == 1 ? two_doc : s == 2 ? three_doc : four_doc);
+            }
+            long start = System.currentTimeMillis();
+            Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
+            long end = System.currentTimeMillis();
+            System.out.println(listSoFar.size() + "\t" + (end - start));
+        }
 
     }
 }

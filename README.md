@@ -84,10 +84,10 @@ public class Example {
 
     public static void main(String[] args) {
         System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick")) // 1.0
+                Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick")) 
         );
         System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man")) // 0.6
+                Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man")) 
         );
     }
 }

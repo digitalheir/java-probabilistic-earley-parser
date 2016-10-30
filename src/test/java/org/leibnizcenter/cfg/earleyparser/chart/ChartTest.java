@@ -60,7 +60,7 @@ public class ChartTest {
             .addRule(
                     0.5,
                     NP,
-                    gDet, N, Mod // eg. the man (with a stick)
+                    Det, N, Mod // eg. the man (with a stick)
             )
             .addRule(
                     0.4,

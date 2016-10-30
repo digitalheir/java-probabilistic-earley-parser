@@ -71,7 +71,7 @@ public class Chart {
 
         // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
         Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);
-        List<State.StateWithScore> newStates = new ArrayList<>();
+        List<State.StateWithScore> newStates = new ArrayList<>(); //used in stream
 
         for (State statePredecessor : statesToPredictOn) {
             final Category Z = statePredecessor.getActiveCategory();
@@ -221,7 +221,8 @@ public class Chart {
     }
 
     private void completeNoViterbi(int i, Collection<State> states,
-                                   Set<State> completedStatesAlreadyHandles,
+                                   /*TODO I think this Set is superfluous and can be deleted to make the algo a bit faster? (Note it was added a long time ago when I was still fleshing out the algorithm.)*/
+                                   Set<State> completedStatesAlreadyHandled,
                                    AddableValue addForwardScores,
                                    AddableValue addInnerScores,
                                    ScoreRefs computationsForward,
@@ -235,7 +236,7 @@ public class Chart {
         //  such that the R*(Z =*> Y) is nonzero
         //  and Y → v is not a unit production
         for (State completedState : states) {
-            completedStatesAlreadyHandles.add(completedState);
+            completedStatesAlreadyHandled.add(completedState);
             final int j = completedState.getRuleStartPosition();
             final NonTerminal Y = completedState.getRule().getLeft();
 
@@ -274,7 +275,10 @@ public class Chart {
                         fw
                 );
 
-//                if (newStateRule.isPassive(newStateDotPosition)/*isCompleted?*/ && !newStateRule.isUnitProduction()) {
+                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
+                if (newStateRule.isPassive(newStateDotPosition)/*isCompleted?*/
+                        && !newStateRule.isUnitProduction()
+                        && stateSets.get(i, newStateRuleStart, newStateDotPosition, newStateRule) == null) {
                     if (possiblyNewStates == null) possiblyNewStates = new StateMap(20);
                     possiblyNewStates.add(
                             newStateRule,
@@ -283,7 +287,7 @@ public class Chart {
                             newStateDotPosition,
                             fw
                     );
-//                }
+                }
 
                 addInnerScores.add(
                         newStateRule,
@@ -296,28 +300,27 @@ public class Chart {
         }
 
         if (possiblyNewStates != null) {
-            System.out.println(possiblyNewStates.size());
-            List<State> newCompletedStates = new ArrayList<>();
-        possiblyNewStates.states.forEach((rule, tIntObjectMapTIntObjectMap) ->
+            List<State> newCompletedStates = new ArrayList<>(possiblyNewStates.size());
+            possiblyNewStates.states.forEach((rule, tIntObjectMapTIntObjectMap) ->
                     tIntObjectMapTIntObjectMap.forEachEntry((index, tIntDoubleMapTIntObjectMap) -> {
                         tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
                             tIntDoubleMap.forEachEntry((dot, score) -> {
                                 boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
                                 final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
-                                if (isnew && state.isCompleted() && !state.rule.isUnitProduction() && !completedStatesAlreadyHandles.contains(state)) {
-                                    //if(newCompletedStates==null)newCompletedStates=new ArrayList<>();
+                                if (!isnew || !state.isCompleted() || state.rule.isUnitProduction())
+                                    throw new IssueRequest("Unexpected state found in possible new states. This is a bug.");
+                                if (!completedStatesAlreadyHandled.contains(state))
                                     newCompletedStates.add(state);
-                                }
                                 return true;
                             });
                             return true;
                         });
                         return true;
                     }));
-
+            //noinspection ConstantConditions
             if (newCompletedStates != null && newCompletedStates.size() > 0) completeNoViterbi(i,
                     newCompletedStates,
-                    completedStatesAlreadyHandles,
+                    completedStatesAlreadyHandled,
                     addForwardScores,
                     addInnerScores,
                     computationsForward,
