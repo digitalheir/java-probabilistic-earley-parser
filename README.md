@@ -34,14 +34,14 @@ Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earl
         <dependency>
             <groupId>org.leibnizcenter</groupId>
             <artifactId>probabilistic-earley-parser</artifactId>
-            <version>0.9.6</version>
+            <version>0.9.7</version>
         </dependency>
 </dependencies>
 ```
 
 or Gradle:
 ```groovy
-compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.6'
+compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.7'
 ```
 
 Most applications will want to interface with the static functions in `Parser`:

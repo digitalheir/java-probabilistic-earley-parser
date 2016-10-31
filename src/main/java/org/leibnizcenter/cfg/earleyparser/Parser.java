@@ -40,7 +40,7 @@ public class Parser {
                                        Grammar grammar,
                                        Iterable<Token<E>> tokens) {
         final ChartWithInputPosition parse = parseAndCountTokens(goal, grammar, tokens, null);
-        final Collection<State> completedStates = parse.chart.getCompletedStates(parse.index, Category.START);
+        final Collection<State> completedStates = parse.chart.stateSets.getCompletedStates(parse.index, Category.START);
         if (completedStates.size() > 0) {
             if (completedStates.size() > 1)
                 throw new IssueRequest("Multiple final states found. This is likely an error.");
@@ -126,7 +126,7 @@ public class Parser {
     public static <E> ParseTreeWithScore getViterbiParseWithScore(NonTerminal S, Grammar grammar, Iterable<Token<E>> tokens) {
         ChartWithInputPosition chart = parseAndCountTokens(S, grammar, tokens, null);
 
-        List<ParseTreeWithScore> parses = chart.chart.getCompletedStates(chart.index, Category.START).stream()
+        List<ParseTreeWithScore> parses = chart.chart.stateSets.getCompletedStates(chart.index, Category.START).stream()
                 .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.getSemiring()))
                 .collect(Collectors.toList());
         if (parses.size() > 1) throw new Error("Found more than one Viterbi parses. This is a bug.");

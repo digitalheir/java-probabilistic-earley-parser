@@ -3,6 +3,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import java.util.HashMap;
@@ -64,5 +65,24 @@ public class StateMap {
 
     public int size() {
         return size;
+    }
+
+    public void forEach(StateHandler h) {
+        states.forEach((rule, tIntObjectMapTIntObjectMap) ->
+                tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
+                    tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                        tIntDoubleMap.forEachEntry((dot, score) -> {
+                            h.consume(position, ruleStart, dot, rule, score);
+                            return true;
+                        });
+                        return true;
+                    });
+                    return true;
+                }));
+    }
+
+    @FunctionalInterface
+    public interface StateHandler {
+        void consume(int position, int ruleStart, int dot, Rule rule, ExpressionSemiring.Value score);
     }
 }

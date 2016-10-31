@@ -177,7 +177,7 @@ public class ParserTest {
                 //System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
             });
         }
-        Collection<State> howMany = chart.getCompletedStates(tokens.size(), Category.START);
+        Collection<State> howMany = chart.stateSets.getCompletedStates(tokens.size(), Category.START);
         Assert.assertEquals(howMany.size(), 1);
         //if (howMany.size() > 1) throw new Error("Found more than one result sets. This is a nasty bug.");
         State finalState = howMany.iterator().next();

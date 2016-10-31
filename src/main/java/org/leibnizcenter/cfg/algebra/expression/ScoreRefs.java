@@ -1,14 +1,11 @@
 package org.leibnizcenter.cfg.algebra.expression;
 
-import gnu.trove.map.TIntObjectMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.Value;
 import org.leibnizcenter.cfg.earleyparser.chart.StateMap;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
-
-import java.util.Map;
 
 /**
  * Contains references to deferred computations. Used in completion stage.
@@ -32,8 +29,8 @@ public class ScoreRefs {
                 .put(dotPosition, set);
     }
 
-    public Map<Rule, TIntObjectMap<TIntObjectMap<TIntObjectMap<Value>>>> getStates() {
-        return states.states;
+    public StateMap getStates() {
+        return states;
     }
 
     public Value getExpression(State state) {

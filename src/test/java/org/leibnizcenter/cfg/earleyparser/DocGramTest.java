@@ -248,7 +248,7 @@ public class DocGramTest {
         List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
 
-        for (int i = 0; i < 0; i++) {
+        for (int i = 0; i < 500; i++) {
             if(i<one_doc.size())
                 listSoFar.add(one_doc.get(i));
             else if(i<one_doc.size()+two_doc.size())

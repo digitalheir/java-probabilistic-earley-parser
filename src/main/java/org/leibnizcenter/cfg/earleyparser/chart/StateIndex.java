@@ -9,8 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * An index of states by rule -> position -> rule start position -> dot position
+ * <p>
  * Created by Maarten on 23-8-2016.
  */
+@SuppressWarnings("WeakerAccess")
 public class StateIndex {
     private final Map<
             Rule,

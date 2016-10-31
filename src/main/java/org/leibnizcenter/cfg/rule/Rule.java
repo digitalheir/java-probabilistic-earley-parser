@@ -32,6 +32,7 @@ public class Rule {
      * (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
      */
     private final double rawProbability;
+    private final int hashCode;
 
     /**
      * Creates a new rule with the specified left side category and series of
@@ -69,6 +70,7 @@ public class Rule {
         this.left = left;
         this.right = right;
 
+        this.hashCode = computeHashCode();
 //        isPreTerminal = Arrays.stream(right)
 //                .filter(r -> r instanceof Terminal)
 //                .limit(1).count() > 0;
@@ -206,13 +208,12 @@ public class Rule {
 
     @Override
     public int hashCode() {
-        int result;
-        long temp;
-        result = left.hashCode();
-        result = 31 * result + Arrays.hashCode(right);
-        temp = Double.doubleToLongBits(rawProbability);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
+        return hashCode;
+    }
+
+    private int computeHashCode() {
+        long temp = Double.doubleToLongBits(rawProbability);
+        return 31 * (31 * left.hashCode() + Arrays.hashCode(right)) + (int) (temp ^ (temp >>> 32));
     }
 
     /**

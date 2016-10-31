@@ -9,9 +9,9 @@ import org.leibnizcenter.cfg.rule.Rule;
  *
  * Created by Maarten on 23-8-2016.
  */
-public class AddableValue extends ScoreRefs {
+public class AddableValuesContainer extends ScoreRefs {
 
-    public AddableValue(int capacity, ExpressionSemiring semiring) {
+    public AddableValuesContainer(int capacity, ExpressionSemiring semiring) {
         super(capacity, semiring);
     }
 

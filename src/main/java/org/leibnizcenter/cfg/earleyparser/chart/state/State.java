@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart.state;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.earleyparser.chart.StateSets;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import java.text.DecimalFormat;
@@ -45,6 +46,7 @@ public class State {
     public final int ruleDotPosition;
     @SuppressWarnings("WeakerAccess")
     public final int positionInInput;
+    private final int hashCode;
 
     /**
      * Makes a predicted State based on the specified rule, with the specified
@@ -67,6 +69,11 @@ public class State {
         this.ruleStartPosition = ruleStartPosition;
         this.ruleDotPosition = ruleDotPosition;
         this.positionInInput = positionInInput;
+        this.hashCode = computeHashCode();
+    }
+
+    public static State create(int index, int ruleStart, int dotPosition, Rule rule) {
+        return StateSets.create(index, ruleStart, dotPosition, rule, null);
     }
 
     @Override
@@ -206,6 +213,10 @@ public class State {
 
     @Override
     public int hashCode() {
+        return hashCode;
+    }
+
+    private int computeHashCode() {
         int result = rule.hashCode();
         result = 31 * result + ruleStartPosition;
         result = 31 * result + ruleDotPosition;
@@ -251,52 +262,60 @@ public class State {
         }
     }
 
-    public static class ViterbiScore implements Comparable<ViterbiScore> {
+    /**
+     * Immutable class represeting a Viterbi score coming from a certain state, transition to a result state computing
+     * using a certain semiring
+     */
+    public static final class ViterbiScore implements Comparable<ViterbiScore> {
         private final State origin;
         private final double innerScore;
         private final DblSemiring sr;
         private final State resultingState;
+        private final int hashCode;
 
         public ViterbiScore(double innerScore, State origin, State resultingState, DblSemiring semiring) {
             this.innerScore = innerScore;
             this.origin = origin;
             this.resultingState = resultingState;
             this.sr = semiring;
+            this.hashCode = computeHashCode();
         }
 
-        public double getScore() {
+        public final double getScore() {
             return innerScore;
         }
 
-        public State getOrigin() {
+        public final State getOrigin() {
             return origin;
         }
 
         @Override
-        public int compareTo(ViterbiScore other) {
+        public final int compareTo(ViterbiScore other) {
             return Double.compare(sr.toProbability(innerScore), sr.toProbability(other.getScore()));
         }
 
-        public State getResultingState() {
+        public final State getResultingState() {
             return resultingState;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public final boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-
             ViterbiScore that = (ViterbiScore) o;
-
-            if (Double.compare(that.innerScore, innerScore) != 0) return false;
-            if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
-            if (!sr.equals(that.sr)) return false;
-            return resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null;
+            return Double.compare(that.innerScore, innerScore) == 0
+                    && (origin != null ? origin.equals(that.origin) : that.origin == null
+                    && sr.equals(that.sr)
+                    && (resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null));
 
         }
 
         @Override
-        public int hashCode() {
+        public final int hashCode() {
+            return hashCode;
+        }
+
+        private int computeHashCode() {
             int result;
             long temp;
             result = origin != null ? origin.hashCode() : 0;
@@ -308,7 +327,7 @@ public class State {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "ViterbiScore{" +
                     "origin=" + origin +
                     ", score=" + sr.toProbability(innerScore) +
