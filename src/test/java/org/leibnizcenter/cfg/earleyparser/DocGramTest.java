@@ -205,7 +205,7 @@ public class DocGramTest {
 
     public final static Grammar grammar = new Grammar.Builder()
             .setSemiring(new LogSemiring())
-                    //.addRule(1.0, DOCUMENT, /* -> */ HEADER, DOCUMENT_BODY) // TODO
+            //.addRule(1.0, DOCUMENT, /* -> */ HEADER, DOCUMENT_BODY) // TODO
             .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)
 
             .addRule(0.7, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE)
@@ -231,9 +231,9 @@ public class DocGramTest {
             .addRule(0.3, TEXT_BLOB, /* -> */ TERMINAL_TEXT)
             .addRule(0.2, TEXT_BLOB, /* -> */ TERMINAL_NEWLINE)
 
-                    //
-                    // Section Title
-                    //
+            //
+            // Section Title
+            //
             .addRule(0.2, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING)
             .addRule(0.3, SECTION_TITLE, /* -> */ SECTION_TITLE_TEXT)
             .addRule(0.5, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING, SECTION_TITLE_TEXT)
@@ -248,23 +248,25 @@ public class DocGramTest {
         List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
 
-        for (int i = 0; i < 500; i++) {
-            if(i<one_doc.size())
+        for (int i = 0; i < 0; i++) {
+            if (i < one_doc.size())
                 listSoFar.add(one_doc.get(i));
-            else if(i<one_doc.size()+two_doc.size())
-                listSoFar.add(two_doc.get(i-one_doc.size()));
-            else if(i<one_doc.size()+two_doc.size()+three_doc.size())
-                listSoFar.add(three_doc.get(i-(one_doc.size()+two_doc.size())));
-            else if(i<one_doc.size()+two_doc.size()+three_doc.size()+four_doc.size())
-                listSoFar.add(four_doc.get(i-(one_doc.size()+two_doc.size()+three_doc.size())));
+            else if (i < one_doc.size() + two_doc.size())
+                listSoFar.add(two_doc.get(i - one_doc.size()));
+            else if (i < one_doc.size() + two_doc.size() + three_doc.size())
+                listSoFar.add(three_doc.get(i - (one_doc.size() + two_doc.size())));
+            else if (i < one_doc.size() + two_doc.size() + three_doc.size() + four_doc.size())
+                listSoFar.add(four_doc.get(i - (one_doc.size() + two_doc.size() + three_doc.size())));
             else {
                 s = ((s + 1) % 4);
                 listSoFar.addAll(s == 0 ? one_doc : s == 1 ? two_doc : s == 2 ? three_doc : four_doc);
             }
-            long start = System.currentTimeMillis();
-            Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
-            long end = System.currentTimeMillis();
-            System.out.println(listSoFar.size() + "\t" + (end - start));
+            if (i > 100) {
+                long start = System.currentTimeMillis();
+                Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
+                long end = System.currentTimeMillis();
+                System.out.println(listSoFar.size() + "\t" + (end - start));
+            }
         }
 
     }

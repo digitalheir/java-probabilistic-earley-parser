@@ -1,14 +1,10 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.Grammar;
-import org.leibnizcenter.cfg.algebra.expression.ScoreRefs;
 import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.Value;
-import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
@@ -60,58 +56,7 @@ public class Chart {
      * @param index The string index to make predictions at.
      */
     public void predict(int index) {
-        DblSemiring sr = grammar.getSemiring();
-
-        // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
-        Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);
-
-        Collection<State.StateWithScore> newStates = new HashSet<>();
-
-        for (State statePredecessor : statesToPredictOn) {
-            final Category Z = statePredecessor.getActiveCategory();
-            double prevForward = stateSets.getForwardScore(statePredecessor);
-
-            // For all productions Y → v such that R(Z =*L> Y) is nonzero
-            grammar.getLeftStarCorners()
-                    .getNonZeroScores(Z).stream()
-                    .flatMap(Y -> grammar.getRules(Y).stream()) // ?
-                    // we predict state <code>i: Y<sub>i</sub> → ·v</code>
-                    .forEach(Y_to_v -> {
-                        Category Y = Y_to_v.getLeft();
-                        State s = stateSets.get(index, index, 0, Y_to_v); // We might want to increment the probability of an existing state
-                        // γ' = P(Y → v)
-                        final double Y_to_vProbability = Y_to_v.getScore();
-
-                        // α' = α * R(Z =*L> Y) * P(Y → v)
-                        final double fw = sr.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_vProbability);
-
-                        double innerScore = stateSets.getInnerScore(s);
-                        if (!(Y_to_vProbability == innerScore || sr.zero() == innerScore))
-                            throw new Error(Y_to_vProbability + " != " + innerScore);
-
-//                        System.out.println("predict, add " + semiring.toProbability(fw));
-                        if (s != null) {
-                            stateSets.addForwardScore(s, fw);
-                            stateSets.setInnerScore(s, Y_to_vProbability);
-                            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, s, grammar.getSemiring()));
-                        } else {
-                            s = State.create(
-                                    index,
-                                    index,
-                                    0,
-                                    Y_to_v);
-                            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, s, grammar.getSemiring()));
-                            newStates.add(new State.StateWithScore(s, fw, Y_to_vProbability, null));
-                        }
-                    });
-        }
-
-        newStates.forEach(ss -> {
-            final State state = ss.getState();
-            stateSets.add(state);
-            stateSets.addForwardScore(state, ss.getForwardScore());
-            stateSets.setInnerScore(state, ss.getInnerScore());
-        });
+        Predict.predict(index, grammar, stateSets);
     }
 
     @SuppressWarnings("unused")
@@ -127,80 +72,7 @@ public class Chart {
      * @param scanProbability Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
     public <E> void scan(final int tokenPosition, final Token<E> token, final ScanProbability scanProbability) {
-
-
-        if (token == null) throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
-
-        final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition);
-        final DblSemiring sr = grammar.getSemiring();
-        /*
-         * Get all states that are active on a terminal
-         *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
-         */
-        // noinspection unchecked
-        stateSets.getStatesActiveOnTerminals(tokenPosition).stream()//.parallel()
-                // TODO can this be more efficient, ie have tokens make their category be explicit? (Do we want to maintain the possibility of such "fluid" categories?)
-                //.sequential()
-                .filter(state -> ((Terminal) state.getActiveCategory()).hasCategory(token))
-                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
-                .forEach(preScanState -> {
-                    /*
-                     * All these methods are synchronized
-                     */
-                            final double preScanForward = stateSets.getForwardScore(preScanState);
-                            final double preScanInner = stateSets.getInnerScore(preScanState);
-                            // Note that this state is unique for each preScanState
-                            final State postScanState = stateSets.getOrCreate(
-                                    tokenPosition + 1, preScanState.getRuleStartPosition(),
-                                    preScanState.advanceDot(),
-                                    preScanState.getRule(),
-                                    token
-                            );
-
-                            // Set forward score //synchronized
-                            stateSets.setForwardScore(
-                                    postScanState,
-                                    calculateForwardScore(scanProb, sr, preScanForward)
-                            );
-
-                            // Get inner score (no side effects)
-                            final double postScanInner = calculateInnerScore(scanProb, sr, preScanInner);
-                            // Set inner score //synchronized
-                            stateSets.setInnerScore(
-                                    postScanState,
-                                    postScanInner
-                            );
-
-                            // Set Viterbi score//synchronized
-                            stateSets.setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
-                        }
-                );
-    }
-
-    /**
-     * Function to calculate the new inner score from given values
-     *
-     * @param scanProbability The probability of scanning this particular token
-     * @param sr              The semiring to calculate with
-     * @param previousInner   The previous inner score
-     * @return The inner score for the new state
-     */
-    private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
-        if (Double.isNaN(scanProbability)) return previousInner;
-        else return sr.times(previousInner, scanProbability);
-    }
-
-    /**
-     * Function to compute the forward score for the new state after scanning the given token.
-     *
-     * @param scanProbability           The probability of scanning this particular token
-     * @param sr                        The semiring to calculate with
-     * @param previousStateForwardScore The previous forward score
-     * @return Computed forward score for the new state
-     */
-    private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
-        if (Double.isNaN(scanProbability)) return previousStateForwardScore;
-        else return sr.times(previousStateForwardScore, scanProbability);
+        Scan.scan(tokenPosition, token, scanProbability, grammar, stateSets);
     }
 
     /**
@@ -214,16 +86,15 @@ public class Chart {
 //        final ScoreRefs computationsInner = new ScoreRefs(1, semiring);
 //        final ScoreRefs computationsForward = new ScoreRefs(1, semiring);
 
-        completeNoViterbi(
+        Complete.completeNoViterbi(
                 i,
                 stateSets.getCompletedStatesThatAreNotUnitProductions(i),
-                null,//new HashSet<>(),
+                //new HashSet<>(),
                 addForwardScores,
                 addInnerScores,
-                null,
-                null
 //                computationsForward,
-//                computationsInner
+//                computationsInner,
+                grammar, stateSets, semiring
         );
 
         // Resolve and set forward score
@@ -237,120 +108,6 @@ public class Chart {
             final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
             stateSets.setInnerScore(state, score.resolve());
         });
-    }
-
-    /**
-     * Completes states exhaustively and makes resolvable expressions for the forward and inner scores.
-     * Note that these expressions can only be resolved to actual values after finishing completion, because they may depend on one another.
-     *
-     * @param position                      State position
-     * @param states                        Completed states to use for deducing what states to proceed
-     * @param completedStatesAlreadyHandled The completed states that we don't want to reiterate.
-     * @param addForwardScores              Container / helper for adding to forward score expressions
-     * @param addInnerScores                Container / helper for adding to inner score expressions
-     * @param computationsForward           Container for forward score expressions. TODO Probably superfluous.
-     * @param computationsInner             Container for inner score expressions. TODO Probably superfluous.
-     */
-    private void completeNoViterbi(int position,
-                                   Collection<State> states,
-                                   Set<State> completedStatesAlreadyHandled,
-                                   AddableValuesContainer addForwardScores,
-                                   AddableValuesContainer addInnerScores,
-                                   ScoreRefs computationsForward,
-                                   ScoreRefs computationsInner
-    ) {
-        StateMap possiblyNewStates = null;
-        // For all states
-        //      i: Y<sub>j</sub> → v·    [a",y"]
-        //      j: X<sub>k</suv> → l·Zm  [a',y']
-        //
-        //  such that the R*(Z =*> Y) is nonzero
-        //  and Y → v is not a unit production
-        for (State completedState : states) {
-            //completedStatesAlreadyHandled.add(completedState);
-            final int j = completedState.getRuleStartPosition();
-            final NonTerminal Y = completedState.getRule().getLeft();
-
-            Value unresolvedCompletedInner = addInnerScores.getOrCreate(completedState, stateSets.getInnerScore(completedState));
-
-            //noinspection Convert2streamapi
-            for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y)) {
-                if (j != stateToAdvance.getPosition()) throw new IssueRequest("Index failed. This is a bug.");
-                // Make i: X_k → lZ·m
-//                Value prevInner = computationsForward.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
-                Value prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
-//                Value prevForward = computationsInner.getOrCreate(stateToAdvance, stateSets.getForwardScore(stateToAdvance));
-                Value prevForward = addForwardScores.getOrCreate(stateToAdvance, stateSets.getForwardScore(stateToAdvance));
-
-                final Category Z = stateToAdvance.getActiveCategory();
-
-                Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
-                Value fw = unitStarScore.times(prevForward).times(unresolvedCompletedInner);
-                Value inner = unitStarScore.times(prevInner).times(unresolvedCompletedInner);
-
-//                    if (completedState != null) {
-//                    } else {
-//                                    resultingState = stateSets.create(i,
-//                                            stateToAdvance.getRuleStartPosition(),
-//                                            stateToAdvance.advanceDot(),
-//                                            stateToAdvance.getRule());
-//                    }
-                Rule newStateRule = stateToAdvance.getRule();
-                int newStateDotPosition = stateToAdvance.advanceDot();
-                int newStateRuleStart = stateToAdvance.getRuleStartPosition();
-                addForwardScores.add(
-                        newStateRule,
-                        position,
-                        newStateRuleStart,
-                        newStateDotPosition,
-                        fw
-                );
-
-                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
-                if (
-                        newStateRule.isPassive(newStateDotPosition)/*isCompleted*/
-                                && !newStateRule.isUnitProduction()
-                                && stateSets.get(position, newStateRuleStart, newStateDotPosition, newStateRule) == null) {
-                    if (possiblyNewStates == null) possiblyNewStates = new StateMap(20);
-                    possiblyNewStates.add(
-                            newStateRule,
-                            position,
-                            newStateRuleStart,
-                            newStateDotPosition,
-                            fw
-                    );
-                }
-
-                addInnerScores.add(
-                        newStateRule,
-                        position,
-                        newStateRuleStart,
-                        newStateDotPosition,
-                        inner
-                );
-            }
-        }
-
-        if (possiblyNewStates != null) {
-            List<State> newCompletedStates = new ArrayList<>(possiblyNewStates.size());
-            possiblyNewStates.forEach((index, ruleStart, dot, rule, score) -> {
-                boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
-                final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
-                if (!isnew || !state.isCompleted() || state.rule.isUnitProduction())
-                    throw new IssueRequest("Unexpected state found in possible new states. This is a bug.");
-                //if (completedStatesAlreadyHandled==null||!completedStatesAlreadyHandled.contains(state))
-                newCompletedStates.add(state);
-            });
-            //noinspection ConstantConditions
-            if (newCompletedStates != null && newCompletedStates.size() > 0) completeNoViterbi(position,
-                    newCompletedStates,
-                    completedStatesAlreadyHandled,
-                    addForwardScores,
-                    addInnerScores,
-                    computationsForward,
-                    computationsInner);
-//        }
-        }
     }
 
     /**
@@ -418,15 +175,6 @@ public class Chart {
         });
     }
 
-//    /**
-//     * Gets the last index in this chart that contains states.
-//     *
-//     * @return The maximal member of {@link #indices()}.
-//     */
-//    public int lastIndex() {
-//        return stateSets.lastKey();
-//    }
-//
 //    /**
 //     * Gets a sub chart of this chart.
 //     *
@@ -526,46 +274,6 @@ public class Chart {
     @SuppressWarnings("unused")
     public int countStates() {
         return stateSets.countStates();
-    }
-//
-//    /**
-//     * Gets the states in this chart at a given index.
-//     *
-//     * @param index The index to return states for.
-//     * @return The {@link Set set} of {@link State states} this chart contains
-//     * at <code>index</code>, or <code>null</code> if no state set exists in
-//     * this chart for the given index. The state set returned by this
-//     * method is <em>not</em> guaranteed to contain the states in the order in
-//     * which they were added. This method
-//     * returns a set of states that is not modifiable.
-//     * @throws NullPointerException If <code>index</code> is <code>null</code>.
-//     * @see java.util.Collections#unmodifiableSet(Set)
-//     */
-//    public Map<State, State.Score> getStates(int index) {
-//        return stateSets.getAtIndex(index);
-//    }
-
-
-    /**
-     * Tests whether this chart is equal to another by comparing their
-     * internal data structures.
-     *
-     * @return <code>true</code> iff the specified object is an instance of
-     * <code>Chart</code> and it contains the same states at the same indices
-     * as this chart.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return (obj instanceof Chart && stateSets.equals(((Chart) obj).stateSets));
-    }
-
-    /**
-     * Computes a hash code for this chart based on its internal data
-     * structure.
-     */
-    @Override
-    public int hashCode() {
-        return 37 * (1 + stateSets.hashCode());
     }
 
     /**
