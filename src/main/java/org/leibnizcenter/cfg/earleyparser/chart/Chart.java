@@ -150,7 +150,8 @@ public class Chart {
             }
             final State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
             final State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
-            final double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.zero();
+            if(prevViterbi == null) throw new Error("Expected viterbi to be set for "+stateToAdvance);
+            final double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.one();
             final State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
 
             // System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getExpression()) + ")");
