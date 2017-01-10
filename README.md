@@ -1,13 +1,32 @@
 # Probabilistic Earley parser
 [![GitHub version](https://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser.svg)](http://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser)
 [![Build Status](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser.svg?branch=master)](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser)
+[![License](https://img.shields.io/npm/l/probabilistic-earley-parser.svg)](https://github.com/digitalheir/java-probabilistic-earley-parser/blob/master/LICENSE)
 
-This is an implementation of a probabilistic Earley parsing algorithm
-in Java, which can parse any Probabilistic Context Free Grammar (PCFG) (also
-known as Stochastic Context Free Grammar (SCFG)),
-or equivalently any language described in Backus-Naur Form (BNF),
-where rewrite rules may be non-deterministic and have a probability 
-attached to them.
+
+This is a library for parsing a sequence of tokens (like words) into tree structures, along with the probability that the particular sequence generates that tree structure. This is mainly useful for linguistic purposes, such as morphological parsing, speech recognition and generally information extraction. It also finds applications in computational biology. 
+
+For example:
+
+* As a computational linguist, you want [derive all ways to interpret an English sentence along with probabilities](https://web.stanford.edu/~jurafsky/icassp95-tc.pdf)
+
+|tokens|parse tree|
+|---|---|
+|[i, want, british, food]|![i want british food](https://cloud.githubusercontent.com/assets/178797/21772897/64838a1e-d68d-11e6-9a9d-11c7c17cb996.png)|
+
+* As a computational biologist, you want to [predict the secondary structure for an RNA sequence](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar#RNA_structure_prediction)
+
+|tokens|parse tree|
+|---|---|
+|`GGGC``UAUU``AGCU``CAGU`<br>`UGGU``UAGA``GCGC``ACCC`<br>`CUGA``UAAG``GGUG``AGGU`<br>`CGCU``GAUU``CGAA``UUCA`<br>`GCAU``AGCC``CA` |![rna secondary structure](https://cloud.githubusercontent.com/assets/178797/21773797/af94f972-d690-11e6-97b4-0aad06071634.jpg)|
+
+* As a computational linguist, [you want to know the most likely table of contents structure for a list of paragraphs](https://digitalheir.github.io/java-rechtspraak-library/document-structure/)
+
+
+
+This library allows you to do these things [efficiently](https://github.com/digitalheir/probabilistic-earley-parser-javascript#runtime-complexity), as long as you can describe the rules as a [Context-free Grammar](https://en.wikipedia.org/wiki/Context-free_grammar) (CFG).
+
+The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences: we can order them by probability.
 
 The parser seems to work correctly and efficiently, but is still < v1.0 because I have not added as much utility functions and tests as I would like.
 
