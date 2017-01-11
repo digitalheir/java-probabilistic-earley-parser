@@ -13,6 +13,7 @@ import java.util.EnumSet;
  * <p>
  * Created by maarten on 19-6-16.
  */
+@SuppressWarnings("unused")
 public interface Semiring<T> {
     @SuppressWarnings("unused")
     static boolean isRighSemiring(Semiring semiring) {
@@ -20,7 +21,7 @@ public interface Semiring<T> {
     }
 
     @SuppressWarnings("unused")
-    static boolean isLefSemiring(Semiring semiring) {
+    static boolean isLeftSemiring(Semiring semiring) {
         return semiring.properties().contains(Property.LeftSemiring);
     }
 
@@ -84,7 +85,7 @@ public interface Semiring<T> {
     /**
      * @return Whether ⊗ left distributes w.r.t. ⊕
      */
-    boolean isLefSemiring();
+    boolean isLeftSemiring();
 
     /**
      * @return Whether ⊗ right distributes w.r.t. ⊕
@@ -111,8 +112,6 @@ public interface Semiring<T> {
         return (this.plus(w1, w2) == w1) && (w1 != w2);
     }
 
-
-// TODO necessary?
 //    /**
 //     * Reverse: a mapping endState T to ReverseT s.t.
 //     * <ul>

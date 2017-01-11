@@ -61,7 +61,7 @@ public final class PepFixture {
     public final static Rule rule6 = Rule.create(1.0, Z, b);
     public final static Rule rule7 = Rule.create(1.0, X, a);
     public final static Rule rule8 = Rule.create(1.0, X, b);
-    public static final Grammar mixed = new Grammar.Builder("mixed")
+    public static final Grammar<String> mixed = new Grammar.Builder<String>("mixed")
             .addRule(rule4)
             .addRule(rule5)
             .addRule(rule6)
@@ -75,7 +75,7 @@ public final class PepFixture {
             .map(Token::new)
             .collect(Collectors.toList());
 
-//    public static Grammar grammarCaseInsensitive = new Grammar.Builder("test")
+//    public static Grammar<E> grammarCaseInsensitive = new Grammar.Builder<E>("test")
 //            .addRule(S, NP, VP)
 //            .addRule(NP, Det, N)
 //            .addRule(VP, LefT)

@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * Complete stage
+ *
  * Created by maarten on 31/10/16.
  */
 public class Complete {
@@ -36,15 +38,15 @@ public class Complete {
      *                         //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
      *                         //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
      */
-    static void completeNoViterbi(int position,
+    static <E> void completeNoViterbi(int position,
                                   Collection<State> states,
 //                                   Set<State> completedStatesAlreadyHandled,
                                   AddableValuesContainer addForwardScores,
                                   AddableValuesContainer addInnerScores,
 //                                   ScoreRefs computationsForward,
 //                                   ScoreRefs computationsInner
-                                  Grammar grammar,
-                                  StateSets stateSets,
+                                  Grammar<E> grammar,
+                                  StateSets<E> stateSets,
                                   ExpressionSemiring semiring
     ) {
         StateMap possiblyNewStates = null;
@@ -59,11 +61,15 @@ public class Complete {
             final int j = completedState.getRuleStartPosition();
             final NonTerminal Y = completedState.getRule().getLeft();
 
-            ExpressionSemiring.Value unresolvedCompletedInner = addInnerScores.getOrCreate(completedState, stateSets.getInnerScore(completedState));
+            ExpressionSemiring.Value unresolvedCompletedInner = addInnerScores.getOrCreate(
+                    completedState,
+                    stateSets.getInnerScore(completedState)
+            );
 
-            //noinspection Convert2streamapi
             for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y)) {
                 if (j != stateToAdvance.getPosition()) throw new IssueRequest("Index failed. This is a bug.");
+
+
                 // Make i: X_k → lZ·m
 //                Value prevInner = computationsForward.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
                 ExpressionSemiring.Value prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.getInnerScore(stateToAdvance));
@@ -74,6 +80,7 @@ public class Complete {
 
                 ExpressionSemiring.Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
                 ExpressionSemiring.Value fw = unitStarScore.times(prevForward).times(unresolvedCompletedInner);
+
                 ExpressionSemiring.Value inner = unitStarScore.times(prevInner).times(unresolvedCompletedInner);
 
 //                    if (completedState != null) {
@@ -93,6 +100,7 @@ public class Complete {
                         newStateDotPosition,
                         fw
                 );
+
 
                 // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
                 if (
@@ -121,7 +129,7 @@ public class Complete {
 
         if (possiblyNewStates != null) {
             List<State> newCompletedStates = new ArrayList<>(possiblyNewStates.size());
-            possiblyNewStates.forEach((index, ruleStart, dot, rule, score) -> {
+            possiblyNewStates.forEach((index, ruleStart, dot, rule, ignored) -> {
                 boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
                 final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
                 if (!isnew || !state.isCompleted() || state.rule.isUnitProduction())
@@ -142,4 +150,41 @@ public class Complete {
 //        }
         }
     }
+
+    /**
+     * Makes completions in the specified chart at the given index.
+     *
+     * @param i The index to make completions at.
+     */
+    public static <E> void completeNoViterbi(int i, Grammar<E> grammar, StateSets<E> stateSets) {
+        final ExpressionSemiring semiring = grammar.getSemiring();
+        final AddableValuesContainer addForwardScores = new AddableValuesContainer(50, semiring);
+        final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
+//        final ScoreRefs computationsInner = new ScoreRefs(1, semiring);
+//        final ScoreRefs computationsForward = new ScoreRefs(1, semiring);
+
+        completeNoViterbi(
+                i,
+                stateSets.getCompletedStatesThatAreNotUnitProductions(i),
+                //new HashSet<>(),
+                addForwardScores,
+                addInnerScores,
+//                computationsForward,
+//                computationsInner,
+                grammar, stateSets, semiring
+        );
+
+        // Resolve and set forward score
+        addForwardScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
+            final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
+            stateSets.setForwardScore(state, score.resolve());
+        });
+
+        // Resolve and set inner score
+        addInnerScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
+            final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
+            stateSets.setInnerScore(state, score.resolve());
+        });
+    }
+
 }

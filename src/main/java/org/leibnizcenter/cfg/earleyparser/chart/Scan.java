@@ -3,14 +3,20 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
-import org.leibnizcenter.cfg.token.Token;
+
+import java.util.Set;
 
 /**
+ * Scan phase of Earley
+ *
  * Created by maarten on 31/10/16.
  */
+@SuppressWarnings("WeakerAccess")
 public final class Scan {
     /**
      * Don't instantiate
@@ -19,22 +25,24 @@ public final class Scan {
         throw new Error();
     }
 
-    static <E> void scan(int tokenPosition, Token<E> token, ScanProbability scanProbability, Grammar grammar, StateSets stateSets) {
-        if (token == null) throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
+    static <T> void scan(final int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability scanProbability, Grammar<T> grammar, StateSets stateSets) {
+        if (tokenWithCategories == null) throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
 
         final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition);
         final DblSemiring sr = grammar.getSemiring();
+        final Token<T> token = tokenWithCategories.getToken();
+        tokenWithCategories.getCategories().forEach(terminalType ->{
         /*
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         // noinspection unchecked
-        stateSets.getStatesActiveOnTerminals(tokenPosition).stream()//.parallel()
-                // TODO can this be more efficient, ie have tokens make their category be explicit? (Do we want to maintain the possibility of such "fluid" categories?)
-                //.sequential()
-                .filter(state -> ((Terminal) state.getActiveCategory()).hasCategory(token))
-                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
+            Set<State> statesActiveOnTerminals = stateSets.getStatesActiveOnTerminals(tokenPosition, terminalType);
+            if(statesActiveOnTerminals!= null) statesActiveOnTerminals
                 .forEach(preScanState -> {
+                            //noinspection unchecked
+                            if(!((Terminal<T>) preScanState.getActiveCategory()).hasCategory(token)) throw new IssueRequest("This is a bug.");
+                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
                     /*
                      * All these methods are synchronized
                      */
@@ -66,7 +74,7 @@ public final class Scan {
                             stateSets.setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
                         }
                 );
-    }
+    });}
 
     /**
      * Function to calculate the new inner score from given values
@@ -76,7 +84,7 @@ public final class Scan {
      * @param previousInner   The previous inner score
      * @return The inner score for the new state
      */
-    static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
+    private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
         if (Double.isNaN(scanProbability)) return previousInner;
         else return sr.times(previousInner, scanProbability);
     }
@@ -89,7 +97,7 @@ public final class Scan {
      * @param previousStateForwardScore The previous forward score
      * @return Computed forward score for the new state
      */
-    static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
+    private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
         if (Double.isNaN(scanProbability)) return previousStateForwardScore;
         else return sr.times(previousStateForwardScore, scanProbability);
     }

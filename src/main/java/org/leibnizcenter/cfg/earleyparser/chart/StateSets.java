@@ -7,6 +7,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
@@ -25,7 +26,7 @@ import java.util.concurrent.ConcurrentMap;
  * Created by maarten on 31/10/16.
  */
 @SuppressWarnings("WeakerAccess")
-public class StateSets {
+public class StateSets<T> {
     private final StateIndex states = new StateIndex(500);
 
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
@@ -59,13 +60,13 @@ public class StateSets {
 
     private final TIntObjectHashMap<Multimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
 
-    private final TIntObjectHashMap<Set<State>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
+    private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final DblSemiring semiring;
-    private final Grammar grammar;
+    private final Grammar<T> grammar;
     private Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
 
 
-    StateSets(Grammar grammar) {
+    StateSets(Grammar<T> grammar) {
         this.grammar = grammar;
         this.semiring = grammar.getSemiring();
         this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
@@ -125,9 +126,13 @@ public class StateSets {
     }
 
 
-    public Set<State> getStatesActiveOnTerminals(int index) {
-        if (!statesActiveOnTerminals.containsKey(index)) statesActiveOnTerminals.put(index, new HashSet<>());
-        return statesActiveOnTerminals.get(index);
+    public Set<State> getStatesActiveOnTerminals(int index, Terminal<T> terminal) {
+        if (!statesActiveOnTerminals.containsKey(index)) return null;
+        else {
+            Map<Terminal<T>, Set<State>> map = statesActiveOnTerminals.get(index);
+            if (map.containsKey(terminal)) return map.get(terminal);
+            else return null;
+        }
     }
 
 
@@ -178,14 +183,16 @@ public class StateSets {
             addToCompletedStatesFor(state);
         }
         if (state.isActive()) {
-            if (state.getActiveCategory() instanceof NonTerminal) {
+            Category activeCategory = state.getActiveCategory();
+            if (activeCategory instanceof NonTerminal) {
                 addToStatesActiveOnNonTerminal(state);
                 add(statesActiveOnNonTerminals, index, state);
 
 //                    Multimap<NonTerminal, State> mapp = statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.get(index);
 //                    final Multimap<NonTerminal, State> map = mapp == null ? HashMultimap.create() //We expect this
 //                            : mapp;
-                Collection<NonTerminal> scores = grammar.getUnitStar().getNonZeroNonTerminals(state.getActiveCategory());
+                final Grammar.LeftCorners unitStar = grammar.getUnitStar();
+                Collection<NonTerminal> scores = unitStar.getNonZeroNonTerminals(activeCategory);
                 scores.forEach(Y -> {
 //                        map.put(Y, state);
                     if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(index))
@@ -193,10 +200,17 @@ public class StateSets {
                     nonTerminalActiveAtIWithNonZeroUnitStarToY.get(index).put(Y, state);
                 });
 //                    statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, map);
-
-            } else if (state.getActiveCategory() instanceof Terminal) add(statesActiveOnTerminals, index, state);
+            } else if (activeCategory instanceof Terminal)  //noinspection unchecked
+                addStateToActiveOnTerminal(index, (Terminal<T>) activeCategory, state);
             else throw new IssueRequest("Neither Terminal nor NonToken...?");
         }
+    }
+
+    private void addStateToActiveOnTerminal(int index, Terminal<T> activeCategory, State state) {
+        if (!statesActiveOnTerminals.containsKey(index)) statesActiveOnTerminals.put(index, new HashMap<>());
+        Map<Terminal<T>, Set<State>> terminalSetMap = statesActiveOnTerminals.get(index);
+        if (!terminalSetMap.containsKey(activeCategory)) terminalSetMap.put(activeCategory, new HashSet<>());
+        terminalSetMap.get(activeCategory).add(state);
     }
 
     private void addToCompletedStatesFor(State state) {
@@ -230,9 +244,9 @@ public class StateSets {
         forwardScores.put(state, semiring.plus(getForwardScore(state)/*default zero*/, increment));
     }
 
-    public void addInnerScore(State state, double increment) {
-        innerScores.put(state, semiring.plus(getInnerScore(state)/*default zero*/, increment));
-    }
+//    public void addInnerScore(State state, double increment) {
+//        innerScores.put(state, semiring.plus(getInnerScore(state)/*default zero*/, increment));
+//    }
 
     public void setForwardScore(State s, double probability) {
         forwardScores.put(s, probability);
@@ -293,9 +307,9 @@ public class StateSets {
         addState(dotToState, state);
     }
 
-    public synchronized State getSynchronized(int index, int ruleStart, int ruleDot, Rule rule) {
-        return states.getState(rule, index, ruleStart, ruleDot);
-    }
+//    public synchronized State getSynchronized(int index, int ruleStart, int ruleDot, Rule rule) {
+//        return states.getState(rule, index, ruleStart, ruleDot);
+//    }
 
     public State get(int index, int ruleStart, int ruleDot, Rule rule) {
         return states.getState(rule, index, ruleStart, ruleDot);

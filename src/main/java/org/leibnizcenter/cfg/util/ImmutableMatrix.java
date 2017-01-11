@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.util;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -32,6 +33,7 @@ public class ImmutableMatrix<T> {
         columnCount = width;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public ImmutableMatrix(MutableMatrix<T> m) {
         Vector<Vector<T>> list = new Vector<>(m.getRowCount());
         list.setSize(m.getRowCount());
@@ -64,13 +66,15 @@ public class ImmutableMatrix<T> {
      * @return number of non-null items
      */
     public int size() {
-        return (int) list.stream().flatMap(Collection::stream).filter(r -> r != null).count();
+        return (int) list.stream().flatMap(Collection::stream).filter(Objects::nonNull).count();
     }
 
+    @SuppressWarnings("WeakerAccess")
     public int getRowCount() {
         return rowCount;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public int getColumnCount() {
         return columnCount;
     }

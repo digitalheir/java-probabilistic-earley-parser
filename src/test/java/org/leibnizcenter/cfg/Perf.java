@@ -12,6 +12,8 @@ import org.leibnizcenter.cfg.token.Tokens;
 import java.util.List;
 
 /**
+ * Test performance todo linear / exponential regression
+ *
  * Created by Maarten on 23-8-2016.
  */
 public class Perf {
@@ -24,7 +26,7 @@ public class Perf {
         Category aa = new ExactStringTerminal("a");
 
         final LogSemiring sr = new LogSemiring();
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.1, S, S, S)
@@ -40,7 +42,7 @@ public class Perf {
         List<Token<String>> tokens = Tokens.tokenize();
         for (int i = 0; i <= 10000; i++) {
             long timeStart = System.currentTimeMillis();
-            ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
+            Parser.getViterbiParseWithScore(S, grammar, tokens);
             long timeEnd = System.currentTimeMillis();
             System.out.println(i + "\t" + (timeEnd - timeStart));
             tokens.add(a);

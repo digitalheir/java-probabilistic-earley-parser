@@ -204,10 +204,7 @@ public class State {
 
         State state = (State) o;
 
-        if (ruleStartPosition != state.ruleStartPosition) return false;
-        if (ruleDotPosition != state.ruleDotPosition) return false;
-        if (positionInInput != state.positionInInput) return false;
-        return rule.equals(state.rule);
+        return ruleStartPosition == state.ruleStartPosition && ruleDotPosition == state.ruleDotPosition && positionInInput == state.positionInInput && rule.equals(state.rule);
 
     }
 

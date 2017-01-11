@@ -6,6 +6,8 @@ import gnu.trove.map.hash.TDoubleObjectHashMap;
 import java.text.DecimalFormat;
 
 /**
+ * Semiring for abstract expression trees
+ *
  * Created by Maarten on 24-8-2016.
  */
 public abstract class ExpressionSemiring implements DblSemiring {
@@ -39,7 +41,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     }
 
     public interface Resolvable {
-        public double resolve();
+        double resolve();
     }
 
     /**
@@ -48,7 +50,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     public class Value implements Resolvable {
         private Expression expression;
 
-        public Value(Expression e) {
+        Value(Expression e) {
             expression = e;
         }
 
@@ -87,16 +89,16 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
     }
 
-    public abstract class Expression implements Resolvable {
+    abstract class Expression implements Resolvable {
         double value = Double.NaN;
 
-        public boolean isDefinite() {
+        boolean isDefinite() {
             return !Double.isNaN(value);
         }
     }
 
     public class Dbl extends Expression {
-        public Dbl(double num) {
+        Dbl(double num) {
             this.value = num;
         }
 
@@ -116,7 +118,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         private final Resolvable right;
         private final Resolvable left;
 
-        public Plus(Resolvable left, Resolvable right) {
+        Plus(Resolvable left, Resolvable right) {
             this.value = Double.NaN;
             this.left = left;
             this.right = right;
@@ -142,7 +144,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         private final Resolvable right;
         private final Resolvable left;
 
-        public Times(Resolvable left, Resolvable right) {
+        Times(Resolvable left, Resolvable right) {
             this.value = Double.NaN;
             this.left = left;
             this.right = right;

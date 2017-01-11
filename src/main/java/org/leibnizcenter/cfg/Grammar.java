@@ -12,13 +12,11 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,7 +33,7 @@ import java.util.stream.IntStream;
  * <p>
  * Once the Grammar is instantiated, it is immutable.
  */
-public class Grammar {
+public class Grammar<T> {
     public final String name;
     public final ImmutableMultimap<Category, Rule> rules;
 
@@ -57,7 +55,8 @@ public class Grammar {
      */
     private final LeftCorners unitStarScores;
 
-    private final Set<NonTerminal> nonTerminals;
+    private final Set<NonTerminal> nonTerminals = new HashSet<>();
+    private final Set<Terminal<T>> terminals = new HashSet<>();
     private final ExpressionSemiring semiring;
 
     /**
@@ -77,9 +76,16 @@ public class Grammar {
     public Grammar(String name, ImmutableMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
-        this.nonTerminals = getAllRules().stream()
-                .map(Rule::getLeft)
-                .distinct().collect(Collectors.toSet());
+
+        getAllRules().forEach(rule -> {
+            nonTerminals.add(rule.getLeft());
+            for (Category c : rule.getRight())
+                if (c instanceof Terminal)//noinspection unchecked
+                    terminals.add((Terminal) c);
+                else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
+                else throw new Error("This is a bug");
+        });
+
         this.semiring = semiring;
         leftCorners = new LeftCorners(semiring);
         setLeftCorners();
@@ -101,8 +107,6 @@ public class Grammar {
             for (int col = 0; col < nonterminalz.length; col++) {
                 NonTerminal Y = nonterminalz[col];
                 final double prob = semiring.toProbability(P.get(X, Y));
-//                if(prob != 1.0 && prob != 0.0)
-//                    System.out.println(prob);
                 // I - P_L
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
@@ -110,7 +114,7 @@ public class Grammar {
         final Matrix R_L = R_L_inverse.inverse();
 
         LeftCorners R__L = new LeftCorners(semiring);
-        /**
+        /*
          * Copy all matrix values into our {@link LeftCorners} object
          */
         IntStream.range(0, R_L.getRowDimension()).forEach(row ->
@@ -128,8 +132,7 @@ public class Grammar {
     private LeftCorners getUnitStarCorners() {
         // Sum all probabilities for unit relations
         final LeftCorners P_U = new LeftCorners(semiring);
-        nonTerminals.stream()
-                .forEach(X -> getRules(X).stream()
+        nonTerminals.forEach(X -> getRules(X).stream()
                         .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
@@ -144,8 +147,7 @@ public class Grammar {
      */
     private void setLeftCorners() {
         // Sum all probabilities for left corners
-        nonTerminals.stream()
-                .forEach(X -> getRules(X).stream()
+        nonTerminals.forEach(X -> getRules(X).stream()
                         .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
                         .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore())));
     }
@@ -200,6 +202,7 @@ public class Grammar {
     /**
      * Gets every rule in this grammar.
      */
+    @SuppressWarnings("WeakerAccess")
     public Collection<Rule> getAllRules() {
         return rules.values();
     }
@@ -253,6 +256,7 @@ public class Grammar {
         return leftCorners.get(LHS, RHS);
     }
 
+    @SuppressWarnings("unused")
     public LeftCorners getLeftCorners() {
         return leftCorners;
     }
@@ -265,8 +269,13 @@ public class Grammar {
         return unitStarScores.get(LHS, RHS);
     }
 
+    @SuppressWarnings("unused")
     public Set<NonTerminal> getNonTerminals() {
         return nonTerminals;
+    }
+
+    public Set<Terminal<T>> getTerminals() {
+        return terminals;
     }
 
     public LeftCorners getUnitStar() {
@@ -274,7 +283,7 @@ public class Grammar {
     }
 
 
-    public static class Builder {
+    public static class Builder<E> {
         private final ImmutableMultimap.Builder<Category, Rule> rules;
         private String name;
         private ExpressionSemiring semiring = new LogSemiring();
@@ -289,13 +298,13 @@ public class Grammar {
             this.rules = new ImmutableMultimap.Builder<>();
         }
 
-        public Builder setSemiring(ExpressionSemiring semiring) {
+        public Builder<E> setSemiring(ExpressionSemiring semiring) {
             this.semiring = semiring;
             this.rf = new RuleFactory(semiring);
             return this;
         }
 
-        public Builder setName(String name) {
+        public Builder<E> setName(String name) {
             this.name = name;
             return this;
         }
@@ -306,27 +315,27 @@ public class Grammar {
          * @param rule The rule to add.
          * @throws NullPointerException If <code>rule</code> is <code>null</code>.
          */
-        public Builder addRule(Rule rule) {
+        public Builder<E> addRule(Rule rule) {
             if (rule == null) throw new NullPointerException("null rule");
             rules.put(rule.left, rule);
             return this;
         }
 
-        public Builder addRule(double probability, NonTerminal left, Category... right) {
+        public Builder<E> addRule(double probability, NonTerminal left, Category... right) {
             return addRule(rf.newRule(probability, left, right));
         }
 
-        public Builder addRule(NonTerminal left, Category... right) {
+        public Builder<E> addRule(NonTerminal left, Category... right) {
             return addRule(rf.newRule(left, right));
         }
 
         //TODO verify if grammar is well-formed
-        public Grammar build() {
-            return new Grammar(name, rules.build(), semiring);
+        public Grammar<E> build() {
+            return new Grammar<>(name, rules.build(), semiring);
         }
 
         @SuppressWarnings("unused")
-        public Builder addRules(Collection<Rule> rules) {
+        public Builder<E> addRules(Collection<Rule> rules) {
             rules.forEach(this::addRule);
             return this;
         }

@@ -9,8 +9,11 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
+ * Predict phase
+ *
  * Created by maarten on 31/10/16.
  */
+@SuppressWarnings("WeakerAccess")
 public class Predict {
     /**
      * Don't instantiate
@@ -19,7 +22,7 @@ public class Predict {
         throw new Error();
     }
 
-    static void predict(int index, Grammar grammar, StateSets stateSets) {
+    static <T> void predict(int index, Grammar<T> grammar, StateSets<T> stateSets) {
         final DblSemiring sr = grammar.getSemiring();
 
         final Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);

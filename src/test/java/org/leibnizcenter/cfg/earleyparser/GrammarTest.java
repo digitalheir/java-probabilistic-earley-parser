@@ -39,7 +39,7 @@ public class GrammarTest {
     private static final Rule ruleEE = Rule.create(sr, 0.5, E, E, E);
     private static final Rule ruleE = Rule.create(sr, 0.5, E, e);
     private static final Rule ruleEC = Rule.create(sr, 0, E, C);
-    private static final Grammar g = new Grammar.Builder("test")
+    private static final Grammar<String> g = new Grammar.Builder<String>("test")
             .setSemiring(sr)
             .addRule(ruleB)
             .addRule(ruleC)

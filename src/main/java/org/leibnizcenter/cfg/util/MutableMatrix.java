@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.util;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -18,6 +19,7 @@ public class MutableMatrix<T> {
      * @param width  Dbl of cells per row
      * @param height Dbl of rows in the matrix
      */
+    @SuppressWarnings("WeakerAccess")
     public MutableMatrix(int width, int height) {
         list = new Vector<>(height);
         list.setSize(height);
@@ -36,6 +38,7 @@ public class MutableMatrix<T> {
      *
      * @param m immutable matrix
      */
+    @SuppressWarnings("WeakerAccess")
     public MutableMatrix(ImmutableMatrix<T> m) {
         int rowCount = m.getRowCount();
         int columnCount = m.getColumnCount();
@@ -64,17 +67,20 @@ public class MutableMatrix<T> {
      * @return number of non-null items
      */
     public int size() {
-        return (int) list.stream().flatMap(Collection::stream).filter(r -> r != null).count();
+        return (int) list.stream().flatMap(Collection::stream).filter(Objects::nonNull).count();
     }
 
+    @SuppressWarnings("unused")
     public Vector<Vector<T>> getRows() {
         return list;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public int getRowCount() {
         return rowCount;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public int getColumnCount() {
         return columnCount;
     }

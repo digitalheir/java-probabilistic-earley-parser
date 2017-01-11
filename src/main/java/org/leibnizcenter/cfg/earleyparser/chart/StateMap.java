@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A map for states to expression values
+ *
  * Created by Maarten on 30/10/2016.
  */
 public class StateMap {

@@ -29,7 +29,7 @@ public class ParseTreeTest {
             her = new ExactStringTerminal("her"),
             he = new ExactStringTerminal("he");
 
-    private static Grammar mygrammar = new Grammar.Builder("test")
+    private static Grammar<String> mygrammar = new Grammar.Builder<String>("test")
             .addRule(S, NP, VP)
             .addRule(NP, he)
             .addRule(NP, her)

@@ -31,7 +31,7 @@
 //
 //        Collection<Rule> rules = Lists.newArrayList(
 //        );
-//        Grammar grammar = new Grammar.Builder("test-grammar")
+//        Grammar grammar = new Grammar.Builder<E>("test-grammar")
 //                .addRule(1.0, goal, NP, VP)
 //                .addRule(0.000000000000000001, NP, NP, NP)
 //                .addRule(0.0000000000001, NP, fish)

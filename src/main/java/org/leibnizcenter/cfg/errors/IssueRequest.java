@@ -1,6 +1,8 @@
 package org.leibnizcenter.cfg.errors;
 
 /**
+ * Error that requires a Github issue
+ *
  * Created by Maarten on 16-8-2016.
  */
 public class IssueRequest extends Error {

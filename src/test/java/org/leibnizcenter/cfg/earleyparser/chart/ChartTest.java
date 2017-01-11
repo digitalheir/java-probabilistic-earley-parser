@@ -17,6 +17,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.token.Tokens;
 
 import java.util.List;
@@ -37,15 +38,16 @@ public class ChartTest {
     private static final NonTerminal Mod = Category.nonTerminal("Mod");
 
     // Token types are realized by implementing Terminal, and implementing hasCategory. This is a functional interface.
-    private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
+    private static final Terminal<String> transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
-    private static final Terminal the = new CaseInsenstiveStringTerminal("the");
-    private static final Terminal a = new CaseInsenstiveStringTerminal("a");
-    private static final Terminal man = new ExactStringTerminal("man");
-    private static final Terminal stick = new ExactStringTerminal("stick");
-    private static final Terminal with = new ExactStringTerminal("with");
+    private static final Terminal<String> the = new CaseInsenstiveStringTerminal("the");
+    private static final Terminal<String> a = new CaseInsenstiveStringTerminal("a");
+    private static final Terminal<String> man = new ExactStringTerminal("man");
+    @SuppressWarnings("unused")
+    private static final Terminal<String> stick = new ExactStringTerminal("stick");
+    private static final Terminal<String> with = new ExactStringTerminal("with");
 
-    private static final Grammar grammar = new Grammar.Builder("test")
+    private static final Grammar<String> grammar = new Grammar.Builder<String>("test")
             .setSemiring(new LogSemiring()) // If not set, defaults to Log semiring which is probably what you want
             .addRule(
                     1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
@@ -106,7 +108,7 @@ public class ChartTest {
 
         double PSVP = 0.9;
         double PSNP = 1 - PSVP;
-        Grammar grammar = new Grammar.Builder("test")
+        Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .setSemiring(new LogSemiring())
                 .addRule(PSVP, S, NP, VP)
                 .addRule(PSNP, S, NP)
@@ -148,7 +150,7 @@ public class ChartTest {
     public final void paper_example() {
         double p = 0.6;
         double q = 0.4;
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a)
                 .addRule(q, S, B)
                 .addRule(1, B, S)
@@ -193,7 +195,7 @@ public class ChartTest {
         final Rule ruleAa = Rule.create(semiring, 1.0, A, a);
         final Rule rule3 = Rule.create(semiring, 1.0, X, Y, Z);
 
-        Grammar grammar = new Grammar.Builder("test")
+        Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .setSemiring(semiring)
                 .addRule(ruleB)
                 .addRule(ruleC)
@@ -201,14 +203,15 @@ public class ChartTest {
                 .addRule(ruleE)
                 .addRule(rule1)
                 .addRule(ruleAa)
-                .addRule(rule3).build();
+                .addRule(rule3)
+                .build();
         DblSemiring sr = grammar.getSemiring();
-        Chart chart = new Chart(grammar);
+        Chart<String> chart = new Chart<>(grammar);
 
         chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         chart.predict(0);
-        chart.scan(0, new Token<>("a"), index -> semiring.fromProbability(0.5));
-        chart.completeNoViterbi(1);
+        chart.scan(0, new TokenWithCategories<>(new Token<>("a"), a), index -> semiring.fromProbability(0.5));
+        Complete.completeNoViterbi(1,grammar,chart.stateSets);
 
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {

@@ -15,12 +15,12 @@ public class ScoreRefs {
     private final StateMap states;
     private final ExpressionSemiring semiring;
 
-    public ScoreRefs(int capacity, ExpressionSemiring semiring) {
+    ScoreRefs(int capacity, ExpressionSemiring semiring) {
         states = new StateMap(capacity);
         this.semiring = semiring;
     }
 
-    public Value getExpression(Rule rule, int index, int ruleStart, int dot) {
+    Value getExpression(Rule rule, int index, int ruleStart, int dot) {
         return states.getDotPositionToScore(rule, index, ruleStart).get(dot);
     }
 
@@ -33,7 +33,7 @@ public class ScoreRefs {
         return states;
     }
 
-    public Value getExpression(State state) {
+    private Value getExpression(State state) {
         return getExpression(state.getRule(), state.getPosition(), state.getRuleStartPosition(), state.getRuleDotPosition());
     }
 

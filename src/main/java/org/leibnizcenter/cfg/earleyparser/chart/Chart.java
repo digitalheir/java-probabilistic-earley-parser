@@ -1,17 +1,17 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.Grammar;
-import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -22,16 +22,15 @@ import java.util.*;
  * be added at a given index once (as sets do not permit duplicate members).
  * State sets are not guaranteed to maintain states in their order of insertion.
  */
-public class Chart {
-    public final StateSets stateSets;
-    private final Grammar grammar;
-    private final ExpressionSemiring semiring;
+public class Chart<T> {
+    public final StateSets<T> stateSets;
+    private final Grammar<T> grammar;
 
     /**
      * Creates a new chart, initializing its internal data structure.
      */
-    public Chart(Grammar grammar) {
-        this(grammar, new StateSets(grammar));
+    public Chart(Grammar<T> grammar) {
+        this(grammar, new StateSets<>(grammar));
     }
 
     /**
@@ -41,10 +40,9 @@ public class Chart {
      * @param stateSets The map of integer-mapped state sets to use as this
      *                  chart's backing data structure.
      */
-    private Chart(Grammar grammar, StateSets stateSets) {
+    private Chart(Grammar<T> grammar, StateSets<T> stateSets) {
         this.stateSets = stateSets;
         this.grammar = grammar;
-        this.semiring = grammar.getSemiring();
     }
 
     /**
@@ -55,12 +53,13 @@ public class Chart {
      *
      * @param index The string index to make predictions at.
      */
+    @SuppressWarnings("WeakerAccess")
     public void predict(int index) {
         Predict.predict(index, grammar, stateSets);
     }
 
     @SuppressWarnings("unused")
-    public void scan(int index, Token token) {
+    public void scan(int index, TokenWithCategories<T> token) {
         scan(index, token, null);
     }
 
@@ -71,43 +70,8 @@ public class Chart {
      * @param token           The token that was scanned.
      * @param scanProbability Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
-    public <E> void scan(final int tokenPosition, final Token<E> token, final ScanProbability scanProbability) {
+    public void scan(final int tokenPosition, final TokenWithCategories<T> token, final ScanProbability scanProbability) {
         Scan.scan(tokenPosition, token, scanProbability, grammar, stateSets);
-    }
-
-    /**
-     * Makes completions in the specified chart at the given index.
-     *
-     * @param i The index to make completions at.
-     */
-    public void completeNoViterbi(int i) {
-        final AddableValuesContainer addForwardScores = new AddableValuesContainer(50, semiring);
-        final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
-//        final ScoreRefs computationsInner = new ScoreRefs(1, semiring);
-//        final ScoreRefs computationsForward = new ScoreRefs(1, semiring);
-
-        Complete.completeNoViterbi(
-                i,
-                stateSets.getCompletedStatesThatAreNotUnitProductions(i),
-                //new HashSet<>(),
-                addForwardScores,
-                addInnerScores,
-//                computationsForward,
-//                computationsInner,
-                grammar, stateSets, semiring
-        );
-
-        // Resolve and set forward score
-        addForwardScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
-            final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
-            stateSets.setForwardScore(state, score.resolve());
-        });
-
-        // Resolve and set inner score
-        addInnerScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
-            final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
-            stateSets.setInnerScore(state, score.resolve());
-        });
     }
 
     /**
@@ -117,10 +81,10 @@ public class Chart {
      * (assuming p = [0,1] and Occam's razor). ~This method does not guarantee a left most parse.~
      *
      * @param completedState Completed state to calculate Viterbi score for
-     * @param originPathTo
+     * @param originPathTo Path to state
      * @param sr             Semiring to use for calculating
      *///TODO write tests
-    public void setViterbiScores(final State completedState, final Set<State> originPathTo, final DblSemiring sr) {
+    public static <T> void setViterbiScores(final State completedState, final Set<State> originPathTo, final DblSemiring sr, StateSets<T> stateSets) {
         Collection<State> newStates = null; // init as null to avoid arraylist creation
         Collection<State> newCompletedStates = null; // init as null to avoid arraylist creation
 
@@ -128,7 +92,6 @@ public class Chart {
             throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
 
         final double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
-        // System.out.println("" + completedState + " (" + sr.toProbability(completedViterbi) + ")");
         final NonTerminal Y = completedState.getRule().getLeft();
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
         int completedPos = completedState.getPosition();
@@ -150,11 +113,10 @@ public class Chart {
             }
             final State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
             final State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
-            if(prevViterbi == null) throw new Error("Expected viterbi to be set for "+stateToAdvance);
-            final double prev = prevViterbi != null ? prevViterbi.getScore() : semiring.one();
+            if (prevViterbi == null) throw new Error("Expected viterbi to be set for " + stateToAdvance);
+            final double prev = prevViterbi.getScore();
             final State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
 
-            // System.out.println("-> " + resultingState + " (" + sr.toProbability(newViterbiScore.getExpression()) + ")");
             if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
                 stateSets.setViterbiScore(newViterbiScore);
                 if (resultingState.isCompleted()) {
@@ -172,7 +134,7 @@ public class Chart {
         if (newCompletedStates != null) newCompletedStates.forEach(resultingState -> {
             final Set<State> path = new HashSet<>(originPathTo);
             path.add(resultingState);
-            setViterbiScores(resultingState, path, sr);
+            setViterbiScores(resultingState, path, sr, stateSets);
         });
     }
 
@@ -272,7 +234,7 @@ public class Chart {
      *
      * @return The total number of states contained.
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int countStates() {
         return stateSets.countStates();
     }
@@ -285,7 +247,8 @@ public class Chart {
         return stateSets.toString();
     }
 
-    public void addState(int index, State state, double forward, double inner) {
+    @SuppressWarnings("WeakerAccess")
+    public void addState(@SuppressWarnings("SameParameterValue") int index, State state, double forward, double inner) {
         stateSets.getOrCreate(index, state.getRuleStartPosition(), state.getRuleDotPosition(), state.getRule());
         stateSets.setInnerScore(state, inner);
         stateSets.setForwardScore(state, forward);

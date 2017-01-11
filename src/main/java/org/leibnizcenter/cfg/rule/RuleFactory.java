@@ -6,6 +6,8 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 
 /**
+ * Factory for {@link Rule rules}
+ *
  * Created by Maarten on 31-7-2016.
  */
 public class RuleFactory {
@@ -15,6 +17,7 @@ public class RuleFactory {
         this.semiring = semiring;
     }
 
+    @SuppressWarnings("unused")
     public RuleFactory() {
         this(new LogSemiring());
     }
@@ -38,6 +41,7 @@ public class RuleFactory {
      * Instantiates a new rule with given probability <strong>as a probability between 0 and 1</strong>. The
      * semiring will take care in converting the number.
      */
+    @SuppressWarnings("WeakerAccess")
     public Rule newRuleWithRawProbability(double probability, NonTerminal LHS, Category... RHS) {
         return new Rule(probability, LHS, RHS);
     }

@@ -39,7 +39,7 @@ public class ParserTest {
         final LogSemiring sr = new LogSemiring();
         double p = (0.6);
         double q = (0.4);
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, S, S)
@@ -47,7 +47,7 @@ public class ParserTest {
 
         List<Token<String>> tokens = IntStream.range(0, 3).mapToObj(i -> new Token<>("a")).collect(Collectors.toList());
 
-        Chart chart = Parser.parse(S, grammar, tokens, null);
+        Chart<String> chart = Parser.parse(S, grammar, tokens, null);
 
         // State set 0
         final State s00Sa = new State(Rule.create(sr, p, S, a), 0, 0, 0);
@@ -126,13 +126,16 @@ public class ParserTest {
 
         // State set 3
         // scanned
-        final State s23Sa1 = new ScannedTokenState<>(new Token<>("a"), Rule.create(sr, p, S, a), 2, 3, 1);
+        final State s23Sa1 = new ScannedTokenState<>(new Token<>("a"),
+                Rule.create(sr, p, S, a), 2, 3, 1);
         Assert.assertTrue(chart.getStates(3).contains(s23Sa1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s23Sa1)), (1 + p) * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s23Sa1)), p, 0.0001);
 
         // completed
-        final State s23S1 = new State(Rule.create(sr, q, S, S, S), 2, 3, 1);
+        final State s23S1 = new State(Rule.create(sr, q, S, S, S),
+                2, 3, 1
+        );
         Assert.assertTrue(chart.getStates(3).contains(s23S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s23S1)), (1 + p) * q * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s23S1)), p * q, 0.0001);
@@ -169,6 +172,7 @@ public class ParserTest {
                 double probFw = sr.toProbability(chart.getForwardScore(s));
                 double probInn = sr.toProbability(chart.getInnerScore(s));
                 double v = 0.0;
+                //noinspection StatementWithEmptyBody
                 if (chart.getViterbiScore(s) == null) {
                     //System.out.println();
                 } else
@@ -192,7 +196,7 @@ public class ParserTest {
         double q = (0.4);
         final LogSemiring sr = new LogSemiring();
         // b surrounded by a's, or a single a
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, S, b, S)
@@ -214,7 +218,7 @@ public class ParserTest {
         double q = (0.4);
         final LogSemiring sr = new LogSemiring();
         // a surrounded by b's, or a single a
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, b, S, b)
@@ -230,7 +234,7 @@ public class ParserTest {
     @Test
     public void viterbi() throws Exception {
         final LogSemiring sr = new LogSemiring();
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.5, S, S, S)
@@ -249,7 +253,7 @@ public class ParserTest {
     @Test
     public void viterbi2() throws Exception {
         final LogSemiring sr = new LogSemiring();
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.1, S, S, S)
@@ -274,7 +278,7 @@ public class ParserTest {
     @Test
     public void viterbi3() throws Exception {
         final LogSemiring sr = new LogSemiring();
-        Grammar grammar = new Grammar.Builder()
+        Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A, A)
                 .addRule(1.0, A, B)

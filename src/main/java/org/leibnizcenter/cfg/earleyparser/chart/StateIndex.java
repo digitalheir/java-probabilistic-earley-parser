@@ -15,6 +15,7 @@ import java.util.Map;
  */
 @SuppressWarnings("WeakerAccess")
 public class StateIndex {
+    //TODO stateToXMap
     private final Map<
             Rule,
                     /*index*/

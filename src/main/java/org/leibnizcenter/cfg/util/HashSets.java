@@ -8,6 +8,7 @@ import java.util.Set;
  * <p>
  * Created by maarten on 9-6-16.
  */
+@SuppressWarnings("unused")
 public class HashSets {
     /**
      * Adds element to given Set, or instantiates a new HashSet if it doesn't exist

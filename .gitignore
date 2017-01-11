@@ -17,3 +17,5 @@ build/
 target/
 settings.xml
 *.iml
+
+/depr

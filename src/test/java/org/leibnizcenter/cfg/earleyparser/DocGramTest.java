@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * Document grammar
+ *
  * Created by Maarten on 23-8-2016.
  */
 public class DocGramTest {
@@ -46,7 +48,7 @@ public class DocGramTest {
     private static final Token<String> NEWLINE = new Token<>("NEWLINE");
     private static final Token<String> NR = new Token<>("NR");
     private static final Token<String> SECTION_TITLE_ = new Token<>("SECTION_TITLE");
-    List<Token<String>> one_doc = new ArrayList<>(200);
+    private List<Token<String>> one_doc = new ArrayList<>(200);
 
     {
         one_doc.add(TEXT_BLOCK);
@@ -64,7 +66,7 @@ public class DocGramTest {
 
     }
 
-    List<Token<String>> two_doc = new ArrayList<>(200);
+    private List<Token<String>> two_doc = new ArrayList<>(200);
 
     {
         two_doc.add(NEWLINE);
@@ -203,7 +205,7 @@ public class DocGramTest {
         four_doc.add(SECTION_TITLE_);
     }
 
-    public final static Grammar grammar = new Grammar.Builder()
+    public final static Grammar<String> grammar = new Grammar.Builder<String>()
             .setSemiring(new LogSemiring())
             //.addRule(1.0, DOCUMENT, /* -> */ HEADER, DOCUMENT_BODY) // TODO
             .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)

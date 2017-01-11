@@ -4,6 +4,7 @@ import org.leibnizcenter.cfg.token.Token;
 
 /**
  * Terminal for which a given string token matches exactly, modulo character case
+ *
  * Created by maarten on 11-6-16.
  */
 public class CaseInsenstiveStringTerminal implements StringTerminal {

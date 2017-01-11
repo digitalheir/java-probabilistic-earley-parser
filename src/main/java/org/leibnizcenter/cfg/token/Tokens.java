@@ -34,6 +34,7 @@ public final class Tokens {
     /**
      * Convenience method for tokenizing a string.
      **/
+    @SuppressWarnings("unused")
     public static List<Token<String>> tokenize(String tokens, String splitOn) {
         return tokenize(tokens, splitOn, Token::new);
     }
@@ -41,6 +42,7 @@ public final class Tokens {
     /**
      * Convenience method for tokenizing a string.
      **/
+    @SuppressWarnings("WeakerAccess")
     public static <T> List<Token<T>> tokenize(String tokens, String splitOn, Function<String, Token<T>> mapper) {
         return Arrays.stream(tokens.split(splitOn))
                 .map(mapper)
@@ -50,6 +52,7 @@ public final class Tokens {
     /**
      * Convenience method for tokenizing a string.
      **/
+    @SuppressWarnings("WeakerAccess")
     public static <T> List<Token<T>> tokenize(String tokens, Pattern splitOn, Function<String, Token<T>> mapper) {
         return Arrays.stream(splitOn.split(tokens))
                 .map(mapper)
@@ -66,14 +69,17 @@ public final class Tokens {
         return Arrays.stream(objs).map(Token::new).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unused")
     public static <T> List<Token<T>> tokenize(Spliterator<T> objs, boolean parallel) {
         return StreamSupport.stream(objs, parallel).map(Token::new).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unused")
     public static <T> List<Token<T>> tokenize(Spliterator<T> objs) {
         return StreamSupport.stream(objs, false).map(Token::new).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unused")
     public static <T> List<Token<T>> tokenize(Collection<T> objs) {
         return objs.stream().map(Token::new).collect(Collectors.toList());
     }
