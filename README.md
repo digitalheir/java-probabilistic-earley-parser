@@ -1,6 +1,6 @@
 # Probabilistic Earley parser
 [![Build Status](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser.svg?branch=master)](https://travis-ci.org/digitalheir/java-probabilistic-earley-parser)
-[![GitHub version](https://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser.svg)](http://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser)
+[![GitHub version](https://badge.fury.io/gh/digitalheir%2Fjava-probabilistic-earley-parser.svg)](https://github.com/digitalheir/java-probabilistic-earley-parser/releases)
 [![License](https://img.shields.io/npm/l/probabilistic-earley-parser.svg)](https://github.com/digitalheir/java-probabilistic-earley-parser/blob/master/LICENSE)
 
 
