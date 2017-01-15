@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -9,9 +10,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Complete stage
@@ -187,4 +186,67 @@ public class Complete {
         });
     }
 
+    /**
+     * For finding the Viterbi path, we can't conflate production recursions (ie can't use the left star corner),
+     * exactly because we need it to find the unique Viterbi path.
+     * Luckily, we can avoid looping over unit productions because it only ever lowers probability
+     * (assuming p = [0,1] and Occam's razor). ~This method does not guarantee a left most parse.~
+     *
+     * @param completedState Completed state to calculate Viterbi score for
+     * @param originPathTo Path to state
+     * @param sr             Semiring to use for calculating
+     *///TODO write tests
+    public static <T> void setViterbiScores(final State completedState, final Set<State> originPathTo, final DblSemiring sr, StateSets<T> stateSets) {
+        Collection<State> newStates = null; // init as null to avoid arraylist creation
+        Collection<State> newCompletedStates = null; // init as null to avoid arraylist creation
+
+        if (stateSets.getViterbiScore(completedState) == null)
+            throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
+
+        final double completedViterbi = stateSets.getViterbiScore(completedState).getScore();
+        final NonTerminal Y = completedState.getRule().getLeft();
+        //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+        int completedPos = completedState.getPosition();
+        for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminal(Y, completedState.getRuleStartPosition(), completedPos)) {
+            if (stateToAdvance.getPosition() > completedPos || stateToAdvance.getPosition() != completedState.getRuleStartPosition())
+                throw new IssueRequest("Index failed. This is a bug.");
+            int ruleStart = stateToAdvance.getRuleStartPosition();
+            int nextDot = stateToAdvance.advanceDot();
+            Rule rule = stateToAdvance.getRule();
+            State resultingState = stateSets.get(completedPos, ruleStart, nextDot, rule);
+            if (resultingState == null) {
+                resultingState = State.create(completedPos, ruleStart, nextDot, rule);
+                if (newStates == null) newStates = new HashSet<>(20);
+                newStates.add(resultingState);
+            }
+            if (originPathTo.contains(resultingState)) {
+                System.err.println("Already went past " + resultingState);
+                return;
+            }
+            final State.ViterbiScore viterbiScore = stateSets.getViterbiScore(resultingState);
+            final State.ViterbiScore prevViterbi = stateSets.getViterbiScore(stateToAdvance);
+            if (prevViterbi == null) throw new Error("Expected viterbi to be set for " + stateToAdvance);
+            final double prev = prevViterbi.getScore();
+            final State.ViterbiScore newViterbiScore = new State.ViterbiScore(sr.times(completedViterbi, prev), completedState, resultingState, sr);
+
+            if (viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0) {
+                stateSets.setViterbiScore(newViterbiScore);
+                if (resultingState.isCompleted()) {
+                    if (newCompletedStates == null) newCompletedStates = new HashSet<>(20);
+                    newCompletedStates.add(resultingState);
+                }
+            }
+
+        }
+
+        // Add new states to chart
+        if (newStates != null) newStates.forEach(stateSets::add);
+
+        // Recurse with new states that are completed
+        if (newCompletedStates != null) newCompletedStates.forEach(resultingState -> {
+            final Set<State> path = new HashSet<>(originPathTo);
+            path.add(resultingState);
+            setViterbiScores(resultingState, path, sr, stateSets);
+        });
+    }
 }

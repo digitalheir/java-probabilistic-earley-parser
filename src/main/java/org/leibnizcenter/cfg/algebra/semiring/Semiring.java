@@ -16,7 +16,13 @@ import java.util.EnumSet;
 @SuppressWarnings("unused")
 public interface Semiring<T> {
     @SuppressWarnings("unused")
+    @Deprecated
     static boolean isRighSemiring(Semiring semiring) {
+        return isRightSemiring(semiring);
+    }
+
+    @SuppressWarnings("unused")
+    static boolean isRightSemiring(Semiring semiring) {
         return semiring.properties().contains(Property.RightSemiring);
     }
 
