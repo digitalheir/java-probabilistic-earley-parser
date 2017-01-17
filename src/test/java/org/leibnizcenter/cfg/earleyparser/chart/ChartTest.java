@@ -210,7 +210,7 @@ public class ChartTest {
 
         chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         Predict.predict(0, grammar, chart.stateSets);
-        chart.scan(0, new TokenWithCategories<>(new Token<>("a"), a), index -> semiring.fromProbability(0.5));
+        Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index -> semiring.fromProbability(0.5)), grammar,chart.stateSets);
         Complete.completeNoViterbi(1, grammar, chart.stateSets);
 
 //        for (int i = 0; i < 2; i++) {

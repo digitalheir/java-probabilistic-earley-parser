@@ -2,9 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
@@ -12,13 +10,12 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Represents an index of states, indexed by many different aspects
@@ -27,8 +24,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 @SuppressWarnings("WeakerAccess")
 public class StateSets<T> {
-    private final StateIndex states = new StateIndex(500);
-
+    private final StateToXMap<State> states = new StateToXMap<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
 
     /**
@@ -38,7 +34,7 @@ public class StateSets<T> {
      * paths from start to position i. So this includes multiple
      * instances of the same history, which may happen because of recursion.
      */
-    private final TObjectDoubleHashMap<State> forwardScores;
+    public final ForwardScores forwardScores;
 
     /**
      * The inner probability <code>γ_{i}</code> of a state
@@ -48,29 +44,24 @@ public class StateSets<T> {
      * Note that this is conditional on the state happening at position k with
      * a certain non-terminal X
      */
-    private final TObjectDoubleHashMap<State> innerScores;
-    private final ConcurrentMap<State, State.ViterbiScore> viterbiScores = new ConcurrentHashMap<>(500);
+    public final InnerScores innerScores;
+    public final ViterbiScores viterbiScores = new ViterbiScores();
 
     private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
     private final TIntObjectHashMap<Multimap<NonTerminal, State>> completedStatesFor = new TIntObjectHashMap<>(500);
     private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
     private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
-    //        private final TIntObjectHashMap<Multimap<NonTerminal, State>> statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY = new TIntObjectHashMap<>(500);
-
-
     private final TIntObjectHashMap<Multimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
-
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
-    private final DblSemiring semiring;
     private final Grammar<T> grammar;
-    private Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
+    private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
 
 
     StateSets(Grammar<T> grammar) {
         this.grammar = grammar;
-        this.semiring = grammar.getSemiring();
-        this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
-        this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
+        DblSemiring semiring = grammar.getSemiring();
+        this.forwardScores = new ForwardScores(semiring);
+        this.innerScores = new InnerScores(semiring);
     }
 
     public Collection<State> getCompletedStates(int i, NonTerminal s) {
@@ -99,16 +90,11 @@ public class StateSets<T> {
     }
 
     public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal Y) {
-        if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j)) return Collections.emptyList();
-        else return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(Y);
+        if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j))
+            return null;
+        else
+            return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(Y);
     }
-
-//        public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int index, NonTerminal Y) {
-//            if (!statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.containsKey(index))
-//                statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, HashMultimap.create());
-//            return statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.get(index).get(Y);
-//        }
-
 
     public Set<State> getStatesActiveOnNonTerminal(NonTerminal y, int position, int beforeOrOnPosition) {
         // stateToAdvance.getPosition() <= beforeOrOnPosition;
@@ -135,17 +121,6 @@ public class StateSets<T> {
         }
     }
 
-
-    /**
-     * Default zero
-     *
-     * @param s state
-     * @return forward score so far
-     */
-    public double getForwardScore(State s) {
-        return forwardScores.get(s);
-    }
-
     public State getOrCreate(int index, int ruleStart, int dotPosition, Rule rule) {
         return getOrCreate(index, ruleStart, dotPosition, rule, null);
     }
@@ -162,20 +137,21 @@ public class StateSets<T> {
      * @return State specified by parameter. May or may not be in the state table. If not, it is added.
      */
     public <E> State getOrCreate(int position, int ruleStart, int dotPosition, Rule rule, Token<E> scannedToken) {
-        TIntObjectMap<State> dotToState = states.getDotToState(rule, position, ruleStart);
-        if (!dotToState.containsKey(dotPosition)) {
-            // Add state if it does not exist yet
+        if (states.contains(rule, position, ruleStart, dotPosition)) {
+            return states.get(rule, position, ruleStart, dotPosition);
+        } else {
             State state = create(position, ruleStart, dotPosition, rule, scannedToken);
-            addState(dotToState, state);
+            addState(state);
+            return state;
         }
-        return dotToState.get(dotPosition);
+
     }
 
-    private void addState(TIntObjectMap<State> dotPositionToState, State state) {
+    private void addState(State state) {
+        states.put(state, state);
+
         int index = state.getPosition();
-        int dotPosition = state.getRuleDotPosition();
         add(byIndex, index, state);
-        dotPositionToState.put(dotPosition, state);
 
         if (state.isCompleted()) {
             add(completedStates, index, state);
@@ -187,23 +163,19 @@ public class StateSets<T> {
             if (activeCategory instanceof NonTerminal) {
                 addToStatesActiveOnNonTerminal(state);
                 add(statesActiveOnNonTerminals, index, state);
-
-//                    Multimap<NonTerminal, State> mapp = statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.get(index);
-//                    final Multimap<NonTerminal, State> map = mapp == null ? HashMultimap.create() //We expect this
-//                            : mapp;
                 final Grammar.LeftCorners unitStar = grammar.getUnitStar();
                 Collection<NonTerminal> scores = unitStar.getNonZeroNonTerminals(activeCategory);
-                scores.forEach(Y -> {
-//                        map.put(Y, state);
-                    if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(index))
-                        nonTerminalActiveAtIWithNonZeroUnitStarToY.put(index, HashMultimap.create());
-                    nonTerminalActiveAtIWithNonZeroUnitStarToY.get(index).put(Y, state);
-                });
-//                    statesActiveOnNonTerminalsWithNonZeroUnitStarScoreToY.put(index, map);
+                scores.forEach(Y -> addToNonTerminalActiveAtIWithNonZeroUnitStarToY(state, index, Y));
             } else if (activeCategory instanceof Terminal)  //noinspection unchecked
                 addStateToActiveOnTerminal(index, (Terminal<T>) activeCategory, state);
             else throw new IssueRequest("Neither Terminal nor NonToken...?");
         }
+    }
+
+    private void addToNonTerminalActiveAtIWithNonZeroUnitStarToY(State state, int index, NonTerminal Y) {
+        if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(index))
+            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(index, HashMultimap.create());
+        nonTerminalActiveAtIWithNonZeroUnitStarToY.get(index).put(Y, state);
     }
 
     private void addStateToActiveOnTerminal(int index, Terminal<T> activeCategory, State state) {
@@ -240,79 +212,18 @@ public class StateSets<T> {
         states.get(index).add(state);
     }
 
-    public void addForwardScore(State state, double increment) {
-        forwardScores.put(state, semiring.plus(getForwardScore(state)/*default zero*/, increment));
-    }
-
-//    public void addInnerScore(State state, double increment) {
-//        innerScores.put(state, semiring.plus(getInnerScore(state)/*default zero*/, increment));
-//    }
-
-    public void setForwardScore(State s, double probability) {
-        forwardScores.put(s, probability);
-    }
-
-    public void setInnerScore(State s, double probability) {
-        innerScores.put(s, probability);
-    }
-
-    /**
-     * Threadsafe because viterbiScores is a ConcurrentHashMap
-     *
-     * @param v viterbi score
-     */
-
-    public void setViterbiScore(State.ViterbiScore v) {
-        setViterbiScore(v.getResultingState(), v);
-    }
-
-    /**
-     * Threadsafe because viterbiScores is a ConcurrentHashMap
-     *
-     * @param resultingState The resulting state from the transition
-     * @param v              viterbi score
-     */
-    public void setViterbiScore(State resultingState, State.ViterbiScore v) {
-        viterbiScores.put(resultingState, v);
-    }
-
-    /**
-     * Default zero
-     *
-     * @param state State for which to get inner score
-     * @return inner score so far
-     */
-    public double getInnerScore(State state) {
-        return innerScores.get(state);
-    }
 
     public Set<State> getStates(int index) {
         return byIndex.get(index);
     }
 
-
-    public State.ViterbiScore getViterbiScore(State s) {
-        return viterbiScores.get(s);
+    public void addIfNew(State state) {
+        if (!contains(state.rule, state.positionInInput, state.ruleStartPosition, state.ruleDotPosition))
+            addState(state);
     }
-
-    public void add(State state) {
-        Rule rule = state.getRule();
-        int ruleStart = state.getRuleStartPosition();
-        int index = state.getPosition();
-
-        TIntObjectMap<TIntObjectMap<State>> forRuleStart = states.getRuleStartToDotToState(rule, index);
-        if (!forRuleStart.containsKey(ruleStart)) forRuleStart.put(ruleStart, new TIntObjectHashMap<>(50));
-        TIntObjectMap<State> dotToState = forRuleStart.get(ruleStart);
-
-        addState(dotToState, state);
-    }
-
-//    public synchronized State getSynchronized(int index, int ruleStart, int ruleDot, Rule rule) {
-//        return states.getState(rule, index, ruleStart, ruleDot);
-//    }
 
     public State get(int index, int ruleStart, int ruleDot, Rule rule) {
-        return states.getState(rule, index, ruleStart, ruleDot);
+        return states.get(rule, index, ruleStart, ruleDot);
     }
 
     public static <E> State create(int index, int ruleStart, int dotPosition, Rule rule, Token<E> c) {
@@ -326,4 +237,7 @@ public class StateSets<T> {
                 .mapToInt(Set::size).sum();
     }
 
+    public boolean contains(Rule rule, int position, int ruleStart, int dotPosition) {
+        return states.contains(rule, position, ruleStart, dotPosition);
+    }
 }

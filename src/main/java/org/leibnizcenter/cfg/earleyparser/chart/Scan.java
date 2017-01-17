@@ -52,11 +52,8 @@ public final class Scan {
                                 if (!((Terminal<T>) preScanState.getActiveCategory()).hasCategory(token))
                                     throw new IssueRequest("This is a bug.");
                                 // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
-                    /*
-                     * All these methods are synchronized
-                     */
-                                final double preScanForward = stateSets.getForwardScore(preScanState);
-                                final double preScanInner = stateSets.getInnerScore(preScanState);
+                                final double preScanForward = stateSets.forwardScores.get(preScanState);
+                                final double preScanInner = stateSets.innerScores.get(preScanState);
                                 // Note that this state is unique for each preScanState
                                 final State postScanState = stateSets.getOrCreate(
                                         tokenPosition + 1, preScanState.getRuleStartPosition(),
@@ -66,7 +63,7 @@ public final class Scan {
                                 );
 
                                 // Set forward score //synchronized
-                                stateSets.setForwardScore(
+                                stateSets.forwardScores.put(
                                         postScanState,
                                         calculateForwardScore(scanProb, sr, preScanForward)
                                 );
@@ -74,13 +71,13 @@ public final class Scan {
                                 // Get inner score (no side effects)
                                 final double postScanInner = calculateInnerScore(scanProb, sr, preScanInner);
                                 // Set inner score //synchronized
-                                stateSets.setInnerScore(
+                                stateSets.innerScores.put(
                                         postScanState,
                                         postScanInner
                                 );
 
                                 // Set Viterbi score//synchronized
-                                stateSets.setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
+                                stateSets.viterbiScores.put(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
                             }
                     );
         });

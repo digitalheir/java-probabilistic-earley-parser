@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * Created by maarten on 11-1-17.
  */
 @SuppressWarnings("unused")
-public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
+public class StateToXMap<T> implements Map<State, T> {
     private final HashMap<Rule,
                     /*index*/
             TIntObjectMap<
@@ -63,7 +63,7 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
         }
     }
 
-    private boolean contains(Rule rule, int index, int ruleStart, int dot) {
+    public boolean contains(Rule rule, int index, int ruleStart, int dot) {
         if (!map.containsKey(rule)) return false;
         final TIntObjectMap<TIntObjectMap<TIntObjectMap<T>>> positions = map.get(rule);
         if (!positions.containsKey(index)) return false;
@@ -134,6 +134,7 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
         m.put(key.ruleDotPosition, value);
         this.keys.add(key);
         this.values.add(value);
+        this.size++;
         return prev;
     }
 
@@ -147,6 +148,7 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
         m.put(dotPosition, value);
         this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
         this.values.add(value);
+        this.size++;
         return prev;
     }
 
@@ -162,6 +164,7 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
         m.remove(key.ruleDotPosition);
         this.keys.remove(key);
         this.values.remove(prev);
+        this.size--;
         return prev;
     }
 
@@ -173,6 +176,9 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
     @Override
     public void clear() {
         this.map.clear();
+        this.keys.clear();
+        this.values.clear();
+        this.size = 0;
     }
 
     @Override

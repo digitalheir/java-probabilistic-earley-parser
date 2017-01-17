@@ -55,7 +55,7 @@ public class Parser {
     public static <E> double recognize(NonTerminal goal,
                                        Grammar<E> grammar,
                                        Iterable<Token<E>> tokens,
-                                       ParseCallbacks callbacks) {
+                                       @SuppressWarnings("SameParameterValue") ParseCallbacks callbacks) {
         final ChartWithInputPosition<E> parse = parseAndCountTokens(goal, grammar, tokens, callbacks);
         final Collection<State> completedStates = parse.chart.stateSets.getCompletedStates(parse.index, Category.START);
         if (completedStates.size() > 0) {
@@ -146,7 +146,7 @@ public class Parser {
             NonTerminal S,
             Grammar<E> grammar,
             Iterable<Token<E>> tokens,
-            ParseCallbacks callbacks
+            @SuppressWarnings("SameParameterValue") ParseCallbacks callbacks
     ) {
         final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, grammar, tokens, callbacks);
         if (viterbiParseWithScore == null) return null;
@@ -217,22 +217,20 @@ public class Parser {
 
         // Cycle through input
         int i = 0;
-        for (TokenWithCategories<E> token : TokenWithCategories.from(tokens, grammar)) {
-            Predict.predict(i,grammar,chart.stateSets);
         for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
-
-            Scan.scan(i, token, scanProbability);
+            callbacks.beforePredict(i, token, chart);
             Predict.predict(i, grammar, chart.stateSets);
             callbacks.onPredict(i, token, chart);
 
-
+            callbacks.beforeScan(i, token, chart);
             Scan.scan(i, token, scanProbability, grammar, chart.stateSets);
             callbacks.onScan(i, token, chart);
 
 
+            callbacks.beforeComplete(i, token, chart);
             Set<State> completedStates = new HashSet<>(chart.stateSets.getCompletedStates(i + 1));
             Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
-            completedStates.forEach(s -> Complete.setViterbiScores(s, new HashSet<>(), grammar.getSemiring(), chart.stateSets));
+            completedStates.forEach(s -> Complete.setViterbiScores(s, grammar.getSemiring(), chart.stateSets));
             callbacks.onComplete(i, token, chart);
 
 

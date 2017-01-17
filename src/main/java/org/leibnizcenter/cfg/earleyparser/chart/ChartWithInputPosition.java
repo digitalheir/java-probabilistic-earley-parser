@@ -1,7 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
-import org.leibnizcenter.cfg.earleyparser.chart.Chart;
-
 /**
  */
 public class ChartWithInputPosition<T> {

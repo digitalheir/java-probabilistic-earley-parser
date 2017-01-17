@@ -1,16 +1,8 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.Grammar;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
-import org.leibnizcenter.cfg.errors.IssueRequest;
-import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.token.TokenWithCategories;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 
@@ -48,9 +40,6 @@ public class Chart<T> {
         this.grammar = grammar;
     }
 
-
-
-
     /**
      * Counts the total number of states contained in this chart, at any
      * index.
@@ -73,10 +62,10 @@ public class Chart<T> {
     @SuppressWarnings("WeakerAccess")
     public void addState(@SuppressWarnings("SameParameterValue") int index, State state, double forward, double inner) {
         stateSets.getOrCreate(index, state.getRuleStartPosition(), state.getRuleDotPosition(), state.getRule());
-        stateSets.setInnerScore(state, inner);
-        stateSets.setForwardScore(state, forward);
-        if (stateSets.getViterbiScore(state) == null)
-            stateSets.setViterbiScore(new State.ViterbiScore(grammar.getSemiring().one(), null, state, grammar.getSemiring()));
+        stateSets.innerScores.put(state, inner);
+        stateSets.forwardScores.put(state, forward);
+        if (stateSets.viterbiScores.get(state) == null)
+            stateSets.viterbiScores.put(new State.ViterbiScore(grammar.getSemiring().one(), null, state, grammar.getSemiring()));
     }
 
     @SuppressWarnings("unused")
@@ -85,15 +74,15 @@ public class Chart<T> {
     }
 
     public double getForwardScore(State s) {
-        return stateSets.getForwardScore(s);
+        return stateSets.forwardScores.get(s);
     }
 
     @SuppressWarnings("unused")
     public double getInnerScore(State s) {
-        return stateSets.getInnerScore(s);
+        return stateSets.innerScores.get(s);
     }
 
     public State.ViterbiScore getViterbiScore(State s) {
-        return stateSets.getViterbiScore(s);
+        return stateSets.viterbiScores.get(s);
     }
 }
