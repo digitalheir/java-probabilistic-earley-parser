@@ -68,9 +68,9 @@ public final class PepFixture {
             .addRule(rule7)
             .addRule(rule8)
             .build();
-    public static final State edge1 = new State(rule1, 2, 3, 1);
+    public static final State edge1 = new State(rule1, 3, 2, 1);
     public static final State edge2 = new State(rule3, 0);
-    public static final State edge3 = new State(rule2, 1, 2, 1);
+    public static final State edge3 = new State(rule2, 2, 1, 1);
     public static final List<Token<String>> tokens = Lists.newArrayList("the", "boy", "left").stream()
             .map(Token::new)
             .collect(Collectors.toList());

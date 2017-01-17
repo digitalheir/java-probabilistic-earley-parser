@@ -317,7 +317,7 @@ public class StateSets<T> {
 
     public static <E> State create(int index, int ruleStart, int dotPosition, Rule rule, Token<E> c) {
         if (c != null) return new ScannedTokenState<>(c, rule, ruleStart, index, dotPosition);
-        else return new State(rule, ruleStart, index, dotPosition);
+        else return new State(rule, index, ruleStart, dotPosition);
     }
 
     public int countStates() {

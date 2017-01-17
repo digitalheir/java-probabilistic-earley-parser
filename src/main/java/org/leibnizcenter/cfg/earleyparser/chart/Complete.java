@@ -6,6 +6,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 
@@ -38,18 +39,15 @@ public class Complete {
      *                         //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
      *                         //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
      */
-    static <E> void completeNoViterbi(int position,
-                                  Collection<State> states,
-//                                   Set<State> completedStatesAlreadyHandled,
-                                  AddableValuesContainer addForwardScores,
-                                  AddableValuesContainer addInnerScores,
-//                                   ScoreRefs computationsForward,
-//                                   ScoreRefs computationsInner
-                                  Grammar<E> grammar,
-                                  StateSets<E> stateSets,
-                                  ExpressionSemiring semiring
+    private static <E> void completeNoViterbi(int position,
+                                              Collection<State> states,
+                                              AddableValuesContainer addForwardScores,
+                                              AddableValuesContainer addInnerScores,
+                                              Grammar<E> grammar,
+                                              StateSets<E> stateSets,
+                                              ExpressionSemiring semiring
     ) {
-        StateMap possiblyNewStates = null;
+        StateToXMap<ExpressionSemiring.Value> possiblyNewStates = null;
         // For all states
         //      i: Y<sub>j</sub> → v·    [a",y"]
         //      j: X<sub>k</suv> → l·Zm  [a',y']
@@ -107,8 +105,8 @@ public class Complete {
                         newStateRule.isPassive(newStateDotPosition)/*isCompleted*/
                                 && !newStateRule.isUnitProduction()
                                 && stateSets.get(position, newStateRuleStart, newStateDotPosition, newStateRule) == null) {
-                    if (possiblyNewStates == null) possiblyNewStates = new StateMap(20);
-                    possiblyNewStates.add(
+                    if (possiblyNewStates == null) possiblyNewStates = new StateToXMap<>(20);
+                    possiblyNewStates.put(
                             newStateRule,
                             position,
                             newStateRuleStart,
@@ -129,7 +127,7 @@ public class Complete {
 
         if (possiblyNewStates != null) {
             List<State> newCompletedStates = new ArrayList<>(possiblyNewStates.size());
-            possiblyNewStates.forEach((index, ruleStart, dot, rule, ignored) -> {
+            possiblyNewStates.forEachEntry((index, ruleStart, dot, rule, ignored) -> {
                 boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
                 final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
                 if (!isnew || !state.isCompleted() || state.rule.isUnitProduction())
@@ -160,28 +158,22 @@ public class Complete {
         final ExpressionSemiring semiring = grammar.getSemiring();
         final AddableValuesContainer addForwardScores = new AddableValuesContainer(50, semiring);
         final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
-//        final ScoreRefs computationsInner = new ScoreRefs(1, semiring);
-//        final ScoreRefs computationsForward = new ScoreRefs(1, semiring);
-
         completeNoViterbi(
                 i,
                 stateSets.getCompletedStatesThatAreNotUnitProductions(i),
-                //new HashSet<>(),
                 addForwardScores,
                 addInnerScores,
-//                computationsForward,
-//                computationsInner,
                 grammar, stateSets, semiring
         );
 
         // Resolve and set forward score
-        addForwardScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
+        addForwardScores.getStates().forEachEntry((position, ruleStart, dot, rule, score) -> {
             final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
             stateSets.setForwardScore(state, score.resolve());
         });
 
         // Resolve and set inner score
-        addInnerScores.getStates().forEach((position, ruleStart, dot, rule, score) -> {
+        addInnerScores.getStates().forEachEntry((position, ruleStart, dot, rule, score) -> {
             final State state = stateSets.getOrCreate(position, ruleStart, dot, rule);
             stateSets.setInnerScore(state, score.resolve());
         });

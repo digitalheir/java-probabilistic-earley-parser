@@ -55,16 +55,22 @@ public class StateToXMap<T> implements Map<State, T> {
 
     @Override
     public boolean containsKey(Object key) {
-        if (!(key instanceof State)) return false;
-        State s = (State) key;
-        final Rule rule = s.getRule();
+        if (!(key instanceof State))
+            return false;
+        else {
+            State s = (State) key;
+            return contains(s.getRule(), s.positionInInput, s.ruleStartPosition, s.ruleDotPosition);
+        }
+    }
+
+    private boolean contains(Rule rule, int index, int ruleStart, int dot) {
         if (!map.containsKey(rule)) return false;
         final TIntObjectMap<TIntObjectMap<TIntObjectMap<T>>> positions = map.get(rule);
-        if (!positions.containsKey(s.positionInInput)) return false;
-        final TIntObjectMap<TIntObjectMap<T>> ruleStarts = positions.get(s.positionInInput);
-        if (!ruleStarts.containsKey(s.ruleStartPosition)) return false;
-        TIntObjectMap<T> dots = ruleStarts.get(s.ruleStartPosition);
-        return dots.containsKey(s.ruleDotPosition);
+        if (!positions.containsKey(index)) return false;
+        final TIntObjectMap<TIntObjectMap<T>> ruleStarts = positions.get(index);
+        if (!ruleStarts.containsKey(ruleStart)) return false;
+        TIntObjectMap<T> dots = ruleStarts.get(ruleStart);
+        return dots.containsKey(dot);
     }
 
     @Override
@@ -75,13 +81,19 @@ public class StateToXMap<T> implements Map<State, T> {
 
     @Override
     public T get(Object key) {
-        if (!containsKey(key))
+        if (!(key != null && key instanceof State))
             return null;
         else {
             State s = (State) key;
-            return map.get(s.getRule()).get(s.positionInInput).get(s.ruleStartPosition).get(s.ruleDotPosition);
+            return this.get(s.getRule(), s.positionInInput, s.ruleStartPosition, s.ruleDotPosition);
         }
     }
+
+
+    public T get(Rule rule, int index, int ruleStart, int dot) {
+        return contains(rule, index, ruleStart, dot) ? map.get(rule).get(index).get(ruleStart).get(dot) : null;
+    }
+
 
     public T getOrPut(State key, T fallback) {
         if (containsKey(key))
@@ -91,15 +103,6 @@ public class StateToXMap<T> implements Map<State, T> {
             return fallback;
         }
     }
-
-//    private static <K, V1, V2> Map<V1, V2> getOrCreate(Map<K, Map<V1, V2>> m, K key) {
-//        if (m.containsKey(key)) return m.get(key);
-//        else {
-//            final HashMap<V1, V2> m2 = new HashMap<>();
-//            m.put(key, m2);
-//            return m2;
-//        }
-//    }
 
     private static <K, V2> TIntObjectMap<V2> getOrCreate(Map<K, TIntObjectMap<V2>> m, K key) {
         if (m.containsKey(key))
@@ -130,6 +133,19 @@ public class StateToXMap<T> implements Map<State, T> {
                 key.ruleStartPosition);
         m.put(key.ruleDotPosition, value);
         this.keys.add(key);
+        this.values.add(value);
+        return prev;
+    }
+
+    public T put(Rule rule, int index, int ruleStart, int dotPosition, T value) {
+        T prev = get(rule, index, ruleStart, dotPosition);
+
+        TIntObjectMap<T> m = getOrCreate(getOrCreate(
+                getOrCreate(map, rule),
+                index),
+                ruleStart);
+        m.put(dotPosition, value);
+        this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
         this.values.add(value);
         return prev;
     }
@@ -172,5 +188,24 @@ public class StateToXMap<T> implements Map<State, T> {
     @Override
     public Set<Entry<State, T>> entrySet() {
         return keySet().stream().map(k -> Maps.immutableEntry(k, get(k))).collect(Collectors.toSet());
+    }
+
+
+    public void forEachEntry(StateHandler<T> h) {
+        map.forEach((rule, tIntObjectMapTIntObjectMap) ->
+                tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
+                    tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                        tIntDoubleMap.forEachEntry((dot, score) -> {
+                            h.consume(position, ruleStart, dot, rule, score);
+                            return true;
+                        });
+                        return true;
+                    });
+                    return true;
+                }));
+    }
+
+    public interface StateHandler<T> {
+        void consume(int position, int ruleStart, int dot, Rule rule, T score);
     }
 }

@@ -22,7 +22,16 @@ public class Predict {
         throw new Error();
     }
 
-    static <T> void predict(int index, Grammar<T> grammar, StateSets<T> stateSets) {
+
+    /**
+     * Makes predictions in the specified chart at the given index.
+     * <p/>
+     * For each state at position i, look at the the nonterminal at the dot position,
+     * add a state that expands that nonterminal at position i, with the dot position at 0
+     *
+     * @param index The token index to make predictions at.
+     */
+    public static <T> void predict(int index, Grammar<T> grammar, StateSets<T> stateSets) {
         final DblSemiring sr = grammar.getSemiring();
 
         final Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);

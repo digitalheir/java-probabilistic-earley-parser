@@ -1,12 +1,12 @@
 
 package org.leibnizcenter.cfg;
 
-import Jama.Matrix;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import org.leibnizcenter.cfg.algebra.matrix.DblMatrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
@@ -101,7 +101,7 @@ public class Grammar<T> {
     private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
         // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
-        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
+        final DblMatrix R_L_inverse = new DblMatrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
             NonTerminal X = nonterminalz[row];
             for (int col = 0; col < nonterminalz.length; col++) {
@@ -111,7 +111,7 @@ public class Grammar<T> {
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
         }
-        final Matrix R_L = R_L_inverse.inverse();
+        final DblMatrix R_L = R_L_inverse.inverse();
 
         LeftCorners R__L = new LeftCorners(semiring);
         /*

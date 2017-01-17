@@ -2,8 +2,8 @@ package org.leibnizcenter.cfg.algebra.expression;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.Value;
-import org.leibnizcenter.cfg.earleyparser.chart.StateMap;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 
@@ -12,24 +12,23 @@ import org.leibnizcenter.cfg.rule.Rule;
  * Created by Maarten on 23-8-2016.
  */
 public class ScoreRefs {
-    private final StateMap states;
+    private final StateToXMap<ExpressionSemiring.Value> states;
     private final ExpressionSemiring semiring;
 
     ScoreRefs(int capacity, ExpressionSemiring semiring) {
-        states = new StateMap(capacity);
+        states = new StateToXMap<>(capacity);
         this.semiring = semiring;
     }
 
     Value getExpression(Rule rule, int index, int ruleStart, int dot) {
-        return states.getDotPositionToScore(rule, index, ruleStart).get(dot);
+        return states.get(rule, index, ruleStart, dot);
     }
 
     void setScore(Rule rule, int index, int ruleStart, int dotPosition, Value set) {
-        states.getDotPositionToScore(rule, index, ruleStart)
-                .put(dotPosition, set);
+        states.put(rule, index, ruleStart, dotPosition, set);
     }
 
-    public StateMap getStates() {
+    public StateToXMap<Value> getStates() {
         return states;
     }
 

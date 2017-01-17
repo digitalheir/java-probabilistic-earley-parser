@@ -155,13 +155,13 @@ public class ChartTest {
                 .addRule(q, S, B)
                 .addRule(1, B, S)
                 .build();
-        Chart chart = new Chart(grammar);
+        Chart<String> chart = new Chart<>(grammar);
         DblSemiring sr = grammar.getSemiring();
 
         State initialState = new State(Rule.create(sr, Category.START, S), 0);
         chart.addState(0, initialState, sr.one(), sr.one());
 
-        chart.predict(0);
+        Predict.predict(0, chart.grammar, chart.stateSets);
 
         Assert.assertTrue(chart.getStates(0).contains(initialState));
         Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, p, S, a), 0)));
@@ -209,9 +209,9 @@ public class ChartTest {
         Chart<String> chart = new Chart<>(grammar);
 
         chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
-        chart.predict(0);
+        Predict.predict(0, grammar, chart.stateSets);
         chart.scan(0, new TokenWithCategories<>(new Token<>("a"), a), index -> semiring.fromProbability(0.5));
-        Complete.completeNoViterbi(1,grammar,chart.stateSets);
+        Complete.completeNoViterbi(1, grammar, chart.stateSets);
 
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {

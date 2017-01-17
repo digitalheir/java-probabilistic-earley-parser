@@ -14,6 +14,7 @@ import java.util.Map;
  *
  * Created by Maarten on 30/10/2016.
  */
+@Deprecated
 public class StateMap {
     public final Map<
             Rule,
@@ -69,19 +70,19 @@ public class StateMap {
         return size;
     }
 
-    public void forEach(StateHandler h) {
-        states.forEach((rule, tIntObjectMapTIntObjectMap) ->
-                tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
-                    tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
-                        tIntDoubleMap.forEachEntry((dot, score) -> {
-                            h.consume(position, ruleStart, dot, rule, score);
-                            return true;
-                        });
-                        return true;
-                    });
-                    return true;
-                }));
-    }
+//    public void forEach(StateHandler h) {
+//        states.forEach((rule, tIntObjectMapTIntObjectMap) ->
+//                tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
+//                    tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+//                        tIntDoubleMap.forEachEntry((dot, score) -> {
+//                            h.consume(position, ruleStart, dot, rule, score);
+//                            return true;
+//                        });
+//                        return true;
+//                    });
+//                    return true;
+//                }));
+//    }
 
     @FunctionalInterface
     public interface StateHandler {

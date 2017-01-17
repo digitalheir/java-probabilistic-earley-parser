@@ -5,9 +5,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.earleyparser.chart.Chart;
-import org.leibnizcenter.cfg.earleyparser.chart.Complete;
-import org.leibnizcenter.cfg.earleyparser.chart.StateSets;
+import org.leibnizcenter.cfg.earleyparser.chart.*;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
@@ -158,9 +156,9 @@ public class Parser {
         // Cycle through input
         int i = 0;
         for (TokenWithCategories<E> token : TokenWithCategories.from(tokens, grammar)) {
-            chart.predict(i);
+            Predict.predict(i,grammar,chart.stateSets);
 
-            chart.scan(i, token, scanProbability);
+            Scan.scan(i, token, scanProbability);
 
             Set<State> completedStates = new HashSet<>(chart.stateSets.getCompletedStates(i + 1));
             Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
