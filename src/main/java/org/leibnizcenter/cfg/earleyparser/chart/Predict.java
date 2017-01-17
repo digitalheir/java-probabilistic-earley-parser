@@ -22,7 +22,6 @@ public class Predict {
         throw new Error();
     }
 
-
     /**
      * Makes predictions in the specified chart at the given index.
      * <p/>

@@ -47,7 +47,7 @@ public class ParserTest {
 
         List<Token<String>> tokens = IntStream.range(0, 3).mapToObj(i -> new Token<>("a")).collect(Collectors.toList());
 
-        Chart<String> chart = Parser.parse(S, grammar, tokens, null);
+        Chart<String> chart = Parser.parse(S, grammar, tokens);
 
         // State set 0
         final State s00Sa = new State(Rule.create(sr, p, S, a), 0, 0, 0);

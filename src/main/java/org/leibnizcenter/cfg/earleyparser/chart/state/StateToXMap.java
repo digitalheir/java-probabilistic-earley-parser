@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * Created by maarten on 11-1-17.
  */
 @SuppressWarnings("unused")
-public class StateToXMap<T> implements Map<State, T> {
+public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
     private final HashMap<Rule,
                     /*index*/
             TIntObjectMap<

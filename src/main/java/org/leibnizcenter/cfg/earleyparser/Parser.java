@@ -10,6 +10,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
+import org.leibnizcenter.cfg.earleyparser.parse.callbacks.ParseCallbacks;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
@@ -40,7 +41,22 @@ public class Parser {
     public static <E> double recognize(NonTerminal goal,
                                        Grammar<E> grammar,
                                        Iterable<Token<E>> tokens) {
-        final ChartWithInputPosition<E> parse = parseAndCountTokens(goal, grammar, tokens, null);
+        return recognize(goal, grammar, tokens, null);
+    }
+
+    /**
+     * Parses the given list of tokens and returns he parse probability
+     *
+     * @param goal    Goal category, typically S for Sentence
+     * @param grammar Grammar to apply to tokens
+     * @param tokens  list of tokens to parse
+     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     */
+    public static <E> double recognize(NonTerminal goal,
+                                       Grammar<E> grammar,
+                                       Iterable<Token<E>> tokens,
+                                       ParseCallbacks callbacks) {
+        final ChartWithInputPosition<E> parse = parseAndCountTokens(goal, grammar, tokens, callbacks);
         final Collection<State> completedStates = parse.chart.stateSets.getCompletedStates(parse.index, Category.START);
         if (completedStates.size() > 0) {
             if (completedStates.size() > 1)
@@ -112,21 +128,47 @@ public class Parser {
         }
     }
 
-    public static <E> Chart parse(NonTerminal S,
-                                  Grammar<E> grammar,
-                                  Iterable<Token<E>> tokens) {
-        return parse(S, grammar, tokens, null);
+    public static <E> Chart<E> parse(NonTerminal S,
+                                     Grammar<E> grammar,
+                                     Iterable<Token<E>> tokens) {
+        return parse(S, grammar, tokens, (ScanProbability) null);
     }
 
-    public static <E> ParseTree getViterbiParse(NonTerminal S, Grammar<E> grammar, Iterable<Token<E>> tokens) {
-        final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, grammar, tokens);
+    public static <E> ParseTree getViterbiParse(
+            NonTerminal S,
+            Grammar<E> grammar,
+            Iterable<Token<E>> tokens
+    ) {
+        return getViterbiParse(S, grammar, tokens, null);
+    }
+
+    public static <E> ParseTree getViterbiParse(
+            NonTerminal S,
+            Grammar<E> grammar,
+            Iterable<Token<E>> tokens,
+            ParseCallbacks callbacks
+    ) {
+        final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, grammar, tokens, callbacks);
         if (viterbiParseWithScore == null) return null;
         return viterbiParseWithScore.getParseTree();
     }
 
-    public static <E> ParseTreeWithScore getViterbiParseWithScore(NonTerminal S, Grammar<E> grammar, Iterable<Token<E>> tokens) {
-        ChartWithInputPosition<E> chart = parseAndCountTokens(S, grammar, tokens, null);
+    public static <E> ParseTreeWithScore getViterbiParseWithScore(
+            NonTerminal S,
+            Grammar<E> grammar,
+            Iterable<Token<E>> tokens
+    ) {
+        return getViterbiParseWithScore(S, grammar, tokens, null);
+    }
 
+
+    public static <E> ParseTreeWithScore getViterbiParseWithScore(
+            NonTerminal S,
+            Grammar<E> grammar,
+            Iterable<Token<E>> tokens,
+            ParseCallbacks callbacks
+    ) {
+        ChartWithInputPosition<E> chart = parseAndCountTokens(S, grammar, tokens, callbacks);
         final StateSets<E> stateSets = chart.chart.stateSets;
         List<ParseTreeWithScore> parses = stateSets.getCompletedStates(chart.index, Category.START).stream()
                 .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.getSemiring()))
@@ -136,17 +178,37 @@ public class Parser {
     }
 
     public static <E> Chart<E> parse(NonTerminal S,
-                                  Grammar<E> grammar,
-                                  Iterable<Token<E>> tokens,
-                                  ScanProbability scanProbability) {
-        return parseAndCountTokens(S, grammar, tokens, scanProbability).chart;
+                                     Grammar<E> grammar,
+                                     Iterable<Token<E>> tokens,
+                                     ScanProbability scanProbability) {
+        return parseAndCountTokens(
+                S,
+                grammar,
+                tokens,
+                new ParseCallbacks.Builder().withScanProbability(scanProbability).build()
+        ).chart;
     }
 
-    public static <E> ChartWithInputPosition<E> parseAndCountTokens(NonTerminal S,
-                                                                 Grammar<E> grammar,
-                                                                 Iterable<Token<E>> tokens,
-                                                                 ScanProbability scanProbability) {
-        Chart<E> chart = new Chart<>(grammar);
+    public static <E> Chart<E> parse(NonTerminal S,
+                                     Grammar<E> grammar,
+                                     Iterable<Token<E>> tokens,
+                                     ParseCallbacks callbacks) {
+        return parseAndCountTokens(
+                S,
+                grammar,
+                tokens,
+                callbacks
+        ).chart;
+    }
+
+    public static <T> ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
+                                                                    Grammar<T> grammar,
+                                                                    Iterable<Token<T>> tokens,
+                                                                    ParseCallbacks callbacks) {
+        ScanProbability scanProbability = callbacks != null ? callbacks.scanProbability : null;
+        if (callbacks == null) callbacks = new ParseCallbacks.Builder().build();
+
+        Chart<T> chart = new Chart<>(grammar);
         DblSemiring sr = grammar.getSemiring();
 
         // Initial state
@@ -157,28 +219,28 @@ public class Parser {
         int i = 0;
         for (TokenWithCategories<E> token : TokenWithCategories.from(tokens, grammar)) {
             Predict.predict(i,grammar,chart.stateSets);
+        for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
 
             Scan.scan(i, token, scanProbability);
+            Predict.predict(i, grammar, chart.stateSets);
+            callbacks.onPredict(i, token, chart);
+
+
+            Scan.scan(i, token, scanProbability, grammar, chart.stateSets);
+            callbacks.onScan(i, token, chart);
+
 
             Set<State> completedStates = new HashSet<>(chart.stateSets.getCompletedStates(i + 1));
             Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
-            completedStates.forEach(s -> Chart.setViterbiScores(s, new HashSet<>(), grammar.getSemiring(), chart.stateSets));
-//            chart.computeViterbi(i + 1);
+            completedStates.forEach(s -> Complete.setViterbiScores(s, new HashSet<>(), grammar.getSemiring(), chart.stateSets));
+            callbacks.onComplete(i, token, chart);
+
+
             i++;
         }
-
         //Set<State> completed = chart.getCompletedStates(i, Category.START);
         //if (completed.size() > 1) throw new Error("This is a bug");
         return new ChartWithInputPosition<>(chart, i);
     }
 
-    public static class ChartWithInputPosition<T> {
-        public final Chart<T> chart;
-        public final int index;
-
-        public ChartWithInputPosition(Chart<T> chart, int index) {
-            this.chart = chart;
-            this.index = index;
-        }
-    }
 }

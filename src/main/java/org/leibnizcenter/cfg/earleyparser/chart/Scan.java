@@ -13,7 +13,7 @@ import java.util.Set;
 
 /**
  * Scan phase of Earley
- *
+ * <p>
  * Created by maarten on 31/10/16.
  */
 @SuppressWarnings("WeakerAccess")
@@ -25,56 +25,66 @@ public final class Scan {
         throw new Error();
     }
 
-    static <T> void scan(final int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability scanProbability, Grammar<T> grammar, StateSets stateSets) {
-        if (tokenWithCategories == null) throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
+    /**
+     * Handles a token scanned from the input string.
+     *
+     * @param tokenPosition       The start index of the scan.
+     * @param tokenWithCategories The token that was scanned.
+     * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
+     */
+    public static <T> void scan(final int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability scanProbability, Grammar<T> grammar, StateSets stateSets) {
+        if (tokenWithCategories == null)
+            throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
 
         final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition);
         final DblSemiring sr = grammar.getSemiring();
         final Token<T> token = tokenWithCategories.getToken();
-        tokenWithCategories.getCategories().forEach(terminalType ->{
+        tokenWithCategories.getCategories().forEach(terminalType -> {
         /*
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
-        // noinspection unchecked
+            // noinspection unchecked
             Set<State> statesActiveOnTerminals = stateSets.getStatesActiveOnTerminals(tokenPosition, terminalType);
-            if(statesActiveOnTerminals!= null) statesActiveOnTerminals
-                .forEach(preScanState -> {
-                            //noinspection unchecked
-                            if(!((Terminal<T>) preScanState.getActiveCategory()).hasCategory(token)) throw new IssueRequest("This is a bug.");
-                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
+            if (statesActiveOnTerminals != null) statesActiveOnTerminals
+                    .forEach(preScanState -> {
+                                //noinspection unchecked
+                                if (!((Terminal<T>) preScanState.getActiveCategory()).hasCategory(token))
+                                    throw new IssueRequest("This is a bug.");
+                                // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
                     /*
                      * All these methods are synchronized
                      */
-                            final double preScanForward = stateSets.getForwardScore(preScanState);
-                            final double preScanInner = stateSets.getInnerScore(preScanState);
-                            // Note that this state is unique for each preScanState
-                            final State postScanState = stateSets.getOrCreate(
-                                    tokenPosition + 1, preScanState.getRuleStartPosition(),
-                                    preScanState.advanceDot(),
-                                    preScanState.getRule(),
-                                    token
-                            );
+                                final double preScanForward = stateSets.getForwardScore(preScanState);
+                                final double preScanInner = stateSets.getInnerScore(preScanState);
+                                // Note that this state is unique for each preScanState
+                                final State postScanState = stateSets.getOrCreate(
+                                        tokenPosition + 1, preScanState.getRuleStartPosition(),
+                                        preScanState.advanceDot(),
+                                        preScanState.getRule(),
+                                        token
+                                );
 
-                            // Set forward score //synchronized
-                            stateSets.setForwardScore(
-                                    postScanState,
-                                    calculateForwardScore(scanProb, sr, preScanForward)
-                            );
+                                // Set forward score //synchronized
+                                stateSets.setForwardScore(
+                                        postScanState,
+                                        calculateForwardScore(scanProb, sr, preScanForward)
+                                );
 
-                            // Get inner score (no side effects)
-                            final double postScanInner = calculateInnerScore(scanProb, sr, preScanInner);
-                            // Set inner score //synchronized
-                            stateSets.setInnerScore(
-                                    postScanState,
-                                    postScanInner
-                            );
+                                // Get inner score (no side effects)
+                                final double postScanInner = calculateInnerScore(scanProb, sr, preScanInner);
+                                // Set inner score //synchronized
+                                stateSets.setInnerScore(
+                                        postScanState,
+                                        postScanInner
+                                );
 
-                            // Set Viterbi score//synchronized
-                            stateSets.setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
-                        }
-                );
-    });}
+                                // Set Viterbi score//synchronized
+                                stateSets.setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
+                            }
+                    );
+        });
+    }
 
     /**
      * Function to calculate the new inner score from given values
