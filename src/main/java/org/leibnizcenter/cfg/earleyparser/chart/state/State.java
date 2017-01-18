@@ -2,8 +2,8 @@ package org.leibnizcenter.cfg.earleyparser.chart.state;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.earleyparser.chart.StateSets;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.token.Token;
 
 import java.text.DecimalFormat;
 
@@ -45,13 +45,13 @@ public class State {
     @SuppressWarnings("WeakerAccess")
     public final int ruleDotPosition;
     @SuppressWarnings("WeakerAccess")
-    public final int positionInInput;
+    public final int position;
     private final int hashCode;
 
     /**
      * Makes a predicted State based on the specified rule, with the specified
      * origin position.
-     * A new State whose {@link #getRule() dotted rule} is the
+     * A new State whose {@link #rule dotted rule} is the
      * specified rule at position <code>0</code>. The new State's origin is the
      * specified <code>origin</code>.
      *
@@ -63,22 +63,27 @@ public class State {
         this(rule, ruleStartPosition, ruleStartPosition, 0);
     }
 
-    public State(Rule rule, int positionInInput, int ruleStartPosition, int ruleDotPosition) {
+    public State(Rule rule, int position, int ruleStartPosition, int ruleDotPosition) {
         if (rule == null) throw new NullPointerException("null rule");
         this.rule = rule;
         this.ruleStartPosition = ruleStartPosition;
         this.ruleDotPosition = ruleDotPosition;
-        this.positionInInput = positionInInput;
+        this.position = position;
         this.hashCode = computeHashCode();
     }
 
     public static State create(int index, int ruleStart, int dotPosition, Rule rule) {
-        return StateSets.create(index, ruleStart, dotPosition, rule, null);
+        return create(index, ruleStart, dotPosition, rule, null);
+    }
+
+    public static <E> State create(int index, int ruleStart, int dotPosition, Rule rule, Token<E> c) {
+        if (c != null) return new ScannedTokenState<>(c, rule, ruleStart, index, dotPosition);
+        else return new State(rule, index, ruleStart, dotPosition);
     }
 
     @Override
     public String toString() {
-        return getPosition() + ": (" + ruleStartPosition + ") " + rule.toString(ruleDotPosition) + "";
+        return position + ": (" + ruleStartPosition + ") " + rule.toString(ruleDotPosition) + "";
     }
 
 
@@ -91,18 +96,12 @@ public class State {
     }
 
     /**
+     * Runs in O(1)
+     *
      * @return Active category for this state. May be null.
      */
     public Category getActiveCategory() {
         return rule.getActiveCategory(ruleDotPosition);
-    }
-
-    public Rule getRule() {
-        return rule;
-    }
-
-    public int getPosition() {
-        return positionInInput;
     }
 
     /**
@@ -118,14 +117,6 @@ public class State {
         return position + 1;
     }
 
-    public int getRuleDotPosition() {
-        return ruleDotPosition;
-    }
-
-    public int getRuleStartPosition() {
-        return ruleStartPosition;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -133,7 +124,7 @@ public class State {
 
         State state = (State) o;
 
-        return ruleStartPosition == state.ruleStartPosition && ruleDotPosition == state.ruleDotPosition && positionInInput == state.positionInInput && rule.equals(state.rule);
+        return ruleStartPosition == state.ruleStartPosition && ruleDotPosition == state.ruleDotPosition && position == state.position && rule.equals(state.rule);
 
     }
 
@@ -146,7 +137,7 @@ public class State {
         int result = rule.hashCode();
         result = 31 * result + ruleStartPosition;
         result = 31 * result + ruleDotPosition;
-        result = 31 * result + positionInInput;
+        result = 31 * result + position;
         return result;
     }
 

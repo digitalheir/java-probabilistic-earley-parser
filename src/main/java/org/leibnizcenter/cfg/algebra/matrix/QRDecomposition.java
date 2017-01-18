@@ -25,19 +25,20 @@ public class QRDecomposition {
      *
      * @serial internal array storage.
      */
-    private double[][] QR;
+    private final double[][] QR;
 
     /**
      * Row and column dimensions.
      */
-    private int m, n;
+    private final int m;
+    private final int n;
 
     /**
      * Array for internal storage of diagonal of R.
      *
      * @serial diagonal of R.
      */
-    private double[] Rdiag;
+    private final double[] Rdiag;
 
     /**
      * QR Decomposition, computed by Householder reflections.
@@ -46,7 +47,7 @@ public class QRDecomposition {
      * @param A Rectangular matrix
      */
 
-    QRDecomposition(DblMatrix A) {
+    public QRDecomposition(Matrix A) {
         // Initialize.
         QR = A.getArrayCopy();
         m = A.getRowDimension();
@@ -88,12 +89,29 @@ public class QRDecomposition {
     }
 
     /**
+     * sqrt(a^2 + b^2) without under/overflow.
+     **/
+    private static double hypot(double a, double b) {
+        double r;
+        if (Math.abs(a) > Math.abs(b)) {
+            r = b / a;
+            r = Math.abs(a) * Math.sqrt(1 + r * r);
+        } else if (b != 0) {
+            r = a / b;
+            r = Math.abs(b) * Math.sqrt(1 + r * r);
+        } else {
+            r = 0.0;
+        }
+        return r;
+    }
+
+    /**
      * Is the matrix full rank?
      *
      * @return true if R, and hence A, has full rank.
      */
 
-    private boolean isFullRank() {
+    public boolean isFullRank() {
         for (int j = 0; j < n; j++) {
             if (Rdiag[j] == 0)
                 return false;
@@ -107,8 +125,8 @@ public class QRDecomposition {
      * @return R
      */
 
-    public DblMatrix getR() {
-        DblMatrix X = new DblMatrix(n, n);
+    public Matrix getR() {
+        Matrix X = new Matrix(n, n);
         double[][] R = X.getArray();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -133,7 +151,7 @@ public class QRDecomposition {
      * @throws RuntimeException         Matrix is rank deficient.
      */
 
-    DblMatrix solve(DblMatrix B) {
+    public Matrix solve(Matrix B) {
         if (B.getRowDimension() != m) {
             throw new IllegalArgumentException("Matrix row dimensions must agree.");
         }
@@ -169,23 +187,6 @@ public class QRDecomposition {
                 }
             }
         }
-        return (new DblMatrix(X, n, nx).getMatrix(n - 1, nx - 1));
-    }
-
-    /**
-     * sqrt(a^2 + b^2) without under/overflow.
-     **/
-    private static double hypot(double a, double b) {
-        double r;
-        if (Math.abs(a) > Math.abs(b)) {
-            r = b / a;
-            r = Math.abs(a) * Math.sqrt(1 + r * r);
-        } else if (b != 0) {
-            r = a / b;
-            r = Math.abs(b) * Math.sqrt(1 + r * r);
-        } else {
-            r = 0.0;
-        }
-        return r;
+        return (new Matrix(X, n, nx).getMatrix(n - 1, nx - 1));
     }
 }

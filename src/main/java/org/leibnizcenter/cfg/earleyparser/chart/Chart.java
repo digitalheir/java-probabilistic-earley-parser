@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public class Chart<T> {
 
     @SuppressWarnings("WeakerAccess")
     public void addState(@SuppressWarnings("SameParameterValue") int index, State state, double forward, double inner) {
-        stateSets.getOrCreate(index, state.getRuleStartPosition(), state.getRuleDotPosition(), state.getRule());
+        stateSets.getOrCreate(index, state.ruleStartPosition, state.ruleDotPosition, state.rule);
         stateSets.innerScores.put(state, inner);
         stateSets.forwardScores.put(state, forward);
         if (stateSets.viterbiScores.get(state) == null)

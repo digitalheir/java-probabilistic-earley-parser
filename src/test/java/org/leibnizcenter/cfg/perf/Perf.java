@@ -1,10 +1,10 @@
-package org.leibnizcenter.cfg;
+package org.leibnizcenter.cfg.perf;
 
+import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
-import org.leibnizcenter.cfg.earleyparser.ParseTreeWithScore;
 import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;

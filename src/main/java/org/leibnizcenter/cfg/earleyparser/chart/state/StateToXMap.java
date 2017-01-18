@@ -30,17 +30,36 @@ public class StateToXMap<T> implements Map<State, T> {
                     >> map;
     private Set<State> keys = new HashSet<>();
     private Multiset<T> values = HashMultiset.create();
+    private int size = 0;
 
     @SuppressWarnings("unused")
     public StateToXMap(int capacity) {
         this.map = new HashMap<>(capacity);
     }
 
-    private int size = 0;
-
     @SuppressWarnings("unused")
     public StateToXMap() {
         this.map = new HashMap<>();
+    }
+
+    private static <K, V2> TIntObjectMap<V2> getOrCreate(Map<K, TIntObjectMap<V2>> m, K key) {
+        if (m.containsKey(key))
+            return m.get(key);
+        else {
+            final TIntObjectMap<V2> m2 = new TIntObjectHashMap<>(10, 0.5F, -1);
+            m.put(key, m2);
+            return m2;
+        }
+    }
+
+    private static <V2> TIntObjectMap<V2> getOrCreate(TIntObjectMap<TIntObjectMap<V2>> intObjectMap, int key) {
+        if (!intObjectMap.containsKey(key)) {
+            final TIntObjectMap<V2> m2 = new TIntObjectHashMap<>(10, 0.5F, -1);
+            intObjectMap.put(key, m2);
+            return m2;
+        } else {
+            return intObjectMap.get(key);
+        }
     }
 
     @Override
@@ -59,7 +78,7 @@ public class StateToXMap<T> implements Map<State, T> {
             return false;
         else {
             State s = (State) key;
-            return contains(s.getRule(), s.positionInInput, s.ruleStartPosition, s.ruleDotPosition);
+            return contains(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
         }
     }
 
@@ -85,15 +104,13 @@ public class StateToXMap<T> implements Map<State, T> {
             return null;
         else {
             State s = (State) key;
-            return this.get(s.getRule(), s.positionInInput, s.ruleStartPosition, s.ruleDotPosition);
+            return this.get(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
         }
     }
-
 
     public T get(Rule rule, int index, int ruleStart, int dot) {
         return contains(rule, index, ruleStart, dot) ? map.get(rule).get(index).get(ruleStart).get(dot) : null;
     }
-
 
     public T getOrPut(State key, T fallback) {
         if (containsKey(key))
@@ -104,32 +121,12 @@ public class StateToXMap<T> implements Map<State, T> {
         }
     }
 
-    private static <K, V2> TIntObjectMap<V2> getOrCreate(Map<K, TIntObjectMap<V2>> m, K key) {
-        if (m.containsKey(key))
-            return m.get(key);
-        else {
-            final TIntObjectMap<V2> m2 = new TIntObjectHashMap<>(10, 0.5F, -1);
-            m.put(key, m2);
-            return m2;
-        }
-    }
-
-    private static <V2> TIntObjectMap<V2> getOrCreate(TIntObjectMap<TIntObjectMap<V2>> intObjectMap, int key) {
-        if (!intObjectMap.containsKey(key)) {
-            final TIntObjectMap<V2> m2 = new TIntObjectHashMap<>(10, 0.5F, -1);
-            intObjectMap.put(key, m2);
-            return m2;
-        } else {
-            return intObjectMap.get(key);
-        }
-    }
-
     @Override
     public T put(State key, T value) {
         T prev = get(key);
         TIntObjectMap<T> m = getOrCreate(getOrCreate(
                 getOrCreate(map, key.rule),
-                key.positionInInput),
+                key.position),
                 key.ruleStartPosition);
         m.put(key.ruleDotPosition, value);
         this.keys.add(key);
@@ -159,7 +156,7 @@ public class StateToXMap<T> implements Map<State, T> {
         T prev = get(key);
         TIntObjectMap<T> m = getOrCreate(getOrCreate(
                 getOrCreate(map, key.rule),
-                key.positionInInput),
+                key.position),
                 key.ruleStartPosition);
         m.remove(key.ruleDotPosition);
         this.keys.remove(key);

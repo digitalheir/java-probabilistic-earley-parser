@@ -4,6 +4,7 @@ import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 
 import java.util.Collection;
@@ -34,7 +35,7 @@ public class Predict {
     public static <T> void predict(int index, Grammar<T> grammar, StateSets<T> stateSets) {
         final DblSemiring sr = grammar.getSemiring();
 
-        final Collection<State> statesToPredictOn = stateSets.getStatesActiveOnNonTerminals(index);
+        final Collection<State> statesToPredictOn = stateSets.activeStates.getActiveOnNonTerminals(index);
         final Collection<State.StateWithScore> newStates = new HashSet<>(20);
 
         // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...

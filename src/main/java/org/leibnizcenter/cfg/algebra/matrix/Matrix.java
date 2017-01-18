@@ -1,5 +1,7 @@
 package org.leibnizcenter.cfg.algebra.matrix;
 
+
+
 /**
  * Jama = Java Matrix class.
  * <p>
@@ -43,7 +45,12 @@ package org.leibnizcenter.cfg.algebra.matrix;
  * @version 5 August 1998
  */
 
-public class DblMatrix {
+public class Matrix {
+    /**
+     * Row and column dimensions.
+     */
+    private final int m;
+    private final int n;
     /**
      * Array for internal storage of elements.
      *
@@ -52,18 +59,13 @@ public class DblMatrix {
     private double[][] A;
 
     /**
-     * Row and column dimensions.
-     */
-    private int m, n;
-
-    /**
      * Construct an m-by-n matrix of zeros.
      *
      * @param m Number of rows.
      * @param n Number of colums.
      */
 
-    public DblMatrix(int m, int n) {
+    public Matrix(int m, int n) {
         this.m = m;
         this.n = n;
         A = new double[m][n];
@@ -78,7 +80,7 @@ public class DblMatrix {
      */
 
     @SuppressWarnings("unused")
-    public DblMatrix(int m, int n, double s) {
+    public Matrix(int m, int n, double s) {
         this.m = m;
         this.n = n;
         A = new double[m][n];
@@ -97,7 +99,7 @@ public class DblMatrix {
      */
 
     @SuppressWarnings("unused")
-    public DblMatrix(double[][] A) {
+    public Matrix(double[][] A) {
         m = A.length;
         n = A[0].length;
         for (int i = 0; i < m; i++) {
@@ -117,7 +119,7 @@ public class DblMatrix {
      */
 
     @SuppressWarnings("WeakerAccess")
-    public DblMatrix(double[][] A, int m, int n) {
+    public Matrix(double[][] A, int m, int n) {
         this.A = A;
         this.m = m;
         this.n = n;
@@ -132,7 +134,7 @@ public class DblMatrix {
      */
 
     @SuppressWarnings("unused")
-    public DblMatrix(double vals[], int m) {
+    public Matrix(double vals[], int m) {
         this.m = m;
         n = (m != 0 ? vals.length / m : 0);
         if (m * n != vals.length) {
@@ -144,6 +146,26 @@ public class DblMatrix {
                 A[i][j] = vals[i + j * m];
             }
         }
+    }
+
+    /**
+     * Generate identity matrix
+     *
+     * @param m Number of rows.
+     * @param n Number of colums.
+     * @return An m-by-n matrix with ones on the diagonal and zeros elsewhere.
+     */
+
+    @SuppressWarnings("WeakerAccess")
+    public static Matrix identity(int m, int n) {
+        Matrix A = new Matrix(m, n);
+        double[][] X = A.getArray();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                X[i][j] = (i == j ? 1.0 : 0.0);
+            }
+        }
+        return A;
     }
 
     /**
@@ -209,8 +231,8 @@ public class DblMatrix {
      * @param j1 Final column index
      * @throws ArrayIndexOutOfBoundsException Submatrix indices
      */
-    DblMatrix getMatrix(int i1, int j1) {
-        DblMatrix X = new DblMatrix(i1 + 1, j1 + 1);
+    Matrix getMatrix(int i1, int j1) {
+        Matrix X = new Matrix(i1 + 1, j1 + 1);
         double[][] B = X.getArray();
         try {
             for (int i = 0; i <= i1; i++) {
@@ -230,8 +252,8 @@ public class DblMatrix {
      * @throws ArrayIndexOutOfBoundsException Submatrix indices
      */
 
-    DblMatrix getMatrix(int[] r, int j1) {
-        DblMatrix X = new DblMatrix(r.length, j1 + 1);
+    Matrix getMatrix(int[] r, int j1) {
+        Matrix X = new Matrix(r.length, j1 + 1);
         double[][] B = X.getArray();
         try {
             for (int i = 0; i < r.length; i++) {
@@ -256,44 +278,6 @@ public class DblMatrix {
     }
 
     /**
-     * C = A + B
-     *
-     * @param B another matrix
-     * @return A + B
-     */
-
-    public DblMatrix plus(DblMatrix B) {
-        checkMatrixDimensions(B);
-        DblMatrix X = new DblMatrix(m, n);
-        double[][] C = X.getArray();
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                C[i][j] = A[i][j] + B.A[i][j];
-            }
-        }
-        return X;
-    }
-
-    /**
-     * Multiply a matrix by a scalar, C = s*A
-     *
-     * @param s scalar
-     * @return s*A
-     */
-
-    public DblMatrix times(double s) {
-        DblMatrix X = new DblMatrix(m, n);
-        double[][] C = X.getArray();
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                C[i][j] = s * A[i][j];
-            }
-        }
-        return X;
-    }
-
-
-    /**
      * Linear algebraic matrix multiplication, A * B
      *
      * @param B another matrix
@@ -301,11 +285,11 @@ public class DblMatrix {
      * @throws IllegalArgumentException Matrix inner dimensions must agree.
      */
 
-    public DblMatrix times(DblMatrix B) {
+    public Matrix times(Matrix B) {
         if (B.m != n) {
             throw new IllegalArgumentException("Matrix inner dimensions must agree.");
         }
-        DblMatrix X = new DblMatrix(m, B.n);
+        Matrix X = new Matrix(m, B.n);
         double[][] C = X.getArray();
         double[] Bcolj = new double[n];
         for (int j = 0; j < B.n; j++) {
@@ -331,11 +315,10 @@ public class DblMatrix {
      * @return solution if A is square, least squares solution otherwise
      */
 
-    private DblMatrix solve(DblMatrix B) {
+    private Matrix solve(Matrix B) {
         return (m == n ? (new LUDecomposition(this)).solve(B) :
                 (new QRDecomposition(this)).solve(B));
     }
-
 
     /**
      * Matrix inverse or pseudoinverse
@@ -343,39 +326,45 @@ public class DblMatrix {
      * @return inverse(A) if A is square, pseudoinverse otherwise.
      */
 
-    public DblMatrix inverse() {
+    public Matrix inverse() {
         return solve(identity(m, m));
-    }
-
-
-    /**
-     * Generate identity matrix
-     *
-     * @param m Number of rows.
-     * @param n Number of colums.
-     * @return An m-by-n matrix with ones on the diagonal and zeros elsewhere.
-     */
-
-    @SuppressWarnings("WeakerAccess")
-    public static DblMatrix identity(int m, int n) {
-        DblMatrix A = new DblMatrix(m, n);
-        double[][] X = A.getArray();
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                X[i][j] = (i == j ? 1.0 : 0.0);
-            }
-        }
-        return A;
     }
 
     /**
      * Check if size(A) == size(B)
      **/
 
-    private void checkMatrixDimensions(DblMatrix B) {
+    private void checkMatrixDimensions(Matrix B) {
         if (B.m != m || B.n != n) {
             throw new IllegalArgumentException("Matrix dimensions must agree.");
         }
+    }
+
+    /**
+     * C = A - B
+     *
+     * @param B another matrix
+     * @return A - B
+     */
+
+    public Matrix minus(Matrix B) {
+        checkMatrixDimensions(B);
+        Matrix X = new Matrix(m, n);
+        double[][] C = X.getArray();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                C[i][j] = A[i][j] - B.A[i][j];
+            }
+        }
+        return X;
+    }
+
+    /** Two norm
+     @return    maximum singular value.
+     */
+
+    public double norm2 () {
+        return (new SingularValueDecomposition(this).norm2());
     }
 
 }

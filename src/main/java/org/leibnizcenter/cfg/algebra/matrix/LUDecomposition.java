@@ -20,20 +20,20 @@ class LUDecomposition {
      *
      * @serial internal array storage.
      */
-    private double[][] LU;
+    private final double[][] LU;
 
     /**
      * Row and column dimensions, and pivot sign.
      */
-    private int m;
-    private int n;
+    private final int m;
+    private final int n;
 
     /**
      * Internal storage of pivot vector.
      *
      * @serial pivot vector.
      */
-    private int[] piv;
+    private final int[] piv;
 
     /**
      * LU Decomposition
@@ -41,7 +41,7 @@ class LUDecomposition {
      *
      * @param A Rectangular matrix
      */
-    LUDecomposition(DblMatrix A) {
+    LUDecomposition(Matrix A) {
         // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
         LU = A.getArrayCopy();
         m = A.getRowDimension();
@@ -132,7 +132,7 @@ class LUDecomposition {
      * @throws RuntimeException         Matrix is singular.
      */
 
-    DblMatrix solve(DblMatrix B) {
+    Matrix solve(Matrix B) {
         if (B.getRowDimension() != m) {
             throw new IllegalArgumentException("Matrix row dimensions must agree.");
         }
@@ -142,7 +142,7 @@ class LUDecomposition {
 
         // Copy right hand side with pivoting
         int nx = B.getColumnDimension();
-        DblMatrix Xmat = B.getMatrix(piv, nx - 1);
+        Matrix Xmat = B.getMatrix(piv, nx - 1);
         double[][] X = Xmat.getArray();
 
         // Solve L*Y = B(piv,:)

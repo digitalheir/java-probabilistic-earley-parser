@@ -9,6 +9,6 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
  * Created by maarten on 16/01/17.
  */
 @FunctionalInterface
-public interface ParseCallback {
-    <T> void on(int position, TokenWithCategories<T> token, Chart chart);
+public interface ParseCallback<T> {
+    void on(int position, TokenWithCategories<T> token, Chart chart);
 }

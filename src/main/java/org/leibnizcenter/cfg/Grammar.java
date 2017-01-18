@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
-import org.leibnizcenter.cfg.algebra.matrix.DblMatrix;
+import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
@@ -101,7 +101,7 @@ public class Grammar<T> {
     private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
         // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
-        final DblMatrix R_L_inverse = new DblMatrix(nonTerminals.size(), nonTerminals.size());
+        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
             NonTerminal X = nonterminalz[row];
             for (int col = 0; col < nonterminalz.length; col++) {
@@ -111,7 +111,7 @@ public class Grammar<T> {
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
             }
         }
-        final DblMatrix R_L = R_L_inverse.inverse();
+        final Matrix R_L = R_L_inverse.inverse();
 
         LeftCorners R__L = new LeftCorners(semiring);
         /*
@@ -151,15 +151,6 @@ public class Grammar<T> {
                         .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
                         .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore())));
     }
-
-    //TODO
-//    isProper(){
-//    }
-//    isConsistent(){
-//    }
-//    hasNoUselessNonTerminals(){
-//
-//    }
 
     /**
      * Gets the name of this grammar.
@@ -346,10 +337,10 @@ public class Grammar<T> {
      * to {@link Category} with some utility functions to deal with probabilities.
      */
     public static class LeftCorners {
-        private Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
-        private Multimap<Category, Category> nonZeroScores = HashMultimap.create();
-        private Multimap<Category, NonTerminal> nonZeroNonTerminalScores = HashMultimap.create();
-        private DblSemiring semiring;
+        private final Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
+        private final Multimap<Category, Category> nonZeroScores = HashMultimap.create();
+        private final Multimap<Category, NonTerminal> nonZeroNonTerminalScores = HashMultimap.create();
+        private final DblSemiring semiring;
 
         /**
          * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}

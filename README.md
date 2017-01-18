@@ -129,7 +129,26 @@ public class Example {
 }
 ```
 
-Most internal parsing stuff is available through he public API, should you need a slightly different parser than usual.
+One of the advantages of Earley parsing is the top-down control you can exert while parsing.
+You can pass the parser callbacks to influence the parsing process:
+
+
+```
+new ParseCallbacks.Builder()
+                        .withOnPreScan((position, token, chart) -> System.out.println("Scan about to happen for token " + token))
+                        .withScanProbability((position, token) -> {
+                            if (token.getCategories().contains(anUnexpectedTerminalForThisWord)) {
+                                return grammar.getSemiring().fromProbability(0.5);
+                            } else {
+                                return grammar.getSemiring().one();
+                            }
+                        })
+                        .withOnPostScan((position, token, chart) -> System.out.println("Scan happened for token " + token))
+                        .withOnPostComplete((position, token, chart) -> System.out.println("Complete happened for token " + token))
+                        .build()
+```
+
+Only use this function if you really know what you're doing. It may mess up your results.
 
 ## Some notes on implementation
 The probability of a parse is defined as the product of the probalities all the applied rules. Usually,

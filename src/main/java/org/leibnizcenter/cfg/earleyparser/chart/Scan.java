@@ -3,11 +3,12 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.token.Token;
-import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
+import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 import java.util.Set;
 
@@ -32,11 +33,11 @@ public final class Scan {
      * @param tokenWithCategories The token that was scanned.
      * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
-    public static <T> void scan(final int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability scanProbability, Grammar<T> grammar, StateSets stateSets) {
+    public static <T> void scan(final int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability<T> scanProbability, Grammar<T> grammar, StateSets stateSets) {
         if (tokenWithCategories == null)
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
 
-        final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition);
+        final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition, tokenWithCategories);
         final DblSemiring sr = grammar.getSemiring();
         final Token<T> token = tokenWithCategories.getToken();
         tokenWithCategories.getCategories().forEach(terminalType -> {
@@ -45,7 +46,7 @@ public final class Scan {
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
             // noinspection unchecked
-            Set<State> statesActiveOnTerminals = stateSets.getStatesActiveOnTerminals(tokenPosition, terminalType);
+            Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
             if (statesActiveOnTerminals != null) statesActiveOnTerminals
                     .forEach(preScanState -> {
                                 //noinspection unchecked
@@ -56,9 +57,9 @@ public final class Scan {
                                 final double preScanInner = stateSets.innerScores.get(preScanState);
                                 // Note that this state is unique for each preScanState
                                 final State postScanState = stateSets.getOrCreate(
-                                        tokenPosition + 1, preScanState.getRuleStartPosition(),
+                                        tokenPosition + 1, preScanState.ruleStartPosition,
                                         preScanState.advanceDot(),
-                                        preScanState.getRule(),
+                                        preScanState.rule,
                                         token
                                 );
 

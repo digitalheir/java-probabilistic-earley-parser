@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.earleyparser.chart;
+package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;

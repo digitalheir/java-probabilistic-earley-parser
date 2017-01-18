@@ -8,10 +8,14 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Complete stage
@@ -54,17 +58,17 @@ public class Complete {
         //  such that the R*(Z =*> Y) is nonzero
         //  and Y → v is not a unit production
         for (State completedState : states) {
-            final int j = completedState.getRuleStartPosition();
-            final NonTerminal Y = completedState.getRule().getLeft();
+            final int j = completedState.ruleStartPosition;
+            final NonTerminal Y = completedState.rule.getLeft();
 
             ExpressionSemiring.Value unresolvedCompletedInner = addInnerScores.getOrCreate(
                     completedState,
                     stateSets.innerScores.get(completedState)
             );
 
-            final Collection<State> statesToAdvance = stateSets.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y);
+            final Collection<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y);
             if (statesToAdvance != null) for (State stateToAdvance : statesToAdvance) {
-                if (j != stateToAdvance.getPosition()) throw new IssueRequest("Index failed. This is a bug.");
+                if (j != stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
 
                 // Make i: X_k → lZ·m
                 ExpressionSemiring.Value prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.get(stateToAdvance));
@@ -77,9 +81,9 @@ public class Complete {
 
                 ExpressionSemiring.Value inner = unitStarScore.times(prevInner).times(unresolvedCompletedInner);
 
-                Rule newStateRule = stateToAdvance.getRule();
+                Rule newStateRule = stateToAdvance.rule;
                 int newStateDotPosition = stateToAdvance.advanceDot();
-                int newStateRuleStart = stateToAdvance.getRuleStartPosition();
+                int newStateRuleStart = stateToAdvance.ruleStartPosition;
                 addForwardScores.add(
                         newStateRule,
                         position,
@@ -150,7 +154,7 @@ public class Complete {
         final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
         completeNoViterbi(
                 i,
-                stateSets.getCompletedStatesThatAreNotUnitProductions(i),
+                stateSets.completedStates.getCompletedStatesThatAreNotUnitProductions(i),
                 addForwardScores,
                 addInnerScores,
                 grammar, stateSets, semiring
@@ -195,15 +199,15 @@ public class Complete {
             throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
 
         final double completedViterbi = stateSets.viterbiScores.get(completedState).getScore();
-        final NonTerminal Y = completedState.getRule().getLeft();
+        final NonTerminal Y = completedState.rule.getLeft();
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-        int completedPos = completedState.getPosition();
-        for (State stateToAdvance : stateSets.getStatesActiveOnNonTerminal(Y, completedState.getRuleStartPosition(), completedPos)) {
-            if (stateToAdvance.getPosition() > completedPos || stateToAdvance.getPosition() != completedState.getRuleStartPosition())
+        int completedPos = completedState.position;
+        for (State stateToAdvance : stateSets.activeStates.getStatesActiveOnNonTerminal(Y, completedState.ruleStartPosition, completedPos)) {
+            if (stateToAdvance.position > completedPos || stateToAdvance.position != completedState.ruleStartPosition)
                 throw new IssueRequest("Index failed. This is a bug.");
-            int ruleStart = stateToAdvance.getRuleStartPosition();
+            int ruleStart = stateToAdvance.ruleStartPosition;
             int nextDot = stateToAdvance.advanceDot();
-            Rule rule = stateToAdvance.getRule();
+            Rule rule = stateToAdvance.rule;
             State resultingState = stateSets.get(completedPos, ruleStart, nextDot, rule);
             if (resultingState == null) {
                 resultingState = State.create(completedPos, ruleStart, nextDot, rule);

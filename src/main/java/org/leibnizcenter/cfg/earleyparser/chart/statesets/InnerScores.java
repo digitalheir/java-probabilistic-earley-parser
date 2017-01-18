@@ -1,12 +1,12 @@
-package org.leibnizcenter.cfg.earleyparser.chart;
+package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 public class InnerScores {
-    private final TObjectDoubleHashMap<State> innerScores;
     public final DblSemiring semiring;
+    private final TObjectDoubleHashMap<State> innerScores;
 
     InnerScores(DblSemiring semiring) {
         this.semiring=semiring;

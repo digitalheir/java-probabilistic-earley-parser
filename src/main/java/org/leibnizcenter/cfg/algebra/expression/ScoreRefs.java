@@ -33,7 +33,7 @@ public class ScoreRefs {
     }
 
     private Value getExpression(State state) {
-        return getExpression(state.getRule(), state.getPosition(), state.getRuleStartPosition(), state.getRuleDotPosition());
+        return getExpression(state.rule, state.position, state.ruleStartPosition, state.ruleDotPosition);
     }
 
     public Value getOrCreate(State state, double defaultValue) {
@@ -47,6 +47,6 @@ public class ScoreRefs {
     }
 
     private void setScore(State state, Value expression) {
-        setScore(state.getRule(), state.getPosition(), state.getRuleStartPosition(), state.getRuleDotPosition(), expression);
+        setScore(state.rule, state.position, state.ruleStartPosition, state.ruleDotPosition, expression);
     }
 }

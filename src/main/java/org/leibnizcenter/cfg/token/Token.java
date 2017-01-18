@@ -1,6 +1,8 @@
 package org.leibnizcenter.cfg.token;
 
 /**
+ * Test Token
+ *
  * Created by Maarten on 2016-06-06.
  */
 public class Token<T> {

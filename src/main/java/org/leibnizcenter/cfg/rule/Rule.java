@@ -124,6 +124,7 @@ public class Rule {
 
     /**
      * Gets the active category in the underlying rule, if any.
+     * Runs in O(1).
      *
      * @return The category at this dotted rule's
      * dot position in the underlying rule's
@@ -270,6 +271,11 @@ public class Rule {
         return rawProbability;
     }
 
+    /**
+     * Runs in O(1)
+     *
+     * @return Whether this state is a unit production
+     */
     public boolean isUnitProduction() {
         return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
     }

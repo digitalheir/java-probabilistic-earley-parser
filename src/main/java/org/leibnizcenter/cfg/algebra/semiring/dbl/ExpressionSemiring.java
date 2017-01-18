@@ -29,10 +29,10 @@ public abstract class ExpressionSemiring implements DblSemiring {
      * Deferred value. Might change internally until resolved.
      */
     public static class Value implements Resolvable {
+        private final ExpressionSemiring semiring;
         private Expression expression;
         private boolean lock = false;
         private double cached = Double.NaN;
-        private ExpressionSemiring semiring;
 
         Value(ExpressionSemiring semiring, Expression e) {
             expression = e;

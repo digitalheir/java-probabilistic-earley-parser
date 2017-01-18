@@ -89,6 +89,7 @@ public class ChartTest {
         final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with the stick");
         ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
         System.out.println(parseTree);
+
     }
 
     @Test
@@ -210,7 +211,7 @@ public class ChartTest {
 
         chart.addState(0, new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         Predict.predict(0, grammar, chart.stateSets);
-        Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index -> semiring.fromProbability(0.5)), grammar,chart.stateSets);
+        Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index, token) -> semiring.fromProbability(0.5), grammar, chart.stateSets);
         Complete.completeNoViterbi(1, grammar, chart.stateSets);
 
 //        for (int i = 0; i < 2; i++) {
