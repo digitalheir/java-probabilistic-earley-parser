@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
@@ -10,6 +9,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import java.util.*;

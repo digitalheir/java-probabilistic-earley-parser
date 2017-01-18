@@ -1,8 +1,8 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Set;
 

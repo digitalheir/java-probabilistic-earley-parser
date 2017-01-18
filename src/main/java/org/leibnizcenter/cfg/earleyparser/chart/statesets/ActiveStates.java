@@ -3,12 +3,12 @@ package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
+import org.leibnizcenter.cfg.grammar.LeftCorners;
 
 import java.util.*;
 
@@ -118,7 +118,7 @@ public class ActiveStates<T> {
     void add(
             final int position,
             final State state,
-            final Grammar.LeftCorners unitStar) {
+            final LeftCorners unitStar) {
         if (state.isActive()) {
             final Category activeCategory = state.getActiveCategory();
             if (activeCategory instanceof NonTerminal) {

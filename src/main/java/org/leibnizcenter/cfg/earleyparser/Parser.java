@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -14,6 +13,7 @@ import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.parse.callbacks.ParseCallbacks;
 import org.leibnizcenter.cfg.earleyparser.parse.callbacks.ParserCallbacksBuilder;
 import org.leibnizcenter.cfg.errors.IssueRequest;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;

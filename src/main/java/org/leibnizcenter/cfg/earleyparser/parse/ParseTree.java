@@ -1,10 +1,10 @@
 
 package org.leibnizcenter.cfg.earleyparser.parse;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.LinkedList;
 import java.util.List;

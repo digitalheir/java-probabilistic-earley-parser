@@ -129,6 +129,21 @@ public class Example {
 }
 ```
 
+You can parse a text file describing your CFG. 
+By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler.
+
+```
+# grammar.cfg
+
+S -> NP VP (1.0)  # Use '->'  
+NP → i   (0.5)    # or '→'
+VP → eat          # probability defaults to 1.0
+```
+
+```java
+Grammar<String> g = Grammar.parse(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));
+```
+
 One of the advantages of Earley parsing is the top-down control you can exert while parsing.
 You can pass the parser callbacks to influence the parsing process:
 

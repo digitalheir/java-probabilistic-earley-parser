@@ -1,8 +1,8 @@
 package org.leibnizcenter.cfg.token;
 
 import com.google.common.collect.ImmutableSet;
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -37,14 +37,6 @@ public class TokenWithCategories<T> {
         return ImmutableSet.copyOf(g.getTerminals().stream().filter(category -> category.hasCategory(token)).collect(Collectors.toSet()));
     }
 
-    public Token<T> getToken() {
-        return token;
-    }
-
-    public Set<Terminal<T>> getCategories() {
-        return categories;
-    }
-
     public static <E> Iterable<TokenWithCategories<E>> from(Iterable<Token<E>> tokens, Grammar<E> grammar) {
         final Iterator<Token<E>> iterator = tokens.iterator();
         return () -> new Iterator<TokenWithCategories<E>>() {
@@ -59,5 +51,13 @@ public class TokenWithCategories<T> {
                 return new TokenWithCategories<>(token, TokenWithCategories.getCategories(token, grammar));
             }
         };
+    }
+
+    public Token<T> getToken() {
+        return token;
+    }
+
+    public Set<Terminal<T>> getCategories() {
+        return categories;
     }
 }
