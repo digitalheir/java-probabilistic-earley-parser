@@ -12,10 +12,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Complete stage
@@ -186,7 +183,7 @@ public class Complete {
      *
      * @param completedState Completed state to calculate Viterbi score for
      * @param sr             Semiring to use for calculating
-     *///TODO write tests
+     */
     public static <T> void setViterbiScores(
             final State completedState,
             final DblSemiring sr,
@@ -202,7 +199,8 @@ public class Complete {
         final NonTerminal Y = completedState.rule.getLeft();
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
         int completedPos = completedState.position;
-        for (State stateToAdvance : stateSets.activeStates.getStatesActiveOnNonTerminal(Y, completedState.ruleStartPosition, completedPos)) {
+        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Y, completedState.ruleStartPosition, completedPos);
+        if (statesToAdvance != null) for (State stateToAdvance : statesToAdvance) {
             if (stateToAdvance.position > completedPos || stateToAdvance.position != completedState.ruleStartPosition)
                 throw new IssueRequest("Index failed. This is a bug.");
             int ruleStart = stateToAdvance.ruleStartPosition;

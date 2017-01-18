@@ -75,8 +75,6 @@ public class Parser {
 
     /**
      * Performs the backward part of the forward-backward algorithm
-     * <p/>
-     * TODO make this an iterative algorithm instead of recursive: might be more efficient?
      */
     public static ParseTree getViterbiParse(State state, Chart chart) {
         if (state.ruleDotPosition <= 0)

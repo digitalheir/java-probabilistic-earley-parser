@@ -16,7 +16,7 @@ public class ForwardScores {
     }
 
         /**
-         * Default zero
+         * Default zero. Runs in O(1).
          *
          * @param s state
          * @return forward score so far
@@ -25,10 +25,16 @@ public class ForwardScores {
         return forwardScores.get(s);
     }
 
+    /**
+     * Runs in O(1).
+     */
     public void put(State state, double score) {
         forwardScores.put(state, score);
     }
 
+    /**
+     * Runs in O(1).
+     */
     public void add(State state, double increment) {
         final double newForwardScore = semiring.plus(forwardScores.get(state)/*default zero*/, increment);
         put(state, newForwardScore);

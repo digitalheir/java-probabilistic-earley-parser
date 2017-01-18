@@ -23,7 +23,9 @@ public class ActiveStates<T> {
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
 
-
+    /**
+     * Runs in O(1).
+     */
     public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal Y) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j))
             return null;
@@ -38,7 +40,7 @@ public class ActiveStates<T> {
             if (setTIntObjectHashMap != null && setTIntObjectHashMap.containsKey(position))
                 return setTIntObjectHashMap.get(position);
         }
-        return Collections.emptySet();
+        return null;
     }
 
     public Set<State> getActiveOnNonTerminals(int index) {

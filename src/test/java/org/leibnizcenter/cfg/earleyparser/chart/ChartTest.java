@@ -174,14 +174,6 @@ public class ChartTest {
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(new State(Rule.create(sr, q, S, B), 0))), q, 0.01);
 
         System.out.println(chart.countStates());
-//        for (State s : chart.getStates(0)) {
-//            System.out.println((s) + "[" + chart.getForwardScore(s) + "]" + "[" + chart.getExpression(s) + "]");
-//        }
-//
-//        for (int i = 0; i < 3; i++) {
-//            chart.scan(i, new Token<>("a"));
-//            if (i < 3) chart.completeNoViterbi(i + 1);
-//        }
 
     }
 
@@ -268,73 +260,5 @@ public class ChartTest {
 ////        Assert.assertFalse(chart.contains(new State(rule3, 0, 4)));
 ////    }
 ////
-//    @Test
-//    public final void testGetIndeces() {
-//        //TODO
-////        Set<Integer> indeces = chart.indices();
-////        Assert.assertTrue(indeces.contains(0));
-////        Assert.assertTrue(indeces.contains(1));
-////
-////        SortedSet<Integer> expected = new TreeSet<Integer>();
-////        for (int i : indeces) {
-////            expected.add(i);
-////        }
-////
-////        Assert.assertEquals(expected, indeces);
-////
-////        int current = null, last;
-////        Iterator<Integer> it = indeces.iterator();
-////        while (it.hasNext()) {
-////            last = current;
-////            current = it.next();
-////            if (last != null) {
-////                Assert.assertTrue(current > last);
-////            }
-////        }
-//    }
-//
-//    @Test
-//    public final void testContainsState() {
-//        Assert.assertTrue(chart.containsStates(0));
-//        Assert.assertTrue(chart.containsStates(1));
-//        Assert.assertFalse(chart.containsStates(2));
-//    }
-//
-////    /**
-////     * Test method for {@link Chart#hashCode()}.
-////     */
-////    @Test
-////    public final void testHashCode() {
-////        Assert.assertEquals(37 * (1 + chart.stateSets.hashCode()), chart.hashCode());
-////    }
-////
-////    /**
-////     * Test method for {@link Chart#addState(int, State)}.
-////     */
-////    @Test
-////    public final void testAddState() {
-////        Assert.assertFalse("able to add edge multiple times",
-////                chart.addState(0, edge1));
-////    }
-//
-//    @Test
-//    public final void testGetState() {
-//        Collection<State> zeroStates = chart.getStates(0);
-//        Assert.assertTrue(zeroStates.contains(edge1));
-//        Assert.assertTrue(zeroStates.contains(edge2));
-//    }
-//
-//    /**
-//     * Test method for {@link Chart#equals(java.lang.Object)}.
-//     */
-//    @Test
-//    public final void testEqualsObject() {
-//        Chart c = new Chart(grammar);
-//        c.addState(0, edge1);
-//        c.addState(0, edge2);
-//        c.addState(1, edge3);
-//
-//        Assert.assertEquals(c, chart);
-//    }
 
 }

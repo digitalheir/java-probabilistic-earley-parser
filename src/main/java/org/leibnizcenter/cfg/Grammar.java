@@ -61,10 +61,6 @@ public class Grammar<T> {
 
     /**
      * Creates a grammar with the given name, and given rules.
-     * <p>
-     * <p>
-     * TODO: Ensure that the probabilities in a SCFG are proper and consistent as defined in Booth and Thompson (1973), and that the grammar contains no useless nonterminals (ones that can never appear in a derivation).
-     * TODO: check that no rules are doubled with different probabilities (in which case we either have undefined dehaviour or conflate the rules?)
      * These restrictions ensure that
      * all nonterminals define probability measures over strings; i.e., P(X ~ x) is a proper distribution over x for all
      * X. Formal definitions of these conditions are given in Appendix A of An Efficient Probabilistic .
@@ -99,7 +95,6 @@ public class Grammar<T> {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
-        // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
@@ -320,7 +315,6 @@ public class Grammar<T> {
             return addRule(rf.newRule(left, right));
         }
 
-        //TODO verify if grammar is well-formed
         public Grammar<E> build() {
             return new Grammar<>(name, rules.build(), semiring);
         }

@@ -8,8 +8,6 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 import java.util.LinkedList;
 import java.util.List;
-//TODO
-
 /**
  * A parse tree that represents the derivation of a string based on the
  * rules in a {@link Grammar}. Parse trees recursively contain
