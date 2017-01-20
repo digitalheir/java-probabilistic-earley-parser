@@ -1,10 +1,9 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -18,10 +17,10 @@ import java.util.Set;
  */
 public class CompletedStates {
     private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
-    private final TIntObjectHashMap<Multimap<NonTerminal, State>> completedStatesFor = new TIntObjectHashMap<>(500);
+    private final TIntObjectHashMap<MyMultimap<NonTerminal, State>> completedStatesFor = new TIntObjectHashMap<>(500);
     private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
 
-    private Multimap<NonTerminal, State> getMapFromLeftHandSide(int position) {
+    private MyMultimap<NonTerminal, State> getMapFromLeftHandSide(int position) {
         return completedStatesFor.get(position);
     }
 
@@ -56,7 +55,7 @@ public class CompletedStates {
     }
 
     public Collection<State> getCompletedStates(int i, NonTerminal s) {
-        Multimap<NonTerminal, State> m = this.getMapFromLeftHandSide(i);
+        MyMultimap<NonTerminal, State> m = this.getMapFromLeftHandSide(i);
         if (m != null && m.containsKey(s)) return m.get(s);
         return Collections.emptySet();
     }
@@ -69,8 +68,8 @@ public class CompletedStates {
     private void addToCompletedStatesFor(final State state) {
         final int index = state.position;
 
-        Multimap<NonTerminal, State> m = completedStatesFor.get(index);
-        if (m == null) m = HashMultimap.create();
+        MyMultimap<NonTerminal, State> m = completedStatesFor.get(index);
+        if (m == null) m = new MyMultimap();
 
         m.put(state.rule.getLeft(), state);
         completedStatesFor.putIfAbsent(index, m);

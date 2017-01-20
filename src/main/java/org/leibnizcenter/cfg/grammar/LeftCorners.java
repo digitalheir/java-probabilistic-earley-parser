@@ -1,12 +1,11 @@
 package org.leibnizcenter.cfg.grammar;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,8 +17,8 @@ import java.util.Map;
  */
 public class LeftCorners {
     private final Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
-    private final Multimap<Category, Category> nonZeroScores = HashMultimap.create();
-    private final Multimap<Category, NonTerminal> nonZeroNonTerminalScores = HashMultimap.create();
+    private final MyMultimap<Category, Category> nonZeroScores = new MyMultimap<>();
+    private final MyMultimap<Category, NonTerminal> nonZeroNonTerminalScores = new MyMultimap<>();
     private final DblSemiring semiring;
 
     /**

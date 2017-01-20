@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.algebra.matrix;
 
-import Jama.util.Maths;
+
+import static java.lang.Math.hypot;
 
 /**
  * Singular Value Decomposition.
@@ -170,7 +171,7 @@ class SingularValueDecomposition {
                     double f = e[p - 2];
                     e[p - 2] = 0.0;
                     for (int j = p - 2; j >= k; j--) {
-                        double t = Maths.hypot(s[j], f);
+                        double t = hypot(s[j], f);
                         double cs = s[j] / t;
                         double sn = f / t;
                         s[j] = t;
@@ -193,7 +194,7 @@ class SingularValueDecomposition {
                     double f = e[k - 1];
                     e[k - 1] = 0.0;
                     for (int j = k; j < p; j++) {
-                        double t = Maths.hypot(s[j], f);
+                        double t = hypot(s[j], f);
                         double cs = s[j] / t;
                         double sn = f / t;
                         s[j] = t;
@@ -238,7 +239,7 @@ class SingularValueDecomposition {
                     // Chase zeros.
 
                     for (int j = k; j < p - 1; j++) {
-                        double t = Maths.hypot(f, g);
+                        double t = hypot(f, g);
                         double cs = f / t;
                         double sn = g / t;
                         if (j != k) {
@@ -253,7 +254,7 @@ class SingularValueDecomposition {
                             v[i][j + 1] = -sn * v[i][j] + cs * v[i][j + 1];
                             v[i][j] = t;
                         }
-                        t = Maths.hypot(f, g);
+                        t = hypot(f, g);
                         cs = f / t;
                         sn = g / t;
                         s[j] = t;
@@ -404,7 +405,7 @@ class SingularValueDecomposition {
         // Compute 2-norm without under/overflow.
         e[k] = 0;
         for (int i = k + 1; i < n; i++) {
-            e[k] = Maths.hypot(e[k], e[i]);
+            e[k] = hypot(e[k], e[i]);
         }
         if (e[k] != 0.0) {
             if (e[k + 1] < 0.0) {
@@ -476,7 +477,7 @@ class SingularValueDecomposition {
     private void computeforblahblah(double[][] a, int m, int k) {
         s[k] = 0;
         for (int i = k; i < m; i++) {
-            s[k] = Maths.hypot(s[k], a[i][k]);
+            s[k] = hypot(s[k], a[i][k]);
         }
         if (s[k] != 0.0) {
             if (a[k][k] < 0.0) {

@@ -1,7 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -9,6 +7,7 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.LeftCorners;
+import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.*;
 
@@ -19,7 +18,7 @@ import java.util.*;
  */
 public class ActiveStates<T> {
     private final TIntObjectHashMap<Set<State>> statesActiveOnNonTerminals = new TIntObjectHashMap<>(500);
-    private final TIntObjectHashMap<Multimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
+    private final TIntObjectHashMap<MyMultimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
 
@@ -108,7 +107,7 @@ public class ActiveStates<T> {
             final int position,
             final NonTerminal Y) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(position))
-            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(position, HashMultimap.create());
+            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(position, new MyMultimap());
         nonTerminalActiveAtIWithNonZeroUnitStarToY.get(position).put(Y, state);
     }
 

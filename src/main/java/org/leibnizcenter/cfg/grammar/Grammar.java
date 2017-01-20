@@ -1,7 +1,6 @@
 
 package org.leibnizcenter.cfg.grammar;
 
-import com.google.common.collect.ImmutableMultimap;
 import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
@@ -12,12 +11,16 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
+import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -40,7 +43,7 @@ public class Grammar<T> {
     private static final Pattern NEWLINE = Pattern.compile("\\n");
     private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     public final String name;
-    public final ImmutableMultimap<Category, Rule> rules;
+    public final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
      * <code>X -L> Y</code> iff there exists a production for X that has a RHS starting with Y,
@@ -70,7 +73,7 @@ public class Grammar<T> {
      * @param rules    Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(String name, ImmutableMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
+    public Grammar(String name, MyMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
 
@@ -162,11 +165,14 @@ public class Grammar<T> {
     private LeftCorners getUnitStarCorners() {
         // Sum all probabilities for unit relations
         final LeftCorners P_U = new LeftCorners(semiring);
-        nonTerminals.forEach(X -> getRules(X).stream()
-                .filter(Rule::isUnitProduction)
+        nonTerminals.forEach(X -> {
+            final Collection<Rule> rules = getRules(X);
+            if(rules!=null)rules.stream()
+                    .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
-                .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore())));
+                    .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore()));
+        });
 
         // R_U = (I - P_U)
         return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);
@@ -195,9 +201,12 @@ public class Grammar<T> {
      */
     private void setLeftCorners() {
         // Sum all probabilities for left corners
-        nonTerminals.forEach(X -> getRules(X).stream()
-                .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
-                .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore())));
+        nonTerminals.forEach(X -> {
+            final Collection<Rule> rules = getRules(X);
+            if (rules != null) rules.stream()
+                    .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
+                    .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore()));
+        });
     }
 
     /**
@@ -261,8 +270,7 @@ public class Grammar<T> {
                 ' ' +
                 name +
                 ": {" +
-                rules.entries().stream()
-                        .map(Map.Entry::getValue)
+                rules.values().stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(", ")) +
                 "}]";
@@ -303,18 +311,18 @@ public class Grammar<T> {
     }
 
     public static class Builder<E> {
-        private final ImmutableMultimap.Builder<Category, Rule> rules;
+        private final MyMultimap<Category, Rule> rules;
         private String name;
         private ExpressionSemiring semiring = new LogSemiring();
         private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {
             this.name = name;
-            this.rules = new ImmutableMultimap.Builder<>();
+            this.rules = new MyMultimap<>();
         }
 
         public Builder() {
-            this.rules = new ImmutableMultimap.Builder<>();
+            this.rules = new MyMultimap<>();
         }
 
         public Builder<E> setSemiring(ExpressionSemiring semiring) {
@@ -349,7 +357,7 @@ public class Grammar<T> {
         }
 
         public Grammar<E> build() {
-            return new Grammar<>(name, rules.build(), semiring);
+            return new Grammar<>(name, rules, semiring);
         }
 
         @SuppressWarnings("unused")

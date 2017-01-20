@@ -1,11 +1,11 @@
 package org.leibnizcenter.cfg.earleyparser.chart.state;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.util.MapEntry;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class StateToXMap<T> implements Map<State, T> {
                             >
                     >> map;
     private Set<State> keys = new HashSet<>();
-    private Multiset<T> values = HashMultiset.create();
+    private TObjectIntMap<T> values = new TObjectIntHashMap<T>(25, 0.5F, 0);
     private int size = 0;
 
     @SuppressWarnings("unused")
@@ -95,7 +95,7 @@ public class StateToXMap<T> implements Map<State, T> {
     @Override
     public boolean containsValue(Object value) {
         //noinspection SuspiciousMethodCalls
-        return values.contains(value);
+        return values.get(value) <= 0;
     }
 
     @Override
@@ -130,7 +130,7 @@ public class StateToXMap<T> implements Map<State, T> {
                 key.ruleStartPosition);
         m.put(key.ruleDotPosition, value);
         this.keys.add(key);
-        this.values.add(value);
+        this.values.put(value, this.values.get(value) + 1);
         this.size++;
         return prev;
     }
@@ -144,7 +144,7 @@ public class StateToXMap<T> implements Map<State, T> {
                 ruleStart);
         m.put(dotPosition, value);
         this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
-        this.values.add(value);
+        this.values.put(value, this.values.get(value) + 1);
         this.size++;
         return prev;
     }
@@ -160,7 +160,7 @@ public class StateToXMap<T> implements Map<State, T> {
                 key.ruleStartPosition);
         m.remove(key.ruleDotPosition);
         this.keys.remove(key);
-        this.values.remove(prev);
+        this.values.put(prev, Math.max(0,this.values.get(prev)));
         this.size--;
         return prev;
     }
@@ -185,12 +185,12 @@ public class StateToXMap<T> implements Map<State, T> {
 
     @Override
     public Collection<T> values() {
-        return values.elementSet();
+        return this.values.keySet();
     }
 
     @Override
     public Set<Entry<State, T>> entrySet() {
-        return keySet().stream().map(k -> Maps.immutableEntry(k, get(k))).collect(Collectors.toSet());
+        return keySet().stream().map(k -> new MapEntry<>(k, get(k))).collect(Collectors.toSet());
     }
 
 
