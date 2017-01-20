@@ -13,7 +13,10 @@ import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -158,6 +161,32 @@ public class Grammar<T> {
         return b.build();
     }
 
+
+    public static Grammar<String> parse(InputStream inputStream, Charset charset) throws IOException {
+        return parse(inputStream, charset,
+                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                LogSemiring.get());
+    }
+
+    public static Grammar<String> parse(InputStream inputStream, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
+        Builder<String> b = new Builder<>();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+        System.out.println("Reading File line by line using BufferedReader");
+
+        String line = reader.readLine();
+        Collection<Rule> rules = new HashSet<>();
+        while (line != null) {
+            line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
+            if (!line.isEmpty())
+                rules.add(Rule.parse(line, parseCategory, semiring));
+            line=reader.readLine();
+        }
+        b.addRules(rules);
+        return b.build();
+    }
+
     public ExpressionSemiring getSemiring() {
         return semiring;
     }
@@ -167,7 +196,7 @@ public class Grammar<T> {
         final LeftCorners P_U = new LeftCorners(semiring);
         nonTerminals.forEach(X -> {
             final Collection<Rule> rules = getRules(X);
-            if(rules!=null)rules.stream()
+            if (rules != null) rules.stream()
                     .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
@@ -309,6 +338,7 @@ public class Grammar<T> {
     public LeftCorners getUnitStar() {
         return unitStarScores;
     }
+
 
     public static class Builder<E> {
         private final MyMultimap<Category, Rule> rules;
