@@ -3,7 +3,6 @@ package org.leibnizcenter.cfg.earleyparser.chart.state;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.token.Token;
 
 import java.text.DecimalFormat;
 
@@ -73,12 +72,7 @@ public class State {
     }
 
     public static State create(int index, int ruleStart, int dotPosition, Rule rule) {
-        return create(index, ruleStart, dotPosition, rule, null);
-    }
-
-    public static <E> State create(int index, int ruleStart, int dotPosition, Rule rule, Token<E> c) {
-        if (c != null) return new ScannedTokenState<>(c, rule, ruleStart, index, dotPosition);
-        else return new State(rule, index, ruleStart, dotPosition);
+        return new State(rule, index, ruleStart, dotPosition);
     }
 
     @Override

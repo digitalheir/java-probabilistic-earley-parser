@@ -61,8 +61,8 @@ public class Chart<T> {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void addState(@SuppressWarnings("SameParameterValue") int index, State state, double forward, double inner) {
-        stateSets.getOrCreate(index, state.ruleStartPosition, state.ruleDotPosition, state.rule);
+    public void addState(State state, double forward, double inner) {
+        stateSets.getOrCreate(state);
         stateSets.innerScores.put(state, inner);
         stateSets.forwardScores.put(state, forward);
         if (stateSets.viterbiScores.get(state) == null)

@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
@@ -8,11 +7,11 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
  */
 public class ForwardScores {
     private final DblSemiring semiring;
-    private final TObjectDoubleHashMap<State> forwardScores;
+    private final StateToDoubleMap forwardScores;
 
     ForwardScores(DblSemiring semiring) {
         this.semiring = semiring;
-        this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
+        this.forwardScores = new StateToDoubleMap(500, 0.5F, semiring.zero());
     }
 
         /**

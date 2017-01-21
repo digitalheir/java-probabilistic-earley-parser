@@ -1,16 +1,15 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 public class InnerScores {
     public final DblSemiring semiring;
-    private final TObjectDoubleHashMap<State> innerScores;
+    private final StateToDoubleMap innerScores;
 
     InnerScores(DblSemiring semiring) {
         this.semiring=semiring;
-        this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
+        this.innerScores = new StateToDoubleMap(500, 0.5F, semiring.zero());
     }
 
     public void put(State s, double probability) {

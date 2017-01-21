@@ -75,8 +75,9 @@ public final class Scan {
                         preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
                 ))
 
-                // After we have calculated everything, we mutate the chart // TODO does this need to be sequential actually?
-                .sequential().forEach(stateSets::createStateAndSetScores);
+                // After we have calculated everything, we mutate the chart
+                .sequential()
+                .forEach(stateSets::createStateAndSetScores);
     }
 
 
@@ -110,10 +111,7 @@ public final class Scan {
         public final double postScanForward;
         public final double postScanInner;
 
-        public final Rule nextRule;
-        public final int nextPosition;
-        public final int nextRuleStart;
-        public final int nextDot;
+        public final State nextState;
         public final Token<T> token;
 
         Delta(
@@ -129,10 +127,7 @@ public final class Scan {
             this.postScanForward = postScanForward;
             this.postScanInner = postScanInner;
             this.token = token;
-            this.nextRule = nextRule;
-            this.nextPosition = nextPosition;
-            this.nextRuleStart = nextRuleStart;
-            this.nextDot = nextDot;
+            this.nextState = State.create(nextPosition, nextRuleStart, nextDot, nextRule);
         }
     }
 }

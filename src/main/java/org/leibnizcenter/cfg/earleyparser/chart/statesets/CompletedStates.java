@@ -69,7 +69,7 @@ public class CompletedStates {
         final int index = state.position;
 
         MyMultimap<NonTerminal, State> m = completedStatesFor.get(index);
-        if (m == null) m = new MyMultimap();
+        if (m == null) m = new MyMultimap<>();
 
         m.put(state.rule.getLeft(), state);
         completedStatesFor.putIfAbsent(index, m);

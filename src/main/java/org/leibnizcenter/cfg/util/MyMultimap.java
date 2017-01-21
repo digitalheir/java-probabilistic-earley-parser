@@ -3,11 +3,12 @@ package org.leibnizcenter.cfg.util;
 import java.util.*;
 
 /**
+ * Dumb implementation of a multimap
  * Created by maarten on 21-1-17.
  */
 public class MyMultimap<T, T1> {
-    private Map<T, Set<T1>> map = new HashMap<T, Set<T1>>();
-    private Set<T1> values = new HashSet<T1>();
+    private Map<T, Set<T1>> map = new HashMap<>();
+    private Set<T1> values = new HashSet<>();
 
     public Collection<T1> get(T y) {
         if (map.containsKey(y)) return map.get(y);

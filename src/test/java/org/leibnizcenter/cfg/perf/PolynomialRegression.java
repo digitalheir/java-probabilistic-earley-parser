@@ -60,8 +60,8 @@ public class PolynomialRegression {
         this.variableName = variableName;
 
         int n = x.length;
-        QRDecomposition qr = null;
-        Matrix matrixX = null;
+        QRDecomposition qr;
+        Matrix matrixX;
 
         // in case Vandermonde matrix does not have full rank, reduce degree until it does
         while (true) {

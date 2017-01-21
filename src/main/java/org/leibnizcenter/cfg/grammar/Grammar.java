@@ -97,14 +97,14 @@ public class Grammar<T> {
         leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
 
-        nonTerminals.forEach(X -> {
-            final Collection<Category> nonZeroScores = leftStarCorners.getNonZeroScores(X);
+        nonTerminals.forEach(Yy -> {
+            final Collection<Category> nonZeroScores = leftStarCorners.getNonZeroScores(Yy);
             if (nonZeroScores != null) {
                 final Set<Rule> rulez = nonZeroScores.stream().flatMap(Y -> {
                     final Collection<Rule> rulesForY = getRules(Y);
                     return rulesForY == null ? Stream.empty() : rulesForY.stream();
                 }).collect(Collectors.toSet());
-                nonZeroLeftStartRules.put(X, rulez);
+                nonZeroLeftStartRules.put(Yy, rulez);
             }
         });
     }
@@ -322,6 +322,7 @@ public class Grammar<T> {
         return leftCorners;
     }
 
+    @SuppressWarnings("unused")
     public LeftCorners getLeftStarCorners() {
         return leftStarCorners;
     }
@@ -372,6 +373,7 @@ public class Grammar<T> {
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<E> setName(String name) {
             this.name = name;
             return this;

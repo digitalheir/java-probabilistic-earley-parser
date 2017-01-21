@@ -3,8 +3,8 @@ package org.leibnizcenter.cfg.util;
 import java.util.Map;
 
 public class MapEntry<K, V> implements Map.Entry<K, V> {
-  final K key;
-  final V value;
+    private final K key;
+    private final V value;
 
   public MapEntry(K key, V value) {
     this.key = key;

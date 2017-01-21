@@ -79,12 +79,12 @@ public class LeftCorners {
         set(x, y, yToProb, val);
     }
 
-    public Collection<Category> getNonZeroScores(Category X) {
-        return nonZeroScores.get(X);
+    Collection<Category> getNonZeroScores(Category Y) {
+        return nonZeroScores.get(Y);
     }
 
-    public Collection<NonTerminal> getNonZeroNonTerminals(Category X) {
-        return nonZeroNonTerminalScores.get(X);
+    public Collection<NonTerminal> getNonZeroNonTerminals(Category Y) {
+        return nonZeroNonTerminalScores.get(Y);
     }
 
     private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {

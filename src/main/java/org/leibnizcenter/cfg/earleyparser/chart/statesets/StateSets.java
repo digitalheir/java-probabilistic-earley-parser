@@ -5,15 +5,13 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.Scan;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
-import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents an index of states, indexed by many different aspects
@@ -42,9 +40,10 @@ public class StateSets<T> {
     public final ViterbiScores viterbiScores = new ViterbiScores();
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
-    private final StateToXMap<State> states = new StateToXMap<>(500);
+    private final Set<State> states = new HashSet<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
     private final Grammar<T> grammar;
+    private Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
 
 
     public StateSets(Grammar<T> grammar) {
@@ -66,27 +65,18 @@ public class StateSets<T> {
         return grammar;
     }
 
-    public State getOrCreate(int index, int ruleStart, int dotPosition, Rule rule) {
-        return getOrCreate(index, ruleStart, dotPosition, rule, null);
-    }
 
     /**
      * Adds state if it does not exist yet
      *
-     * @param position     State position
-     * @param ruleStart    Rule start position
-     * @param dotPosition  Rule dot position
-     * @param rule         State rule
      * @param scannedToken The token that was scanned to create this state
-     * @param <E>          Token type
      * @return State specified by parameter. May or may not be in the state table. If not, it is added.
      */
-    public <E> State getOrCreate(int position, int ruleStart, int dotPosition, Rule rule, Token<E> scannedToken) {
-        if (contains(rule, position, ruleStart, dotPosition)) {
-            return states.get(rule, position, ruleStart, dotPosition);
+    public State getOrCreate(State state, Token<T> scannedToken) {
+        if (contains(state)) {
+            return state;
         } else {
-            State state = State.create(position, ruleStart, dotPosition, rule, scannedToken);
-            addState(state);
+            addState(state, scannedToken);
             return state;
         }
 
@@ -97,13 +87,21 @@ public class StateSets<T> {
      *
      * @param state State to add
      */
-    private void addState(final State state) {
+    private void addState(final State state, Token<T> scannedToken) {
         final int index = state.position;
 
-        states.put(state, state);
+        states.add(state);
         add(byIndex, index, state);
         completedStates.add(index, state);
         activeStates.add(index, state, grammar.getUnitStar());
+        if (scannedToken != null) {
+            ScannedToken<T> eScannedToken = new ScannedToken<>(
+                    scannedToken,
+                    state.rule,
+                    state.ruleDotPosition
+            );
+            scannedTokens.put(state, eScannedToken);
+        }
     }
 
     public Set<State> getStates(int index) {
@@ -111,13 +109,10 @@ public class StateSets<T> {
     }
 
     public void addIfNew(State state) {
-        if (!contains(state.rule, state.position, state.ruleStartPosition, state.ruleDotPosition))
-            addState(state);
+        if (!contains(state))
+            addState(state, null);
     }
 
-    public State get(int index, int ruleStart, int ruleDot, Rule rule) {
-        return states.get(rule, index, ruleStart, ruleDot);
-    }
 
     public int countStates() {
         //noinspection unchecked
@@ -125,8 +120,8 @@ public class StateSets<T> {
                 .mapToInt(Set::size).sum();
     }
 
-    public boolean contains(Rule rule, int position, int ruleStart, int dotPosition) {
-        return states.contains(rule, position, ruleStart, dotPosition);
+    public boolean contains(State s) {
+        return states.contains(s);
     }
 
     public void setScores(Predict.Delta delta) {
@@ -144,13 +139,13 @@ public class StateSets<T> {
         this.viterbiScores.put(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
         this.forwardScores.add(delta.predicted, delta.fw);
         this.innerScores.put(delta.predicted, delta.Y_to_vProbability);
-
-
     }
 
     public void createStateAndSetScores(Scan.Delta<T> score) {
         final DblSemiring sr = this.getGrammar().getSemiring();
-        final State postScanState = this.getOrCreate(score.nextPosition, score.nextRuleStart, score.nextDot, score.nextRule, score.token);
+        final State postScanState = this.getOrCreate(
+                score.nextState, score.token
+        );
 
 //                    if (checkNoNewStatesAreDoubles.contains(rule, position, ruleStart, dot))
 //                        throw new IssueRequest("Tried to scan same state twice. This is a bug.");
@@ -170,5 +165,14 @@ public class StateSets<T> {
         this.viterbiScores.put(
                 new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr)
         );
+    }
+
+    public ScannedToken<T> getScannedToken(State state) {
+        return scannedTokens.get(state);
+    }
+
+
+    public void getOrCreate(State s) {
+        getOrCreate(s, null);
     }
 }

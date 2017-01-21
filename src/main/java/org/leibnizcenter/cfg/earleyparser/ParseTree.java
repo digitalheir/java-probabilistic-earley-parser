@@ -2,7 +2,7 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
@@ -130,7 +130,7 @@ public abstract class ParseTree {
             this.token = scannedToken;
         }
 
-        public Token(ScannedTokenState<E> scannedState) {
+        public Token(ScannedToken<E> scannedState) {
             this(scannedState.scannedToken, scannedState.scannedCategory);
         }
 

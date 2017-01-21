@@ -9,7 +9,7 @@ import org.leibnizcenter.cfg.earleyparser.callbacks.ParserCallbacksBuilder;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.ChartWithInputPosition;
-import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
+import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
@@ -84,20 +84,21 @@ public class Parser {
             Category prefixEnd = state.rule.getRight()[state.ruleDotPosition - 1];
             if (prefixEnd instanceof Terminal) {
                 // Scanned terminal state
-                if (!(state instanceof ScannedTokenState))
+                ScannedToken scannedState = chart.stateSets.getScannedToken(state);
+                if ((scannedState == null))
                     throw new IssueRequest("Expected state to be a scanned state. This is a bug.");
 
                 // let \'a = \, call
+                State state1 = State.create(
+                        state.position - 1,
+                        state.ruleStartPosition,
+                        state.ruleDotPosition - 1,
+                        state.rule
+                );
                 ParseTree T = getViterbiParse(
-                        chart.stateSets.get(
-                                state.position - 1,
-                                state.ruleStartPosition,
-                                state.ruleDotPosition - 1,
-                                state.rule
-                        ),
+                        state1,
                         chart
                 );
-                final ScannedTokenState scannedState = (ScannedTokenState) state;
                 //noinspection unchecked
                 T.addRightMost(new ParseTree.Token<>(scannedState));
                 return T;
@@ -111,13 +112,14 @@ public class Parser {
                 State origin = viterbi.getOrigin();
 
                 // Recurse for predecessor state (before the completion happened)
+                State predecessor = State.create(
+                        origin.ruleStartPosition,
+                        state.ruleStartPosition,
+                        state.ruleDotPosition - 1,
+                        state.rule
+                );
                 ParseTree T = getViterbiParse(
-                        chart.stateSets.get(
-                                origin.ruleStartPosition,
-                                state.ruleStartPosition,
-                                state.ruleDotPosition - 1,
-                                state.rule
-                        )
+                        predecessor
                         , chart);
                 // Recurse for completed state
                 ParseTree Tprime = getViterbiParse(origin, chart);
@@ -211,7 +213,7 @@ public class Parser {
 
         // Initial state
         State initialState = new State(Rule.create(sr, 1.0, Category.START, S), 0);
-        chart.addState(0, initialState, sr.one(), sr.one());
+        chart.addState(initialState, sr.one(), sr.one());
 
         // Cycle through input
         final int[] i = {0};

@@ -47,8 +47,9 @@ public class Predict {
                     // we predict state <code>i: Y<sub>i</sub> → ·v</code>
                     .map(statePredecessor_Y_to_v -> getNextStateAndScores(index, grammar, stateSets, statePredecessor_Y_to_v))
 
-                    // Now that we've calculated the scores, add to chart... // TODO does this need to be sequential actually?
-                    .sequential().forEach(stateSets::setScores);
+                    // Now that we've calculated the scores, add to chart...
+                    .sequential()
+                    .forEach(stateSets::setScores);
     }
 
     private static <T> Delta getNextStateAndScores(int index,
@@ -69,8 +70,9 @@ public class Predict {
         // α' = α * R(Z =*L> Y) * P(Y → v)
         final double fw = grammar.getSemiring().times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_vProbability);
 
-        boolean isNew = !stateSets.contains(Y_to_v, index, index, 0);
-        return new Delta(isNew, isNew ? State.create(index, index, 0, Y_to_v) : stateSets.get(index, index, 0, Y_to_v), Y_to_vProbability, fw, statePredecessor);
+        State state = State.create(index, index, 0, Y_to_v);
+        boolean isNew = !stateSets.contains(state);
+        return new Delta(isNew, state, Y_to_vProbability, fw, statePredecessor);
     }
 
 

@@ -1,15 +1,12 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.util.MapEntry;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Maps states to other objects
@@ -17,7 +14,9 @@ import java.util.stream.Collectors;
  * Created by maarten on 11-1-17.
  */
 @SuppressWarnings("unused")
-public class StateToXMap<T> implements Map<State, T> {
+
+@Deprecated
+public class StateToXMap<T> {
     private final HashMap<Rule,
                     /*index*/
             TIntObjectMap<
@@ -29,20 +28,24 @@ public class StateToXMap<T> implements Map<State, T> {
                                     >
                             >
                     >> map;
-    private Set<State> keys = new HashSet<>();
-    private TObjectIntMap<T> values = new TObjectIntHashMap<>(25, 0.5F, 0);
+    private final HashMap<State, T> map2;
+    //    private Set<State> keys = new HashSet<>();
+//    private TObjectIntMap<T> values = new TObjectIntHashMap<>(25, 0.5F, 0);
     private int size = 0;
 
     @SuppressWarnings("unused")
     public StateToXMap(int capacity) {
         this.map = new HashMap<>(capacity);
+        map2 = new HashMap<>();
     }
 
     @SuppressWarnings("unused")
     public StateToXMap() {
         this.map = new HashMap<>();
+        map2 = new HashMap<>();
     }
 
+    @SuppressWarnings("Duplicates")
     private static <K, V2> TIntObjectMap<V2> getOrCreate(Map<K, TIntObjectMap<V2>> m, K key) {
         if (m.containsKey(key))
             return m.get(key);
@@ -53,6 +56,7 @@ public class StateToXMap<T> implements Map<State, T> {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     private static <V2> TIntObjectMap<V2> getOrCreate(TIntObjectMap<TIntObjectMap<V2>> intObjectMap, int key) {
         if (!intObjectMap.containsKey(key)) {
             final TIntObjectMap<V2> m2 = new TIntObjectHashMap<>(10, 0.5F, -1);
@@ -63,17 +67,17 @@ public class StateToXMap<T> implements Map<State, T> {
         }
     }
 
-    @Override
+
     public int size() {
         return size;
     }
 
-    @Override
-    public boolean isEmpty() {
-        return size == 0;
-    }
 
-    @Override
+//    public boolean isEmpty() {
+//        return size == 0;
+//    }
+
+
     public boolean containsKey(Object key) {
         if (!(key instanceof State))
             return false;
@@ -93,36 +97,38 @@ public class StateToXMap<T> implements Map<State, T> {
         return dots.containsKey(dot);
     }
 
-    @Override
-    public boolean containsValue(Object value) {
-        //noinspection SuspiciousMethodCalls
-        return values.get(value) <= 0;
-    }
+//
+//    public boolean containsValue(Object value) {
+//        //noinspection SuspiciousMethodCalls
+//        return values.get(value) <= 0;
+//    }
 
-    @Override
+
     public T get(Object key) {
+
         if (!(key != null && key instanceof State))
             return null;
         else {
             State s = (State) key;
-            return this.get(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
+            if (map2.containsKey(key)) return map2.get(key);
+            else return this.get(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
         }
     }
 
     public T get(Rule rule, int index, int ruleStart, int dot) {
         return contains(rule, index, ruleStart, dot) ? map.get(rule).get(index).get(ruleStart).get(dot) : null;
     }
+//
+//    public T getOrPut(State key, T fallback) {
+//        if (containsKey(key))
+//            return get(key);
+//        else {
+//            put(key, fallback);
+//            return fallback;
+//        }
+//    }
 
-    public T getOrPut(State key, T fallback) {
-        if (containsKey(key))
-            return get(key);
-        else {
-            put(key, fallback);
-            return fallback;
-        }
-    }
 
-    @Override
     public T put(State key, T value) {
         T prev = get(key);
         TIntObjectMap<T> m = getOrCreate(getOrCreate(
@@ -130,72 +136,75 @@ public class StateToXMap<T> implements Map<State, T> {
                 key.position),
                 key.ruleStartPosition);
         m.put(key.ruleDotPosition, value);
-        this.keys.add(key);
-        this.values.put(value, this.values.get(value) + 1);
+
+//        this.keys.add(key);
+//        this.values.put(value, this.values.get(value) + 1);
+        map2.put(key, value);
         this.size++;
         return prev;
     }
 
-    public T put(Rule rule, int index, int ruleStart, int dotPosition, T value) {
-        T prev = get(rule, index, ruleStart, dotPosition);
-
-        TIntObjectMap<T> m = getOrCreate(getOrCreate(
-                getOrCreate(map, rule),
-                index),
-                ruleStart);
-        m.put(dotPosition, value);
-        this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
-        this.values.put(value, this.values.get(value) + 1);
-        this.size++;
-        return prev;
-    }
-
-    @Override
-    public T remove(Object k) {
-        if (!(k instanceof State)) return null;
-        State key = (State) k;
-        T prev = get(key);
-        TIntObjectMap<T> m = getOrCreate(getOrCreate(
-                getOrCreate(map, key.rule),
-                key.position),
-                key.ruleStartPosition);
-        m.remove(key.ruleDotPosition);
-        this.keys.remove(key);
-        this.values.put(prev, Math.max(0,this.values.get(prev)));
-        this.size--;
-        return prev;
-    }
-
-    @Override
-    public void putAll(Map<? extends State, ? extends T> m) {
-        m.forEach(this::put);
-    }
-
-    @Override
-    public void clear() {
-        this.map.clear();
-        this.keys.clear();
-        this.values.clear();
-        this.size = 0;
-    }
-
-    @Override
-    public Set<State> keySet() {
-        return this.keys;
-    }
-
-    @Override
-    public Collection<T> values() {
-        return this.values.keySet();
-    }
-
-    @Override
-    public Set<Entry<State, T>> entrySet() {
-        return keySet().stream().map(k -> new MapEntry<>(k, get(k))).collect(Collectors.toSet());
-    }
+//    public T put(Rule rule, int index, int ruleStart, int dotPosition, T value) {
+//        T prev = get(rule, index, ruleStart, dotPosition);
+//
+//        TIntObjectMap<T> m = getOrCreate(getOrCreate(
+//                getOrCreate(map, rule),
+//                index),
+//                ruleStart);
+//        m.put(dotPosition, value);
+//        this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
+//        this.values.put(value, this.values.get(value) + 1);
+//        this.size++;
+//        return prev;
+//    }
 
 
+//    public T remove(Object k) {
+//        if (!(k instanceof State)) return null;
+//        State key = (State) k;
+//        T prev = get(key);
+//        TIntObjectMap<T> m = getOrCreate(getOrCreate(
+//                getOrCreate(map, key.rule),
+//                key.position),
+//                key.ruleStartPosition);
+//        m.remove(key.ruleDotPosition);
+//        this.keys.remove(key);
+//        this.values.put(prev, Math.max(0,this.values.get(prev)));
+//        this.size--;
+//        return prev;
+//    }
+//
+//
+//    public void putAll(Map<? extends State, ? extends T> m) {
+//        m.forEach(this::put);
+//    }
+
+
+    //    public void clear() {
+//        this.map.clear();
+//        this.keys.clear();
+//        this.values.clear();
+//        this.size = 0;
+//    }
+//
+//
+//    public Set<State> keySet() {
+//        return this.keys;
+//    }
+//
+//
+//    public Collection<T> values() {
+//        return this.values.keySet();
+//    }
+//
+//
+//    public Set<Entry<State, T>> entrySet() {
+//        return keySet().stream().map(k -> new MapEntry<>(k, get(k))).collect(Collectors.toSet());
+//    }
+//
+//
     public void forEachEntry(StateHandler<T> h) {
+        //noinspection Duplicates
         map.forEach((rule, tIntObjectMapTIntObjectMap) ->
                 tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
                     tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {

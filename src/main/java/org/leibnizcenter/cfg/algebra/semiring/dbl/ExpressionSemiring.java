@@ -21,10 +21,6 @@ public abstract class ExpressionSemiring implements DblSemiring {
         return new Value(this, new Dbl(this, value));
     }
 
-    public interface Resolvable {
-        double resolve();
-    }
-
     /**
      * Deferred value. Might change internally until resolved.
      */
@@ -140,7 +136,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         private final ExpressionSemiring semiring;
 
 
-        Plus(ExpressionSemiring semiring, Resolvable left, Resolvable right) {
+        public Plus(ExpressionSemiring semiring, Resolvable left, Resolvable right) {
             this.value = Double.NaN;
             this.left = left;
             this.right = right;
@@ -169,7 +165,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         private final Resolvable left;
         private final ExpressionSemiring semiring;
 
-        Times(ExpressionSemiring semiring, Resolvable left, Resolvable right) {
+        public Times(ExpressionSemiring semiring, Resolvable left, Resolvable right) {
             this.value = Double.NaN;
             this.left = left;
             this.right = right;

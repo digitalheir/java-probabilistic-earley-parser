@@ -1,18 +1,19 @@
 package org.leibnizcenter.cfg.earleyparser;
 
-import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Complete stage
@@ -41,13 +42,13 @@ public class Complete {
      */
     private static <E> void completeNoViterbi(final int position,
                                               final Collection<State> states,
-                                              final AddableValuesContainer addForwardScores,
-                                              final AddableValuesContainer addInnerScores,
+                                              final DeferredStateScoreComputations addForwardScores,
+                                              final DeferredStateScoreComputations addInnerScores,
                                               final Grammar<E> grammar,
                                               final StateSets<E> stateSets,
                                               final ExpressionSemiring semiring
     ) {
-        StateToXMap<ExpressionSemiring.Value> newStates = null;
+        DeferredStateScoreComputations newStates = null;
         // For all states
         //      i: Y<sub>j</sub> → v·    [a",y"]
         //      j: X<sub>k</suv> → l·Zm  [a',y']
@@ -58,7 +59,7 @@ public class Complete {
             final int j = completedState.ruleStartPosition;
             final NonTerminal Y = completedState.rule.getLeft();
 
-            ExpressionSemiring.Value unresolvedCompletedInner = addInnerScores.getOrCreate(
+            DeferredValue unresolvedCompletedInner = addInnerScores.getOrCreate(
                     completedState,
                     stateSets.innerScores.get(completedState)
             );
@@ -68,62 +69,52 @@ public class Complete {
                 if (j != stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
 
                 // Make i: X_k → lZ·m
-                ExpressionSemiring.Value prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.get(stateToAdvance));
-                ExpressionSemiring.Value prevForward = addForwardScores.getOrCreate(stateToAdvance, stateSets.forwardScores.get(stateToAdvance));
+                DeferredValue prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.get(stateToAdvance));
+                DeferredValue prevForward = addForwardScores.getOrCreate(stateToAdvance, stateSets.forwardScores.get(stateToAdvance));
 
                 final Category Z = stateToAdvance.getActiveCategory();
 
-                ExpressionSemiring.Value unitStarScore = semiring.dbl(grammar.getUnitStarScore(Z, Y));
-                ExpressionSemiring.Value fw = unitStarScore.times(prevForward).times(unresolvedCompletedInner);
+                Resolvable unitStarScore = new Atom(grammar.getUnitStarScore(Z, Y));
+                Resolvable fw = new ExpressionSemiring.Times(semiring,
+                        new ExpressionSemiring.Times(semiring, unitStarScore, prevForward),
+                        unresolvedCompletedInner
+                );
 
-                ExpressionSemiring.Value inner = unitStarScore.times(prevInner).times(unresolvedCompletedInner);
+                Resolvable inner = new ExpressionSemiring.Times(semiring,
+                        new ExpressionSemiring.Times(semiring, unitStarScore, prevInner)
+                        , unresolvedCompletedInner);
 
                 Rule newStateRule = stateToAdvance.rule;
                 int newStateDotPosition = stateToAdvance.advanceDot();
                 int newStateRuleStart = stateToAdvance.ruleStartPosition;
-                addForwardScores.add(
-                        newStateRule,
-                        position,
-                        newStateRuleStart,
-                        newStateDotPosition,
+                State s = State.create(position, newStateRuleStart, newStateDotPosition, newStateRule);
+
+                addForwardScores.plus(
+                        s,
                         fw
                 );
-
 
                 // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
                 if (
                         newStateRule.isPassive(newStateDotPosition)/*isCompleted*/
                                 && !newStateRule.isUnitProduction()
-                                && stateSets.get(position, newStateRuleStart, newStateDotPosition, newStateRule) == null) {
-                    if (newStates == null) newStates = new StateToXMap<>(20);
-                    newStates.put(
-                            newStateRule,
-                            position,
-                            newStateRuleStart,
-                            newStateDotPosition,
+                                && !stateSets.contains(s)) {
+                    if (newStates == null) newStates = new DeferredStateScoreComputations(semiring);
+                    newStates.plus(
+                            s,
                             fw
                     );
                 }
 
-                addInnerScores.add(
-                        newStateRule,
-                        position,
-                        newStateRuleStart,
-                        newStateDotPosition,
+                addInnerScores.plus(s,
                         inner
                 );
             }
         }
 
         if (newStates != null) {
-            List<State> newCompletedStates = new ArrayList<>(newStates.size());
-            newStates.forEachEntry((index, ruleStart, dot, rule, ignored) -> {
-                boolean isnew = stateSets.get(index, ruleStart, dot, rule) == null;
-                final State state = stateSets.getOrCreate(index, ruleStart, dot, rule);
-                if (!isnew || !state.isCompleted() || state.rule.isUnitProduction())
-                    throw new IssueRequest("Unexpected state found in possible new states. This is a bug.");
-                newCompletedStates.add(state);
-            });
+            Set<State> newCompletedStates = newStates.states.keySet();
+            newCompletedStates.forEach(stateSets::getOrCreate);
             if (newCompletedStates.size() > 0) Complete.completeNoViterbi(
                     position,
                     newCompletedStates,
@@ -147,8 +138,8 @@ public class Complete {
             final StateSets<E> stateSets
     ) {
         final ExpressionSemiring semiring = grammar.getSemiring();
-        final AddableValuesContainer addForwardScores = new AddableValuesContainer(50, semiring);
-        final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
+        final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(semiring);
+        final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(semiring);
 
         completeNoViterbi(
                 i,
@@ -159,19 +150,19 @@ public class Complete {
         );
 
         // Resolve and set forward & inner scores
-        addForwardScores.getStates().forEachEntry(
-                (position, ruleStart, dot, rule, score) ->
+        addForwardScores.states.forEach(
+                (s, score) ->
                         stateSets.forwardScores.put(
-                                stateSets.getOrCreate(position, ruleStart, dot, rule),
-                                score.resolveFinal()
+                                stateSets.getOrCreate(s, null),
+                                score.resolve()//todo resolveFinal
                         )
         );
 
-        addInnerScores.getStates().forEachEntry(
-                (position, ruleStart, dot, rule, score) ->
+        addInnerScores.states.forEach(
+                (s, score) ->
                         stateSets.innerScores.put(
-                                stateSets.getOrCreate(position, ruleStart, dot, rule),
-                                score.resolveFinal()
+                                stateSets.getOrCreate(s, null),
+                                score.resolve()//todo resolveFinal
                         )
         );
     }
@@ -208,9 +199,8 @@ public class Complete {
             int ruleStart = stateToAdvance.ruleStartPosition;
             int nextDot = stateToAdvance.advanceDot();
             Rule rule = stateToAdvance.rule;
-            State resultingState = stateSets.get(completedPos, ruleStart, nextDot, rule);
-            if (resultingState == null) {
-                resultingState = State.create(completedPos, ruleStart, nextDot, rule);
+            State resultingState = State.create(completedPos, ruleStart, nextDot, rule);
+            if (!stateSets.contains(resultingState)) {
                 if (newStates == null) newStates = new HashSet<>(20);
                 newStates.add(resultingState);
             }
