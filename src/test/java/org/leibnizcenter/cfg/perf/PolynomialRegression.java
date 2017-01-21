@@ -1,9 +1,8 @@
 package org.leibnizcenter.cfg.perf;
 
 
-
-import Jama.Matrix;
-import Jama.QRDecomposition;
+import org.leibnizcenter.cfg.algebra.matrix.Matrix;
+import org.leibnizcenter.cfg.algebra.matrix.QRDecomposition;
 
 import java.util.List;
 
@@ -113,7 +112,7 @@ public class PolynomialRegression {
      * @param args the command-line arguments
      */
     public static void main(String[] args) {
-        List<long[]> results = org.leibnizcenter.cfg.perf.Perf.run();
+        List<long[]> results = Perf.run();
         double[] x = new double[results.size()];
         double[] y = new double[results.size()];
         for (int i = 0; i < results.size(); i++) {

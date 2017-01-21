@@ -8,11 +8,16 @@ import java.util.EnumSet;
  * Log semiring implementation, used to avoid underflow in probability calculations.
  */
 public class LogSemiring extends ExpressionSemiring {
+    private static final LogSemiring SINGLETON = new LogSemiring();
     private static final EnumSet<Property> properties = EnumSet.of(
             Property.LeftSemiring,
             Property.RightSemiring,
             Property.Commutative
     );
+
+    public static LogSemiring get(){
+        return SINGLETON;
+    }
 
     @Override
     public double plus(double w1, double w2) {

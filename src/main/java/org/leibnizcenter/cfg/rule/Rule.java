@@ -1,12 +1,17 @@
 
 package org.leibnizcenter.cfg.rule;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -25,6 +30,8 @@ import java.util.Arrays;
  * @see Grammar
  */
 public class Rule {
+    private static Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s]+\\s*)+)\\s*(\\([0-9](?:[0-9]+)?\\))?\\s*");
+    private static Pattern WHITESPACE = Pattern.compile("\\s+");
     public final NonTerminal left;
     public final Category[] right;
     /**
@@ -71,10 +78,8 @@ public class Rule {
         this.right = right;
 
         this.hashCode = computeHashCode();
-//        isPreTerminal = Arrays.stream(right)
-//                .filter(r -> r instanceof Terminal)
-//                .limit(1).count() > 0;
     }
+
 
     /**
      * Instiantiates a new rule with a rawProbability score of 1.0 (assuming we use the Probability semiring, which
@@ -100,7 +105,6 @@ public class Rule {
         this(semiring.one(), left, right);
     }
 
-
     @Deprecated
     public static Rule create(double probability, NonTerminal LHS, Category... RHS) {
         return new Rule(probability, LHS, RHS);
@@ -122,8 +126,54 @@ public class Rule {
         return new Rule(semiring.fromProbability(probability), LHS, RHS);
     }
 
+//    /**
+//     * Tests whether this rule is a pre-terminal production rule. A rule is a
+//     * preterminal rule if its right side contains a
+//     * {@link Category#isTerminal(Category) terminal category}.
+//     *
+//     * @return <code>true</code> iff this rule's right side contains a
+//     * terminal category.
+//     */
+//    public boolean isPreterminal() {
+//        return isPreTerminal;
+//    }
+//
+//    /**
+//     * Tests whether this rule is a pre-terminal with a right side of length
+//     * <code>1</code>.
+//     *
+//     * @see #isPreterminal()
+//     * @see #getRight()
+//     */
+//    public boolean isSingletonPreterminal() {
+//        return (isPreterminal() && right.length == 1);
+//    }
+
+    public static Rule parse(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
+        Matcher m = RULE.matcher(line);
+        if(!m.matches()) throw new IllegalArgumentException("String was not a valid rule: "+line);
+        else{
+            final NonTerminal LHS = new NonTerminal(m.group(1));
+
+            List<Category> lRHS = Arrays.stream(WHITESPACE.split(m.group(2).trim()))
+                    .map(parseCategory)
+                    .collect(Collectors.toList());
+            Category[] RHS = new Category[lRHS.size()];
+            RHS = lRHS.toArray(RHS);
+
+            final String prob = m.group(3);
+            final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
+            return new Rule(
+                    probability,
+                    LHS,
+                    RHS
+            );
+        }
+    }
+
     /**
      * Gets the active category in the underlying rule, if any.
+     * Runs in O(1).
      *
      * @return The category at this dotted rule's
      * dot position in the underlying rule's
@@ -155,29 +205,6 @@ public class Rule {
         return dotPosition == right.length;
     }
 
-//    /**
-//     * Tests whether this rule is a pre-terminal production rule. A rule is a
-//     * preterminal rule if its right side contains a
-//     * {@link Category#isTerminal(Category) terminal category}.
-//     *
-//     * @return <code>true</code> iff this rule's right side contains a
-//     * terminal category.
-//     */
-//    public boolean isPreterminal() {
-//        return isPreTerminal;
-//    }
-//
-//    /**
-//     * Tests whether this rule is a pre-terminal with a right side of length
-//     * <code>1</code>.
-//     *
-//     * @see #isPreterminal()
-//     * @see #getRight()
-//     */
-//    public boolean isSingletonPreterminal() {
-//        return (isPreterminal() && right.length == 1);
-//    }
-
     /**
      * Gets the left side category of this rule.
      */
@@ -200,10 +227,10 @@ public class Rule {
         Rule rule = (Rule) o;
 
         if (Double.compare(rule.rawProbability, rawProbability) != 0) return false;
+        if (hashCode != rule.hashCode) return false;
         if (!left.equals(rule.left)) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         return Arrays.equals(right, rule.right);
-
     }
 
     @Override
@@ -270,8 +297,12 @@ public class Rule {
         return rawProbability;
     }
 
+    /**
+     * Runs in O(1)
+     *
+     * @return Whether this state is a unit production
+     */
     public boolean isUnitProduction() {
         return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
     }
-
 }

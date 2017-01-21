@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
+ * Test Log Semiring
+ *
  * Created by Maarten on 31-7-2016.
  */
 public class LogSemiringTest {

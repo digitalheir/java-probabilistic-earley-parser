@@ -1,19 +1,19 @@
 
 package org.leibnizcenter.cfg.earleyparser;
 
-import com.google.common.collect.Lists;
 import org.junit.Test;
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -68,10 +68,10 @@ public final class PepFixture {
             .addRule(rule7)
             .addRule(rule8)
             .build();
-    public static final State edge1 = new State(rule1, 2, 3, 1);
+    public static final State edge1 = new State(rule1, 3, 2, 1);
     public static final State edge2 = new State(rule3, 0);
-    public static final State edge3 = new State(rule2, 1, 2, 1);
-    public static final List<Token<String>> tokens = Lists.newArrayList("the", "boy", "left").stream()
+    public static final State edge3 = new State(rule2, 2, 1, 1);
+    public static final List<Token<String>> tokens = Stream.of("the", "boy", "left")
             .map(Token::new)
             .collect(Collectors.toList());
 

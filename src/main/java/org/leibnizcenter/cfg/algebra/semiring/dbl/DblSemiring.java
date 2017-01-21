@@ -126,25 +126,4 @@ public interface DblSemiring {
     double fromProbability(double x);
 
     double toProbability(double x);
-
-
-// TODO necessary?
-//    /**
-//     * Reverse: a mapping endState double to Reversedouble s.t.
-//     * <ul>
-//     * <li> Reverse(Reverse(a)) = a</li>
-//     * <li> Reverse(Plus(a, b)) = Plus(Reverse(a), Reverse(b))</li>
-//     * <li> Reverse(Times(a, b)) = Times(Reverse(b), Reverse(a))</li>
-//     * </ul>
-//     * <p>
-//     * Typically the identity mapping in a (both left and right) semiring. In the left string semiring, it maps to the reverse string in the right string semiring.
-//     *
-//     * @return the reverse T
-//     */
-//    double reverse(double w1);
-//
-//    /**
-//     * Semiring's divide operation
-//     */
-//    double divide(double w1, double w2);
 }

@@ -1,14 +1,13 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.junit.Test;
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,171 +42,8 @@ public class DocGramTest {
     public static final ExactStringTerminal TERMINAL_SECTION_TITLE = new ExactStringTerminal("SECTION_TITLE");
     public static final ExactStringTerminal TERMINAL_TEXT = new ExactStringTerminal("TEXT_BLOCK");
     public static final ExactStringTerminal TERMINAL_NEWLINE = new ExactStringTerminal("NEWLINE");
-
-    private static final Token<String> TEXT_BLOCK = new Token<>("TEXT_BLOCK");
-    private static final Token<String> NEWLINE = new Token<>("NEWLINE");
-    private static final Token<String> NR = new Token<>("NR");
-    private static final Token<String> SECTION_TITLE_ = new Token<>("SECTION_TITLE");
-    private List<Token<String>> one_doc = new ArrayList<>(200);
-
-    {
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(NEWLINE);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(NEWLINE);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(NEWLINE);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(TEXT_BLOCK);
-        one_doc.add(TEXT_BLOCK);
-
-    }
-
-    private List<Token<String>> two_doc = new ArrayList<>(200);
-
-    {
-        two_doc.add(NEWLINE);
-        two_doc.add(NR);
-        two_doc.add(SECTION_TITLE_);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(NEWLINE);
-        two_doc.add(NR);
-        two_doc.add(SECTION_TITLE_);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(NEWLINE);
-        two_doc.add(NR);
-        two_doc.add(SECTION_TITLE_);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(NEWLINE);
-        two_doc.add(NR);
-        two_doc.add(TEXT_BLOCK);
-        two_doc.add(TEXT_BLOCK);
-    }
-
-    List<Token<String>> three_doc = new ArrayList<>(200);
-
-    {
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(NEWLINE);
-        three_doc.add(NR);
-        three_doc.add(SECTION_TITLE_);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(TEXT_BLOCK);
-        three_doc.add(NR);
-    }
-
-    List<Token<String>> four_doc = new ArrayList<>(200);
-
-    {
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NEWLINE);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(SECTION_TITLE_);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NEWLINE);
-        four_doc.add(NR);
-        four_doc.add(SECTION_TITLE_);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NEWLINE);
-        four_doc.add(NR);
-        four_doc.add(SECTION_TITLE_);
-        four_doc.add(NEWLINE);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NEWLINE);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NEWLINE);
-        four_doc.add(TEXT_BLOCK);
-        four_doc.add(NR);
-        four_doc.add(NR);
-        four_doc.add(NR);
-        four_doc.add(SECTION_TITLE_);
-    }
-
     public final static Grammar<String> grammar = new Grammar.Builder<String>()
             .setSemiring(new LogSemiring())
-            //.addRule(1.0, DOCUMENT, /* -> */ HEADER, DOCUMENT_BODY) // TODO
             .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)
 
             .addRule(0.7, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE)
@@ -244,12 +80,171 @@ public class DocGramTest {
             .addRule(0.1, SECTION_TITLE_TEXT, /* -> */ TERMINAL_NEWLINE, SECTION_TITLE_TEXT)
 
             .build();
+    private static final Token<String> TEXT_BLOCK = new Token<>("TEXT_BLOCK");
+    private static final Token<String> NEWLINE = new Token<>("NEWLINE");
+    private static final Token<String> NR = new Token<>("NR");
+    private static final Token<String> SECTION_TITLE_ = new Token<>("SECTION_TITLE");
+    List<Token<String>> three_doc = new ArrayList<>(200);
+    List<Token<String>> four_doc = new ArrayList<>(200);
+    private List<Token<String>> one_doc = new ArrayList<>(200);
+    private List<Token<String>> two_doc = new ArrayList<>(200);
+
+    {
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(NEWLINE);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(NEWLINE);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(NEWLINE);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(TEXT_BLOCK);
+        one_doc.add(TEXT_BLOCK);
+
+    }
+
+    {
+        two_doc.add(NEWLINE);
+        two_doc.add(NR);
+        two_doc.add(SECTION_TITLE_);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(NEWLINE);
+        two_doc.add(NR);
+        two_doc.add(SECTION_TITLE_);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(NEWLINE);
+        two_doc.add(NR);
+        two_doc.add(SECTION_TITLE_);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(NEWLINE);
+        two_doc.add(NR);
+        two_doc.add(TEXT_BLOCK);
+        two_doc.add(TEXT_BLOCK);
+    }
+
+    {
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(NEWLINE);
+        three_doc.add(NR);
+        three_doc.add(SECTION_TITLE_);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(TEXT_BLOCK);
+        three_doc.add(NR);
+    }
+
+    {
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NEWLINE);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(SECTION_TITLE_);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NEWLINE);
+        four_doc.add(NR);
+        four_doc.add(SECTION_TITLE_);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NEWLINE);
+        four_doc.add(NR);
+        four_doc.add(SECTION_TITLE_);
+        four_doc.add(NEWLINE);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NEWLINE);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NEWLINE);
+        four_doc.add(TEXT_BLOCK);
+        four_doc.add(NR);
+        four_doc.add(NR);
+        four_doc.add(NR);
+        four_doc.add(SECTION_TITLE_);
+    }
 
     @Test
     public void tryGram() {
         List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
 
+
+        //noinspection ConstantConditions
         for (int i = 0; i < 0; i++) {
             if (i < one_doc.size())
                 listSoFar.add(one_doc.get(i));

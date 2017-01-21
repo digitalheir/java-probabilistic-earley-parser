@@ -2,7 +2,6 @@ package org.leibnizcenter.cfg.earleyparser;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -11,6 +10,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
@@ -68,7 +68,7 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s01Sa1)), p, 0.0001);
 
         // completed
-        final State s01SSS1 = new State(Rule.create(sr, q, S, S, S), 0, 1, 1);
+        final State s01SSS1 = new State(Rule.create(sr, q, S, S, S), 1, 0, 1);
         Assert.assertTrue(chart.getStates(1).contains(s01SSS1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s01SSS1)), q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s01SSS1)), p * q, 0.0001);
@@ -83,7 +83,7 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s11SSS0)), Math.pow(q, 2) / p, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s11SSS0)), q, 0.0001);
 
-        Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 0, 1, 1)));
+        Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 1, 0, 1)));
         Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 1, 1, 0)));
 
         // State set 2
@@ -93,22 +93,22 @@ public class ParserTest {
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s12Sa1)), q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s12Sa1)), p, 0.0001);
         // completed
-        final State s12SSS1 = new State(Rule.create(sr, q, S, S, S), 1, 2, 1);
+        final State s12SSS1 = new State(Rule.create(sr, q, S, S, S), 2, 1, 1);
         Assert.assertTrue(chart.getStates(2).contains(s12SSS1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s12SSS1)), q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s12SSS1)), p * q, 0.0001);
 
-        final State s02SSS2 = new State(Rule.create(sr, q, S, S, S), 0, 2, 2);
+        final State s02SSS2 = new State(Rule.create(sr, q, S, S, S), 2, 0, 2);
         Assert.assertTrue(chart.getStates(2).contains(s02SSS2));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s02SSS2)), p * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s02SSS2)), p * p * q, 0.0001);
 
-        final State s02SSS1 = new State(Rule.create(sr, q, S, S, S), 0, 2, 1);
+        final State s02SSS1 = new State(Rule.create(sr, q, S, S, S), 2, 0, 1);
         Assert.assertTrue(chart.getStates(2).contains(s02SSS1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s02SSS1)), p * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s02SSS1)), p * p * q * q, 0.0001);
 
-        final State s02S1 = new State(Rule.create(sr, Category.START, S), 0, 2, 1);
+        final State s02S1 = new State(Rule.create(sr, Category.START, S), 2, 0, 1);
         Collection<State> states2 = chart.getStates(2);
         Assert.assertTrue(states2.contains(s02S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s02S1)), p * p * q, 0.0001);
@@ -134,33 +134,33 @@ public class ParserTest {
 
         // completed
         final State s23S1 = new State(Rule.create(sr, q, S, S, S),
-                2, 3, 1
+                3, 2, 1
         );
         Assert.assertTrue(chart.getStates(3).contains(s23S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s23S1)), (1 + p) * q * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s23S1)), p * q, 0.0001);
 
-        final State s13S2 = new State(Rule.create(sr, q, S, S, S), 1, 3, 2);
+        final State s13S2 = new State(Rule.create(sr, q, S, S, S), 3, 1, 2);
         Assert.assertTrue(chart.getStates(3).contains(s13S2));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s13S2)), p * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s13S2)), p * p * q, 0.0001);
 
-        final State s13S1 = new State(Rule.create(sr, q, S, S, S), 1, 3, 1);
+        final State s13S1 = new State(Rule.create(sr, q, S, S, S), 3, 1, 1);
         Assert.assertTrue(chart.getStates(3).contains(s13S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s13S1)), p * q * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s13S1)), p * p * q * q, 0.0001);
 
-        final State s03S2 = new State(Rule.create(sr, q, S, S, S), 0, 3, 2);
+        final State s03S2 = new State(Rule.create(sr, q, S, S, S), 3, 0, 2);
         Assert.assertTrue(chart.getStates(3).contains(s03S2));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s03S2)), 2 * p * p * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s03S2)), 2 * p * p * p * q * q, 0.0001);
 
-        final State s03S1 = new State(Rule.create(sr, q, S, S, S), 0, 3, 1);
+        final State s03S1 = new State(Rule.create(sr, q, S, S, S), 3, 0, 1);
         Assert.assertTrue(chart.getStates(3).contains(s03S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s03S1)), 2 * p * p * q * q * q, 0.0001);
         Assert.assertEquals(sr.toProbability(chart.getInnerScore(s03S1)), 2 * p * p * p * q * q * q, 0.0001);
 
-        final State s33S1 = new State(Rule.create(sr, Category.START, S), 0, 3, 1);
+        final State s33S1 = new State(Rule.create(sr, Category.START, S), 3, 0, 1);
         final Set<State> states3s = chart.getStates(3);
         Assert.assertTrue(states3s.contains(s33S1));
         Assert.assertEquals(sr.toProbability(chart.getForwardScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.0001);
@@ -181,7 +181,7 @@ public class ParserTest {
                 //System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
             });
         }
-        Collection<State> howMany = chart.stateSets.getCompletedStates(tokens.size(), Category.START);
+        Collection<State> howMany = chart.stateSets.completedStates.getCompletedStates(tokens.size(), Category.START);
         Assert.assertEquals(howMany.size(), 1);
         //if (howMany.size() > 1) throw new Error("Found more than one result sets. This is a nasty bug.");
         State finalState = howMany.iterator().next();

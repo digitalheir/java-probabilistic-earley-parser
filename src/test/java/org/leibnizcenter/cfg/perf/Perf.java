@@ -1,11 +1,11 @@
 package org.leibnizcenter.cfg.perf;
 
-import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.Parser;
+import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
@@ -49,7 +49,7 @@ public class Perf {
 
         List<long[]> l = new ArrayList<>();
 
-        for (int i = 0; i <= 0; i++) {
+        for (int i = 0; i <= 1; i++) {
             tokens.add(a);
         }
         for (int i = 0; i <= 1000; i++) {

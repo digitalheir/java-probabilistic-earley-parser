@@ -15,7 +15,7 @@ public class ScannedTokenState<E> extends State {
 
 
     public ScannedTokenState(Token<E> scannedToken, Rule rule, int ruleStartPosition, int positionInInput, int ruleDotPosition) {
-        super(rule, ruleStartPosition, positionInInput, ruleDotPosition);
+        super(rule, positionInInput, ruleStartPosition, ruleDotPosition);
         this.scannedToken = scannedToken;
         this.scannedCategory = rule.getRight()[ruleDotPosition - 1];
     }

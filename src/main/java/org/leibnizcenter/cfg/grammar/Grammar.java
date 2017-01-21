@@ -1,24 +1,31 @@
 
-package org.leibnizcenter.cfg;
+package org.leibnizcenter.cfg.grammar;
 
-import Jama.Matrix;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
-import gnu.trove.map.TObjectDoubleMap;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
+import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
+import org.leibnizcenter.cfg.util.MyMultimap;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 /**
@@ -34,9 +41,10 @@ import java.util.stream.IntStream;
  * Once the Grammar is instantiated, it is immutable.
  */
 public class Grammar<T> {
+    private static final Pattern NEWLINE = Pattern.compile("\\n");
+    private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     public final String name;
-    public final ImmutableMultimap<Category, Rule> rules;
-
+    public final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
      * <code>X -L> Y</code> iff there exists a production for X that has a RHS starting with Y,
@@ -44,27 +52,21 @@ public class Grammar<T> {
      * all such rules
      */
     private final LeftCorners leftCorners;
-
     /**
      * Reflexive, transitive closure of leftCorners, with the probabilities summed
      */
     private final LeftCorners leftStarCorners;
-
     /**
      * Reflexive, transitive closure of unit production relations, with the probabilities summed
      */
     private final LeftCorners unitStarScores;
-
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
     private final ExpressionSemiring semiring;
+    private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
 
     /**
      * Creates a grammar with the given name, and given rules.
-     * <p>
-     * <p>
-     * TODO: Ensure that the probabilities in a SCFG are proper and consistent as defined in Booth and Thompson (1973), and that the grammar contains no useless nonterminals (ones that can never appear in a derivation).
-     * TODO: check that no rules are doubled with different probabilities (in which case we either have undefined dehaviour or conflate the rules?)
      * These restrictions ensure that
      * all nonterminals define probability measures over strings; i.e., P(X ~ x) is a proper distribution over x for all
      * X. Formal definitions of these conditions are given in Appendix A of An Efficient Probabilistic .
@@ -73,7 +75,7 @@ public class Grammar<T> {
      * @param rules    Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(String name, ImmutableMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
+    public Grammar(String name, MyMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
 
@@ -91,6 +93,17 @@ public class Grammar<T> {
         setLeftCorners();
         leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
+
+        nonTerminals.forEach(X -> {
+            final Collection<Category> nonZeroScores = leftStarCorners.getNonZeroScores(X);
+            if (nonZeroScores != null) {
+                final Set<Rule> rulez = nonZeroScores.stream().flatMap(Y -> {
+                    final Collection<Rule> rulesForY = getRules(Y);
+                    return rulesForY == null ? Stream.empty() : rulesForY.stream();
+                }).collect(Collectors.toSet());
+                nonZeroLeftStartRules.put(X, rulez);
+            }
+        });
     }
 
     /**
@@ -99,7 +112,6 @@ public class Grammar<T> {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
-        // TODO make this method robust to any semiring, instead of converting to/from common probability and risking arithm underflow
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
@@ -125,6 +137,66 @@ public class Grammar<T> {
         return R__L;
     }
 
+    public static Grammar<String> parse(String str) {
+        return parse(str, s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                LogSemiring.get());
+    }
+
+    public static Grammar<String> parse(String s, Function<String, Category> parseCategory, DblSemiring semiring) {
+        Builder<String> b = new Builder<>();
+        b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
+                .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
+                .filter(line -> !line.isEmpty())
+                .map(line -> Rule.parse(line, parseCategory, semiring)).collect(Collectors.toSet())
+        );
+        return b.build();
+    }
+
+    public static Grammar<String> parse(Path path, Charset charset) throws IOException {
+        return parse(
+                path,
+                charset,
+                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                LogSemiring.get()
+        );
+    }
+
+    public static Grammar<String> parse(Path path, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
+        Builder<String> b = new Builder<>();
+        final Collection<Rule> rules = Files.lines(path, charset)
+                .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
+                .filter(line -> !line.isEmpty())
+                .map(line -> Rule.parse(line, parseCategory, semiring)).collect(Collectors.toSet());
+        b.addRules(rules);
+        return b.build();
+    }
+
+
+    public static Grammar<String> parse(InputStream inputStream, Charset charset) throws IOException {
+        return parse(inputStream, charset,
+                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                LogSemiring.get());
+    }
+
+    public static Grammar<String> parse(InputStream inputStream, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
+        Builder<String> b = new Builder<>();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+        System.out.println("Reading File line by line using BufferedReader");
+
+        String line = reader.readLine();
+        Collection<Rule> rules = new HashSet<>();
+        while (line != null) {
+            line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
+            if (!line.isEmpty())
+                rules.add(Rule.parse(line, parseCategory, semiring));
+            line = reader.readLine();
+        }
+        b.addRules(rules);
+        return b.build();
+    }
+
     public ExpressionSemiring getSemiring() {
         return semiring;
     }
@@ -132,34 +204,49 @@ public class Grammar<T> {
     private LeftCorners getUnitStarCorners() {
         // Sum all probabilities for unit relations
         final LeftCorners P_U = new LeftCorners(semiring);
-        nonTerminals.forEach(X -> getRules(X).stream()
-                        .filter(Rule::isUnitProduction)
+        nonTerminals.forEach(X -> {
+            final Collection<Rule> rules = getRules(X);
+            if (rules != null) rules.stream()
+                    .filter(Rule::isUnitProduction)
 //                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
 //                        .distinct()
-                        .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore())));
+                    .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore()));
+        });
 
         // R_U = (I - P_U)
         return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);
     }
+
+    //    /**
+//     * Gets a singleton preterminal rule with the specified left category,
+//     * producing the given string token.
+//     *
+//     * @param left  The left side of the preterminal rule.
+//     * @param token The right side of the preterminal rule.
+//     * @return A preterminal rule of the form <code>left -> token</code> if
+//     * any exists within this grammar, or <code>null</code> if none exists.
+//     * @see Rule#isSingletonPreterminal()
+//     */
+//    public Rule getSingletonPreterminal(Category left, Token token) {
+//        if (rules.containsKey(left))
+//            for (Rule r : rules.get(left))
+//                if (r.isSingletonPreterminal() && Tokens.hasCategory(token, r.right[0]))
+//                    return r;
+//        return null;
+//    }
 
     /**
      * Compute left corner relations
      */
     private void setLeftCorners() {
         // Sum all probabilities for left corners
-        nonTerminals.forEach(X -> getRules(X).stream()
-                        .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
-                        .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore())));
+        nonTerminals.forEach(X -> {
+            final Collection<Rule> rules = getRules(X);
+            if (rules != null) rules.stream()
+                    .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
+                    .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore()));
+        });
     }
-
-    //TODO
-//    isProper(){
-//    }
-//    isConsistent(){
-//    }
-//    hasNoUselessNonTerminals(){
-//
-//    }
 
     /**
      * Gets the name of this grammar.
@@ -169,7 +256,6 @@ public class Grammar<T> {
     public String getName() {
         return name;
     }
-
 
     /**
      * Tests whether this grammar contains rules for the specified left side
@@ -211,24 +297,6 @@ public class Grammar<T> {
         return leftStarCorners.get(LHS, RHS);
     }
 
-    //    /**
-//     * Gets a singleton preterminal rule with the specified left category,
-//     * producing the given string token.
-//     *
-//     * @param left  The left side of the preterminal rule.
-//     * @param token The right side of the preterminal rule.
-//     * @return A preterminal rule of the form <code>left -> token</code> if
-//     * any exists within this grammar, or <code>null</code> if none exists.
-//     * @see Rule#isSingletonPreterminal()
-//     */
-//    public Rule getSingletonPreterminal(Category left, Token token) {
-//        if (rules.containsKey(left))
-//            for (Rule r : rules.get(left))
-//                if (r.isSingletonPreterminal() && Tokens.hasCategory(token, r.right[0]))
-//                    return r;
-//        return null;
-//    }
-
     /**
      * Gets a string representation of this grammar.
      *
@@ -241,8 +309,7 @@ public class Grammar<T> {
                 ' ' +
                 name +
                 ": {" +
-                rules.entries().stream()
-                        .map(Map.Entry::getValue)
+                rules.values().stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(", ")) +
                 "}]";
@@ -282,20 +349,24 @@ public class Grammar<T> {
         return unitStarScores;
     }
 
+    public Collection<Rule> getNonZeroLeftStarRules(Category X) {
+        return nonZeroLeftStartRules.get(X);
+    }
+
 
     public static class Builder<E> {
-        private final ImmutableMultimap.Builder<Category, Rule> rules;
+        private final MyMultimap<Category, Rule> rules;
         private String name;
         private ExpressionSemiring semiring = new LogSemiring();
         private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {
             this.name = name;
-            this.rules = new ImmutableMultimap.Builder<>();
+            this.rules = new MyMultimap<>();
         }
 
         public Builder() {
-            this.rules = new ImmutableMultimap.Builder<>();
+            this.rules = new MyMultimap<>();
         }
 
         public Builder<E> setSemiring(ExpressionSemiring semiring) {
@@ -329,9 +400,8 @@ public class Grammar<T> {
             return addRule(rf.newRule(left, right));
         }
 
-        //TODO verify if grammar is well-formed
         public Grammar<E> build() {
-            return new Grammar<>(name, rules.build(), semiring);
+            return new Grammar<>(name, rules, semiring);
         }
 
         @SuppressWarnings("unused")
@@ -341,90 +411,4 @@ public class Grammar<T> {
         }
     }
 
-    /**
-     * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
-     * to {@link Category} with some utility functions to deal with probabilities.
-     */
-    public static class LeftCorners {
-        private Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
-        private Multimap<Category, Category> nonZeroScores = HashMultimap.create();
-        private Multimap<Category, NonTerminal> nonZeroNonTerminalScores = HashMultimap.create();
-        private DblSemiring semiring;
-
-        /**
-         * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
-         * to {@link Category} with some utility functions to deal with probabilities.
-         */
-        LeftCorners(DblSemiring semiring) {
-            this.semiring = semiring;
-        }
-
-
-        /**
-         * Adds the given number to the current value of [X, Y]
-         *
-         * @param x           Left hand side
-         * @param y           Right hand side
-         * @param probability number to add
-         */
-        void plus(Category x, Category y, double probability) {
-            TObjectDoubleMap<Category> yToProb = getYToProb(x);
-            final double newProbability = semiring.plus(yToProb.get(y)/*defaults to zero*/, probability);
-            if (Double.isNaN(newProbability))
-                throw new Error();
-            set(x, y, yToProb, newProbability);
-        }
-
-        /**
-         * @return stored value in left-corner relationship. zero by default
-         */
-        public double get(Category x, Category y) {
-            return getYToProb(x).get(y)/*defaults to zero*/;
-        }
-
-        /**
-         * Will instantiate empty map if it does not exist yet.
-         *
-         * @param x LHS
-         * @return map for given LHS.
-         */
-        private TObjectDoubleMap<Category> getYToProb(Category x) {
-            if (map.containsKey(x)) return map.get(x);
-            else {
-                TObjectDoubleMap<Category> yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, semiring.zero()));
-                map.put(x, yToProb);
-                return yToProb;
-            }
-        }
-
-        /**
-         * Sets table entry to a given probability. Will instantiate empty map if it does not exist yet.
-         *
-         * @param x   LHS
-         * @param y   RHS
-         * @param val Dbl to set table entry to
-         */
-        public void set(NonTerminal x, NonTerminal y, final double val) {
-            TObjectDoubleMap<Category> yToProb = getYToProb(x);
-            set(x, y, yToProb, val);
-        }
-
-        public Collection<Category> getNonZeroScores(Category X) {
-            return nonZeroScores.get(X);
-        }
-
-        public Collection<NonTerminal> getNonZeroNonTerminals(Category X) {
-            return nonZeroNonTerminalScores.get(X);
-        }
-
-        private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {
-            if (val != semiring.zero()) {
-                nonZeroScores.put(x, y);
-                if (y instanceof NonTerminal) nonZeroNonTerminalScores.put(x, (NonTerminal) y);
-            }
-
-            yToProb.put(y, val);
-        }
-
-    }
 }

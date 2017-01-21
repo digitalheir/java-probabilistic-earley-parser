@@ -129,7 +129,41 @@ public class Example {
 }
 ```
 
-Most internal parsing stuff is available through he public API, should you need a slightly different parser than usual.
+You can parse a text file describing your CFG. 
+By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler.
+
+```
+# grammar.cfg
+
+S -> NP VP (1.0)  # Use '->'  
+NP → i   (0.5)    # or '→'
+VP → eat          # probability defaults to 1.0
+```
+
+```java
+Grammar<String> g = Grammar.parse(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));
+```
+
+One of the advantages of Earley parsing is the top-down control you can exert while parsing.
+You can pass the parser callbacks to influence the parsing process:
+
+
+```
+new ParseCallbacks.Builder()
+                        .withOnPreScan((position, token, chart) -> System.out.println("Scan about to happen for token " + token))
+                        .withScanProbability((position, token) -> {
+                            if (token.getCategories().contains(anUnexpectedTerminalForThisWord)) {
+                                return grammar.getSemiring().fromProbability(0.5);
+                            } else {
+                                return grammar.getSemiring().one();
+                            }
+                        })
+                        .withOnPostScan((position, token, chart) -> System.out.println("Scan happened for token " + token))
+                        .withOnPostComplete((position, token, chart) -> System.out.println("Complete happened for token " + token))
+                        .build()
+```
+
+Only use this function if you really know what you're doing. It may mess up your results.
 
 ## Some notes on implementation
 The probability of a parse is defined as the product of the probalities all the applied rules. Usually,
@@ -172,3 +206,6 @@ This software is licensed under a permissive [MIT license](https://opensource.or
 ## References
 [Stolcke, Andreas. "An efficient probabilistic context-free parsing algorithm that computes prefix probabilities." *Computational linguistics* 21.2 (1995): 165-201.
 APA](http://www.aclweb.org/anthology/J95-2002)
+
+## Contact
+Inquiries go to maarten.trompper@gmail.com

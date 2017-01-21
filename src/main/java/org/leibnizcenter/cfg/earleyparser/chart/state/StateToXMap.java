@@ -1,11 +1,11 @@
 package org.leibnizcenter.cfg.earleyparser.chart.state;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import org.leibnizcenter.cfg.rule.Rule;
+import org.leibnizcenter.cfg.util.MapEntry;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * Created by maarten on 11-1-17.
  */
 @SuppressWarnings("unused")
-public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
+public class StateToXMap<T> implements Map<State, T> {
     private final HashMap<Rule,
                     /*index*/
             TIntObjectMap<
@@ -29,77 +29,18 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
                             >
                     >> map;
     private Set<State> keys = new HashSet<>();
-    private Multiset<T> values = HashMultiset.create();
+    private TObjectIntMap<T> values = new TObjectIntHashMap<T>(25, 0.5F, 0);
+    private int size = 0;
 
     @SuppressWarnings("unused")
     public StateToXMap(int capacity) {
         this.map = new HashMap<>(capacity);
     }
 
-    private int size = 0;
-
     @SuppressWarnings("unused")
     public StateToXMap() {
         this.map = new HashMap<>();
     }
-
-    @Override
-    public int size() {
-        return size;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        if (!(key instanceof State)) return false;
-        State s = (State) key;
-        final Rule rule = s.getRule();
-        if (!map.containsKey(rule)) return false;
-        final TIntObjectMap<TIntObjectMap<TIntObjectMap<T>>> positions = map.get(rule);
-        if (!positions.containsKey(s.positionInInput)) return false;
-        final TIntObjectMap<TIntObjectMap<T>> ruleStarts = positions.get(s.positionInInput);
-        if (!ruleStarts.containsKey(s.ruleStartPosition)) return false;
-        TIntObjectMap<T> dots = ruleStarts.get(s.ruleStartPosition);
-        return dots.containsKey(s.ruleDotPosition);
-    }
-
-    @Override
-    public boolean containsValue(Object value) {
-        //noinspection SuspiciousMethodCalls
-        return values.contains(value);
-    }
-
-    @Override
-    public T get(Object key) {
-        if (!containsKey(key))
-            return null;
-        else {
-            State s = (State) key;
-            return map.get(s.getRule()).get(s.positionInInput).get(s.ruleStartPosition).get(s.ruleDotPosition);
-        }
-    }
-
-    public T getOrPut(State key, T fallback) {
-        if (containsKey(key))
-            return get(key);
-        else {
-            put(key, fallback);
-            return fallback;
-        }
-    }
-
-//    private static <K, V1, V2> Map<V1, V2> getOrCreate(Map<K, Map<V1, V2>> m, K key) {
-//        if (m.containsKey(key)) return m.get(key);
-//        else {
-//            final HashMap<V1, V2> m2 = new HashMap<>();
-//            m.put(key, m2);
-//            return m2;
-//        }
-//    }
 
     private static <K, V2> TIntObjectMap<V2> getOrCreate(Map<K, TIntObjectMap<V2>> m, K key) {
         if (m.containsKey(key))
@@ -122,15 +63,89 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
     }
 
     @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        if (!(key instanceof State))
+            return false;
+        else {
+            State s = (State) key;
+            return contains(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
+        }
+    }
+
+    public boolean contains(Rule rule, int index, int ruleStart, int dot) {
+        if (!map.containsKey(rule)) return false;
+        final TIntObjectMap<TIntObjectMap<TIntObjectMap<T>>> positions = map.get(rule);
+        if (!positions.containsKey(index)) return false;
+        final TIntObjectMap<TIntObjectMap<T>> ruleStarts = positions.get(index);
+        if (!ruleStarts.containsKey(ruleStart)) return false;
+        TIntObjectMap<T> dots = ruleStarts.get(ruleStart);
+        return dots.containsKey(dot);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        //noinspection SuspiciousMethodCalls
+        return values.get(value) <= 0;
+    }
+
+    @Override
+    public T get(Object key) {
+        if (!(key != null && key instanceof State))
+            return null;
+        else {
+            State s = (State) key;
+            return this.get(s.rule, s.position, s.ruleStartPosition, s.ruleDotPosition);
+        }
+    }
+
+    public T get(Rule rule, int index, int ruleStart, int dot) {
+        return contains(rule, index, ruleStart, dot) ? map.get(rule).get(index).get(ruleStart).get(dot) : null;
+    }
+
+    public T getOrPut(State key, T fallback) {
+        if (containsKey(key))
+            return get(key);
+        else {
+            put(key, fallback);
+            return fallback;
+        }
+    }
+
+    @Override
     public T put(State key, T value) {
         T prev = get(key);
         TIntObjectMap<T> m = getOrCreate(getOrCreate(
                 getOrCreate(map, key.rule),
-                key.positionInInput),
+                key.position),
                 key.ruleStartPosition);
         m.put(key.ruleDotPosition, value);
         this.keys.add(key);
-        this.values.add(value);
+        this.values.put(value, this.values.get(value) + 1);
+        this.size++;
+        return prev;
+    }
+
+    public T put(Rule rule, int index, int ruleStart, int dotPosition, T value) {
+        T prev = get(rule, index, ruleStart, dotPosition);
+
+        TIntObjectMap<T> m = getOrCreate(getOrCreate(
+                getOrCreate(map, rule),
+                index),
+                ruleStart);
+        m.put(dotPosition, value);
+        this.keys.add(new State(rule, dotPosition, ruleStart, dotPosition));
+        this.values.put(value, this.values.get(value) + 1);
+        this.size++;
         return prev;
     }
 
@@ -141,11 +156,12 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
         T prev = get(key);
         TIntObjectMap<T> m = getOrCreate(getOrCreate(
                 getOrCreate(map, key.rule),
-                key.positionInInput),
+                key.position),
                 key.ruleStartPosition);
         m.remove(key.ruleDotPosition);
         this.keys.remove(key);
-        this.values.remove(prev);
+        this.values.put(prev, Math.max(0,this.values.get(prev)));
+        this.size--;
         return prev;
     }
 
@@ -157,6 +173,9 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
     @Override
     public void clear() {
         this.map.clear();
+        this.keys.clear();
+        this.values.clear();
+        this.size = 0;
     }
 
     @Override
@@ -166,11 +185,30 @@ public class StateToXMap<T> implements Map<State, T> {//TODO use this everywhere
 
     @Override
     public Collection<T> values() {
-        return values.elementSet();
+        return this.values.keySet();
     }
 
     @Override
     public Set<Entry<State, T>> entrySet() {
-        return keySet().stream().map(k -> Maps.immutableEntry(k, get(k))).collect(Collectors.toSet());
+        return keySet().stream().map(k -> new MapEntry<>(k, get(k))).collect(Collectors.toSet());
+    }
+
+
+    public void forEachEntry(StateHandler<T> h) {
+        map.forEach((rule, tIntObjectMapTIntObjectMap) ->
+                tIntObjectMapTIntObjectMap.forEachEntry((position, tIntDoubleMapTIntObjectMap) -> {
+                    tIntDoubleMapTIntObjectMap.forEachEntry((ruleStart, tIntDoubleMap) -> {
+                        tIntDoubleMap.forEachEntry((dot, score) -> {
+                            h.consume(position, ruleStart, dot, rule, score);
+                            return true;
+                        });
+                        return true;
+                    });
+                    return true;
+                }));
+    }
+
+    public interface StateHandler<T> {
+        void consume(int position, int ruleStart, int dot, Rule rule, T score);
     }
 }

@@ -1,7 +1,7 @@
 package org.leibnizcenter.cfg.category.nonterminal;
 
-import com.google.common.base.Strings;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.util.Strings2;
 
 /**
  * Non-terminal {@link Category}
@@ -19,7 +19,7 @@ public class NonTerminal implements Category {
      *                                  <code>null</code> or zero-length.
      */
     public NonTerminal(String name) {
-        if (Strings.isNullOrEmpty(name)) throw new IllegalArgumentException("empty name specified for category");
+        if (Strings2.isNullOrEmpty(name)) throw new IllegalArgumentException("empty name specified for category");
         this.name = name;
     }
 

@@ -26,12 +26,12 @@ public class CaseInsenstiveStringTerminal implements StringTerminal {
 
         CaseInsenstiveStringTerminal that = (CaseInsenstiveStringTerminal) o;
 
-        return string != null ? string.equals(that.string) : that.string == null;
-
+        return string != null ? string.equalsIgnoreCase(that.string) : that.string == null;
     }
 
     @Override
     public int hashCode() {
-        return string != null ? string.hashCode() : 0;
+        // NOTE this might not always work
+        return string != null ?string.toLowerCase().hashCode() : 0;
     }
 }
