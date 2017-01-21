@@ -1,14 +1,15 @@
-package org.leibnizcenter.cfg;
+package org.leibnizcenter.cfg.perf;
 
+import org.leibnizcenter.cfg.Grammar;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
-import org.leibnizcenter.cfg.earleyparser.ParseTreeWithScore;
 import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,7 +18,12 @@ import java.util.List;
  * Created by Maarten on 23-8-2016.
  */
 public class Perf {
-    public static void main(String[] args) {
+    public static void main(String[] ignored) {
+        List<long[]> l = run();
+        l.forEach(line -> System.out.println(line[0] + "\t" + line[1]));
+    }
+
+    public static List<long[]> run() {
         NonTerminal A = Category.nonTerminal("A");
         NonTerminal B = Category.nonTerminal("B");
         NonTerminal C = Category.nonTerminal("C");
@@ -40,13 +46,23 @@ public class Perf {
 
         final Token<String> a = new Token<>("a");
         List<Token<String>> tokens = Tokens.tokenize();
-        for (int i = 0; i <= 10000; i++) {
+
+        List<long[]> l = new ArrayList<>();
+
+        for (int i = 0; i <= 0; i++) {
+            tokens.add(a);
+        }
+        for (int i = 0; i <= 1000; i++) {
             long timeStart = System.currentTimeMillis();
             Parser.getViterbiParseWithScore(S, grammar, tokens);
             long timeEnd = System.currentTimeMillis();
-            System.out.println(i + "\t" + (timeEnd - timeStart));
+            final long time = timeEnd - timeStart;
+            l.add(new long[]{i, time});
+            System.out.println(i + "\t" + time);
             tokens.add(a);
         }
+
+        return l;
     }
 }
 
