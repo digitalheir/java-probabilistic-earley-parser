@@ -75,7 +75,7 @@ public class StateSets<T> {
      * @return State specified by parameter. May or may not be in the state table. If not, it is added.
      */
     public <E> State getOrCreate(int position, int ruleStart, int dotPosition, Rule rule, Token<E> scannedToken) {
-        if (states.contains(rule, position, ruleStart, dotPosition)) {
+        if (contains(rule, position, ruleStart, dotPosition)) {
             return states.get(rule, position, ruleStart, dotPosition);
         } else {
             State state = State.create(position, ruleStart, dotPosition, rule, scannedToken);

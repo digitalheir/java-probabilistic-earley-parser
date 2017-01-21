@@ -49,7 +49,10 @@ public class Perf {
 
         List<long[]> l = new ArrayList<>();
 
-        for (int i = 0; i <= 100; i++) {
+        for (int i = 0; i <= 1; i++) {
+            tokens.add(a);
+        }
+        for (int i = 0; i <= 1000; i++) {
             long timeStart = System.currentTimeMillis();
             Parser.getViterbiParseWithScore(S, grammar, tokens);
             long timeEnd = System.currentTimeMillis();

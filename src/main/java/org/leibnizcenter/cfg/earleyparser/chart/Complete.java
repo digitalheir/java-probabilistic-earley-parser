@@ -149,6 +149,7 @@ public class Complete {
         final ExpressionSemiring semiring = grammar.getSemiring();
         final AddableValuesContainer addForwardScores = new AddableValuesContainer(50, semiring);
         final AddableValuesContainer addInnerScores = new AddableValuesContainer(50, semiring);
+
         completeNoViterbi(
                 i,
                 stateSets.completedStates.getCompletedStatesThatAreNotUnitProductions(i),
@@ -184,7 +185,7 @@ public class Complete {
      * @param completedState Completed state to calculate Viterbi score for
      * @param sr             Semiring to use for calculating
      */
-    public static <T> void setViterbiScores(
+    public static <T> void computeViterbiScores(
             final State completedState,
             final DblSemiring sr,
             StateSets<T> stateSets
@@ -235,7 +236,7 @@ public class Complete {
         // Recurse with new states that are completed
         if (newCompletedStates != null)
             for (State resultingState : newCompletedStates)
-                setViterbiScores(resultingState, sr, stateSets);
+                computeViterbiScores(resultingState, sr, stateSets);
 
     }
 }

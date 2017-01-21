@@ -20,14 +20,12 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 /**
@@ -65,6 +63,7 @@ public class Grammar<T> {
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
     private final ExpressionSemiring semiring;
+    private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -94,6 +93,17 @@ public class Grammar<T> {
         setLeftCorners();
         leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
+
+        nonTerminals.forEach(X -> {
+            final Collection<Category> nonZeroScores = leftStarCorners.getNonZeroScores(X);
+            if (nonZeroScores != null) {
+                final Set<Rule> rulez = nonZeroScores.stream().flatMap(Y -> {
+                    final Collection<Rule> rulesForY = getRules(Y);
+                    return rulesForY == null ? Stream.empty() : rulesForY.stream();
+                }).collect(Collectors.toSet());
+                nonZeroLeftStartRules.put(X, rulez);
+            }
+        });
     }
 
     /**
@@ -181,7 +191,7 @@ public class Grammar<T> {
             line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
             if (!line.isEmpty())
                 rules.add(Rule.parse(line, parseCategory, semiring));
-            line=reader.readLine();
+            line = reader.readLine();
         }
         b.addRules(rules);
         return b.build();
@@ -337,6 +347,10 @@ public class Grammar<T> {
 
     public LeftCorners getUnitStar() {
         return unitStarScores;
+    }
+
+    public Collection<Rule> getNonZeroLeftStarRules(Category X) {
+        return nonZeroLeftStartRules.get(X);
     }
 
 

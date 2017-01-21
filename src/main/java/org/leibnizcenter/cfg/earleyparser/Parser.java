@@ -206,11 +206,6 @@ public class Parser {
                                                                     Grammar<T> grammar,
                                                                     Iterable<Token<T>> tokens,
                                                                     ParseCallbacks<T> callbacks) {
-        ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
-        if (callbacks == null) {
-            callbacks = new ParserCallbacksBuilder<T>().build();
-        }
-
         Chart<T> chart = new Chart<>(grammar);
         DblSemiring sr = grammar.getSemiring();
 
@@ -219,29 +214,50 @@ public class Parser {
         chart.addState(0, initialState, sr.one(), sr.one());
 
         // Cycle through input
-        int i = 0;
-        for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
-            callbacks.beforePredict(i, token, chart);
-            Predict.predict(i, grammar, chart.stateSets);
-            callbacks.onPredict(i, token, chart);
+        final int[] i = {0};
 
-            callbacks.beforeScan(i, token, chart);
-            Scan.scan(i, token, scanProbability, grammar, chart.stateSets);
-            callbacks.onScan(i, token, chart);
-
-
-            callbacks.beforeComplete(i, token, chart);
-            Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
-            Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
-            completedStates.forEach(s -> Complete.setViterbiScores(s, grammar.getSemiring(), chart.stateSets));
-            callbacks.onComplete(i, token, chart);
-
-
-            i++;
-        }
+        TokenWithCategories.from(tokens, grammar).forEach((token) -> {
+            predict(grammar, callbacks, chart, i[0], token);
+            scan(grammar, callbacks, chart, i[0], token);
+            complete(grammar, callbacks, chart, i[0], token);
+            i[0]++;
+        });
         //Set<State> completed = chart.getCompletedStates(i, Category.START);
         //if (completed.size() > 1) throw new Error("This is a bug");
-        return new ChartWithInputPosition<>(chart, i);
+        return new ChartWithInputPosition<>(chart, i[0]);
+    }
+
+    private static <T> void complete(Grammar<T> grammar, ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
+
+        final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
+        Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
+        completedStates.forEach(s -> Complete.computeViterbiScores(s, grammar.getSemiring(), chart.stateSets));
+
+        if (callbacks != null) callbacks.onComplete(i, token, chart);
+    }
+
+    private static <T> void scan(Grammar<T> grammar, ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
+        if (callbacks != null) callbacks.beforeScan(i, token, chart);
+
+        Scan.scan(
+                i,
+                token,
+                scanProbability,
+                grammar.getSemiring(),
+                chart.stateSets
+        );
+
+        if (callbacks != null) callbacks.onScan(i, token, chart);
+    }
+
+    private static <T> void predict(Grammar<T> grammar, ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        if (callbacks != null) callbacks.beforePredict(i, token, chart);
+
+        Predict.predict(i, grammar, chart.stateSets);
+
+        if (callbacks != null) callbacks.onPredict(i, token, chart);
     }
 
 }
