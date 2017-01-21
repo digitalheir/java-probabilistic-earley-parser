@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.algebra.expression;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring.Value;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 

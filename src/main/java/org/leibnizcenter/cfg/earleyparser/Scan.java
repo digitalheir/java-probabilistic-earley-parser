@@ -1,12 +1,12 @@
-package org.leibnizcenter.cfg.earleyparser.chart;
+package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.ForwardScores;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.InnerScores;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
-import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
@@ -20,7 +20,6 @@ import java.util.stream.Stream;
  * <p>
  * Created by maarten on 31/10/16.
  */
-@SuppressWarnings("WeakerAccess")
 public final class Scan {
     /**
      * Don't instantiate
@@ -38,10 +37,10 @@ public final class Scan {
      */
     public static <T> void scan(
             final int tokenPosition,
-            TokenWithCategories<T> tokenWithCategories,
-            ScanProbability<T> scanProbability,
-            DblSemiring sr,
-            StateSets stateSets
+            final TokenWithCategories<T> tokenWithCategories,
+            final ScanProbability<T> scanProbability,
+            final DblSemiring sr,
+            final StateSets<T> stateSets
     ) {
         if (tokenWithCategories == null)
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
@@ -50,6 +49,7 @@ public final class Scan {
         final Token<T> token = tokenWithCategories.getToken();
         final ForwardScores forwardScores = stateSets.forwardScores;
         final InnerScores innerScores = stateSets.innerScores;
+        final int nextPosition = tokenPosition + 1;
 
 //        StateToXMap<State> checkNoNewStatesAreDoubles = new StateToXMap<>(10 + 100);
 
@@ -58,70 +58,27 @@ public final class Scan {
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         tokenWithCategories.getCategories().stream()
-                .flatMap(terminalType -> {
+                .parallel()
+                .flatMap((final Terminal<T> terminalType) -> {
                     final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
                     return statesActiveOnTerminals == null
                             ? Stream.empty()
                             : statesActiveOnTerminals.stream();
                 })
                 .parallel() // Parallellize for performance: everything we do in map does not mutate state
-                .map(preScanState -> {
-                    if (!((Terminal<T>) preScanState.getActiveCategory())
-                            .hasCategory(token)) throw new IssueRequest("This is a bug.");
-                    // Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>
-                    final double preScanForward = forwardScores.get(preScanState);
-                    final double preScanInner = innerScores.get(preScanState);
-                    // Note that this state is unique for each preScanState
-                    final int nextPosition = tokenPosition + 1;
-                    final int nextRuleStart = preScanState.ruleStartPosition;
-                    final int nextDot = preScanState.advanceDot();
-                    final Rule nextRule = preScanState.rule;
+                .map(preScanState -> new Delta<>(
+                        token,
+                        preScanState,
+                        calculateForwardScore(scanProb, sr, forwardScores.get(preScanState)),
+                        calculateInnerScore(scanProb, sr, innerScores.get(preScanState)),
+                        /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
+                        preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
+                ))
 
-                    // Get forward/inner score
-                    final double postScanForward = calculateForwardScore(scanProb, sr, preScanForward);
-                    final double postScanInner = calculateInnerScore(scanProb, sr, preScanInner);
-
-
-                    return new Delta(
-                            preScanState,
-                            postScanForward,
-                            postScanInner,
-                            nextRule, nextPosition, nextRuleStart, nextDot
-                    );
-                })
-
-                // After we have calculated everything, we may mutate the chart
-
-                .parallel()//.sequential() // TODO does this need to be sequential actually?
-
-                .forEach(score -> {
-                    final int position = score.nextPosition;
-                    final int ruleStart = score.nextRuleStart;
-                    final int dot = score.nextDot;
-                    final Rule rule = score.nextRule;
-
-                    final State postScanState = stateSets.getOrCreate(position, ruleStart, dot, rule, token);
-
-//                    if (checkNoNewStatesAreDoubles.contains(rule, position, ruleStart, dot))
-//                        throw new IssueRequest("Tried to scan same state twice. This is a bug.");
-//                    else checkNoNewStatesAreDoubles.put(postScanState, postScanState);
-
-                    // Set forward score
-                    forwardScores.put(
-                            postScanState,
-                            score.postScanForward
-                    );
-                    // Set inner score
-                    innerScores.put(
-                            postScanState,
-                            score.postScanInner
-                    );
-                    // Set Viterbi score
-                    stateSets.viterbiScores.put(
-                            new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr)
-                    );
-                });
+                // After we have calculated everything, we mutate the chart // TODO does this need to be sequential actually?
+                .sequential().forEach(stateSets::createStateAndSetScores);
     }
+
 
     /**
      * Function to calculate the new inner score from given values
@@ -133,8 +90,7 @@ public final class Scan {
      */
 
     private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
-        if (Double.isNaN(scanProbability)) return previousInner;
-        else return sr.times(previousInner, scanProbability);
+        return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
     }
 
     /**
@@ -146,33 +102,33 @@ public final class Scan {
      * @return Computed forward score for the new state
      */
     private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
-        if (Double.isNaN(scanProbability)) return previousStateForwardScore;
-        else return sr.times(previousStateForwardScore, scanProbability);
+        return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
-    private static class Delta {
+    public static class Delta<T> {
+        public final State preScanState;
+        public final double postScanForward;
+        public final double postScanInner;
 
-        private final State preScanState;
-        private final double postScanForward;
-        private final double postScanInner;
+        public final Rule nextRule;
+        public final int nextPosition;
+        public final int nextRuleStart;
+        public final int nextDot;
+        public final Token<T> token;
 
-        private final Rule nextRule;
-        private final int nextPosition;
-        private final int nextRuleStart;
-        private final int nextDot;
-
-        public Delta(
-                State preScanState,
+        Delta(
+                Token<T> token, State preScanState,
                 double postScanForward,
                 double postScanInner,
                 Rule nextRule,
                 int nextPosition,
                 int nextRuleStart,
-                int nextDot) {
+                int nextDot
+        ) {
             this.preScanState = preScanState;
             this.postScanForward = postScanForward;
             this.postScanInner = postScanInner;
-
+            this.token = token;
             this.nextRule = nextRule;
             this.nextPosition = nextPosition;
             this.nextRuleStart = nextRuleStart;

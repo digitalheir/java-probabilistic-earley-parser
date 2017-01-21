@@ -1,7 +1,6 @@
-package org.leibnizcenter.cfg.earleyparser.parse.callbacks;
+package org.leibnizcenter.cfg.earleyparser.callbacks;
 
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
-import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 /**

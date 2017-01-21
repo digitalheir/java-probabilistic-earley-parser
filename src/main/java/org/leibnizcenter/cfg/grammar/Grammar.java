@@ -9,8 +9,10 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
+import org.leibnizcenter.cfg.util.MapEntry;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.io.BufferedReader;
@@ -43,8 +45,9 @@ import java.util.stream.Stream;
 public class Grammar<T> {
     private static final Pattern NEWLINE = Pattern.compile("\\n");
     private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
+    @SuppressWarnings("WeakerAccess")
     public final String name;
-    public final MyMultimap<Category, Rule> rules;
+    private final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
      * <code>X -L> Y</code> iff there exists a production for X that has a RHS starting with Y,
@@ -181,7 +184,7 @@ public class Grammar<T> {
     public static Grammar<String> parse(InputStream inputStream, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
         Builder<String> b = new Builder<>();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
 
         System.out.println("Reading File line by line using BufferedReader");
 
@@ -246,15 +249,6 @@ public class Grammar<T> {
                     .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
                     .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore()));
         });
-    }
-
-    /**
-     * Gets the name of this grammar.
-     *
-     * @return The value specified when this grammar was created.
-     */
-    public String getName() {
-        return name;
     }
 
     /**
@@ -349,8 +343,11 @@ public class Grammar<T> {
         return unitStarScores;
     }
 
-    public Collection<Rule> getNonZeroLeftStarRules(Category X) {
-        return nonZeroLeftStartRules.get(X);
+    public Stream<MapEntry<State, Rule>> streamNonZeroLeftStarRulesWithPrecedingState(final State statePredecessor) {
+        final Category Z = statePredecessor.getActiveCategory();
+        return nonZeroLeftStartRules.get(Z)
+                .stream()
+                .map(Y_to_v -> new MapEntry<>(statePredecessor, Y_to_v));
     }
 
 
@@ -404,7 +401,7 @@ public class Grammar<T> {
             return new Grammar<>(name, rules, semiring);
         }
 
-        @SuppressWarnings("unused")
+        @SuppressWarnings({"unused", "WeakerAccess"})
         public Builder<E> addRules(Collection<Rule> rules) {
             rules.forEach(this::addRule);
             return this;

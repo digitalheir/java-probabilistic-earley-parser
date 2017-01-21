@@ -2,8 +2,11 @@ package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.earleyparser.Predict;
+import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
+import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
@@ -57,6 +60,10 @@ public class StateSets<T> {
     static void add(TIntObjectHashMap<Set<State>> states, int position, State state) {
         if (!states.containsKey(position)) states.put(position, new HashSet<>());
         states.get(position).add(state);
+    }
+
+    public Grammar<T> getGrammar() {
+        return grammar;
     }
 
     public State getOrCreate(int index, int ruleStart, int dotPosition, Rule rule) {
@@ -120,5 +127,48 @@ public class StateSets<T> {
 
     public boolean contains(Rule rule, int position, int ruleStart, int dotPosition) {
         return states.contains(rule, position, ruleStart, dotPosition);
+    }
+
+    public void setScores(Predict.Delta delta) {
+        final ExpressionSemiring semiring = this.getGrammar().getSemiring();
+
+        if (delta.isNew) {
+            this.addIfNew(delta.predicted);
+        } else {
+            final double innerScore = this.innerScores.get(delta.predicted);
+            if (!(delta.Y_to_vProbability == innerScore || semiring.zero() == innerScore))
+                throw new IssueRequest(delta.Y_to_vProbability + " != " + innerScore);
+        }
+
+
+        this.viterbiScores.put(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
+        this.forwardScores.add(delta.predicted, delta.fw);
+        this.innerScores.put(delta.predicted, delta.Y_to_vProbability);
+
+
+    }
+
+    public void createStateAndSetScores(Scan.Delta<T> score) {
+        final DblSemiring sr = this.getGrammar().getSemiring();
+        final State postScanState = this.getOrCreate(score.nextPosition, score.nextRuleStart, score.nextDot, score.nextRule, score.token);
+
+//                    if (checkNoNewStatesAreDoubles.contains(rule, position, ruleStart, dot))
+//                        throw new IssueRequest("Tried to scan same state twice. This is a bug.");
+//                    else checkNoNewStatesAreDoubles.put(postScanState, postScanState);
+
+        // Set forward score
+        forwardScores.put(
+                postScanState,
+                score.postScanForward
+        );
+        // Set inner score
+        innerScores.put(
+                postScanState,
+                score.postScanInner
+        );
+        // Set Viterbi score
+        this.viterbiScores.put(
+                new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr)
+        );
     }
 }

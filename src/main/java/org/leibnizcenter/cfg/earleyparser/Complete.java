@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.earleyparser.chart;
+package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.expression.AddableValuesContainer;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
@@ -6,8 +6,8 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.chart.state.StateToXMap;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
+import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateToXMap;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
@@ -185,6 +185,7 @@ public class Complete {
      * @param completedState Completed state to calculate Viterbi score for
      * @param sr             Semiring to use for calculating
      */
+    @SuppressWarnings("WeakerAccess")
     public static <T> void computeViterbiScores(
             final State completedState,
             final DblSemiring sr,

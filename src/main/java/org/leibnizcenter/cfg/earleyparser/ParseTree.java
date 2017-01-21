@@ -1,5 +1,5 @@
 
-package org.leibnizcenter.cfg.earleyparser.parse;
+package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedTokenState;
@@ -68,6 +68,7 @@ public abstract class ParseTree {
      * <code>Det, N</code> in that order, or <code>null</code> if this parse
      * tree has no children.
      */
+    @SuppressWarnings("WeakerAccess")
     public List<ParseTree> getChildren() {
         return children;
     }
@@ -94,7 +95,7 @@ public abstract class ParseTree {
         return sb.toString();
     }
 
-    public void addRightMost(ParseTree tree) {
+    void addRightMost(ParseTree tree) {
         children.addLast(tree);
     }
 
@@ -145,6 +146,7 @@ public abstract class ParseTree {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static class NonToken extends ParseTree {
         public NonToken(Category node) {
             super(node);

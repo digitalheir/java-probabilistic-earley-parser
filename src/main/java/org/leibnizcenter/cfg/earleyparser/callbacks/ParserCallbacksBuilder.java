@@ -1,6 +1,4 @@
-package org.leibnizcenter.cfg.earleyparser.parse.callbacks;
-
-import org.leibnizcenter.cfg.earleyparser.parse.ScanProbability;
+package org.leibnizcenter.cfg.earleyparser.callbacks;
 
 public class ParserCallbacksBuilder<T> {
     private ScanProbability<T> scanProbability;

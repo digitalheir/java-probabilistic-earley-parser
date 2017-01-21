@@ -2,13 +2,13 @@ package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.parse.ParseTree;
 
 /**
  * Parse tree along with the viterbi score
  *
  * Created by Maarten on 15/08/2016.
  */
+@SuppressWarnings("WeakerAccess")
 public class ParseTreeWithScore {
     public final ParseTree parseTree;
     public final State.ViterbiScore score;

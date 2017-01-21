@@ -107,7 +107,7 @@ public class ActiveStates<T> {
             final int position,
             final NonTerminal Y) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.containsKey(position))
-            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(position, new MyMultimap());
+            nonTerminalActiveAtIWithNonZeroUnitStarToY.put(position, new MyMultimap<>());
         nonTerminalActiveAtIWithNonZeroUnitStarToY.get(position).put(Y, state);
     }
 

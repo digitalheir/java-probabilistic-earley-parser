@@ -1,4 +1,4 @@
-package org.leibnizcenter.cfg.earleyparser.parse;
+package org.leibnizcenter.cfg.earleyparser.callbacks;
 
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 

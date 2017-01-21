@@ -1,9 +1,10 @@
-package org.leibnizcenter.cfg.earleyparser.chart.state;
+package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.util.MapEntry;
 
@@ -29,7 +30,7 @@ public class StateToXMap<T> implements Map<State, T> {
                             >
                     >> map;
     private Set<State> keys = new HashSet<>();
-    private TObjectIntMap<T> values = new TObjectIntHashMap<T>(25, 0.5F, 0);
+    private TObjectIntMap<T> values = new TObjectIntHashMap<>(25, 0.5F, 0);
     private int size = 0;
 
     @SuppressWarnings("unused")
