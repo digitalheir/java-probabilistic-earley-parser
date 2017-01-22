@@ -17,26 +17,15 @@ class DeferredStateScoreComputations {
     DeferredStateScoreComputations(ExpressionSemiring semiring) {
         this.states = new HashMap<>();
         this.semiring = semiring;
-        this.ZERO = semiring::zero;
+        this.ZERO = semiring.ZERO_EXPRESSION;
     }
 
-    private DeferredValue getOrCreate(State state,
-                                      Resolvable default_) {
+    DeferredValue getOrCreate(State state,
+                              Resolvable default_) {
         if (this.states.containsKey(state)) {
             return this.states.get(state);
         } else {
             final DeferredValue deferredValue = new DeferredValue(default_);
-            this.states.put(state, deferredValue);
-            return deferredValue;
-        }
-    }
-
-    DeferredValue getOrCreate(State state,
-                              double default_) {
-        if (this.states.containsKey(state)) {
-            return this.states.get(state);
-        } else {
-            final DeferredValue deferredValue = new DeferredValue(new Atom(default_));
             this.states.put(state, deferredValue);
             return deferredValue;
         }
@@ -47,7 +36,7 @@ class DeferredStateScoreComputations {
                 s,
                 this.ZERO
         );
-        current.expression = new ExpressionSemiring.Plus(semiring, addValue, current.expression);
+        current.setExpression(semiring.new Plus(addValue, current.getExpression()));
         this.states.put(s, current);
     }
 

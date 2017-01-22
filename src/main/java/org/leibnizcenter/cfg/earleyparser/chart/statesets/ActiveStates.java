@@ -7,6 +7,7 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.LeftCorners;
+import org.leibnizcenter.cfg.grammar.UnitStarScores;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.*;
@@ -117,7 +118,7 @@ public class ActiveStates<T> {
     void add(
             final int position,
             final State state,
-            final LeftCorners unitStar) {
+            final UnitStarScores unitStar) {
         if (state.isActive()) {
             final Category activeCategory = state.getActiveCategory();
             if (activeCategory instanceof NonTerminal) {

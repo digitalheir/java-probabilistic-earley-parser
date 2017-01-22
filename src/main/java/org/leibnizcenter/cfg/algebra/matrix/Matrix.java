@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.algebra.matrix;
 
 
+import java.util.Arrays;
 
 /**
  * Jama = Java Matrix class.
@@ -69,6 +70,32 @@ public class Matrix {
         this.m = m;
         this.n = n;
         A = new double[m][n];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Matrix matrix = (Matrix) o;
+
+        return m == matrix.m && n == matrix.n && Arrays.deepEquals(A, matrix.A);
+
+    }
+
+    @Override
+    public String toString() {
+        return "Matrix{" +
+                "A=" + Arrays.toString(A) +
+                '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int result = m;
+        result = 31 * result + n;
+        result = 31 * result + Arrays.deepHashCode(A);
+        return result;
     }
 
     /**
@@ -359,12 +386,26 @@ public class Matrix {
         return X;
     }
 
-    /** Two norm
-     @return    maximum singular value.
+    /**
+     * Two norm
+     *
+     * @return maximum singular value.
      */
 
-    public double norm2 () {
+    public double norm2() {
         return (new SingularValueDecomposition(this).norm2());
     }
 
+    public void forEach(CellHandler cellHandler) {
+        for (int i = 0; i < A.length; i++) {
+            double[] row = A[i];
+            for (int j = 0; j < row.length; j++)
+                cellHandler.consume(i, j, row[j]);
+        }
+    }
+
+    @FunctionalInterface
+    public interface CellHandler {
+        void consume(int row, int column, double value);
+    }
 }

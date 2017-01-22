@@ -8,6 +8,7 @@ import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
+import org.leibnizcenter.cfg.grammar.AtomMap;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 
@@ -42,15 +43,15 @@ public class StateSets<T> {
     public final ActiveStates<T> activeStates = new ActiveStates<>();
     private final Set<State> states = new HashSet<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
-    private final Grammar<T> grammar;
+    public final Grammar<T> grammar;
     private Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
 
 
     public StateSets(Grammar<T> grammar) {
         this.grammar = grammar;
-        DblSemiring semiring = grammar.getSemiring();
-        this.forwardScores = new ForwardScores(semiring);
-        this.innerScores = new InnerScores(semiring);
+        DblSemiring semiring = grammar.semiring;
+        this.forwardScores = new ForwardScores(semiring,grammar.atoms);
+        this.innerScores = new InnerScores(semiring,grammar.atoms);
     }
 
     /**
@@ -59,10 +60,6 @@ public class StateSets<T> {
     static void add(TIntObjectHashMap<Set<State>> states, int position, State state) {
         if (!states.containsKey(position)) states.put(position, new HashSet<>());
         states.get(position).add(state);
-    }
-
-    public Grammar<T> getGrammar() {
-        return grammar;
     }
 
 
@@ -93,7 +90,7 @@ public class StateSets<T> {
         states.add(state);
         add(byIndex, index, state);
         completedStates.add(index, state);
-        activeStates.add(index, state, grammar.getUnitStar());
+        activeStates.add(index, state, grammar.unitStarScores);
         if (scannedToken != null) {
             ScannedToken<T> eScannedToken = new ScannedToken<>(
                     scannedToken,
@@ -125,7 +122,7 @@ public class StateSets<T> {
     }
 
     public void setScores(Predict.Delta delta) {
-        final ExpressionSemiring semiring = this.getGrammar().getSemiring();
+        final ExpressionSemiring semiring = this.grammar.semiring;
 
         if (delta.isNew) {
             this.addIfNew(delta.predicted);
@@ -142,7 +139,7 @@ public class StateSets<T> {
     }
 
     public void createStateAndSetScores(Scan.Delta<T> score) {
-        final DblSemiring sr = this.getGrammar().getSemiring();
+        final DblSemiring sr = this.grammar.semiring;
         final State postScanState = this.getOrCreate(
                 score.nextState, score.token
         );
@@ -172,7 +169,7 @@ public class StateSets<T> {
     }
 
 
-    public void getOrCreate(State s) {
-        getOrCreate(s, null);
+    public State getOrCreate(State s) {
+        return getOrCreate(s, null);
     }
 }

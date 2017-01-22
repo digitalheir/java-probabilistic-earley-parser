@@ -45,10 +45,9 @@ public class Complete {
                                               final DeferredStateScoreComputations addForwardScores,
                                               final DeferredStateScoreComputations addInnerScores,
                                               final Grammar<E> grammar,
-                                              final StateSets<E> stateSets,
-                                              final ExpressionSemiring semiring
+                                              final StateSets<E> stateSets
     ) {
-        DeferredStateScoreComputations newStates = null;
+        final DeferredStateScoreComputations newStates = new DeferredStateScoreComputations(grammar.semiring);
         // For all states
         //      i: Y<sub>j</sub> → v·    [a",y"]
         //      j: X<sub>k</suv> → l·Zm  [a',y']
@@ -57,74 +56,75 @@ public class Complete {
         //  and Y → v is not a unit production
         for (State completedState : states) {
             final int j = completedState.ruleStartPosition;
-            final NonTerminal Y = completedState.rule.getLeft();
+            final NonTerminal Yl = completedState.rule.left;
 
             DeferredValue unresolvedCompletedInner = addInnerScores.getOrCreate(
                     completedState,
-                    stateSets.innerScores.get(completedState)
+                    stateSets.innerScores.getAtom(completedState)
             );
 
-            final Collection<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Y);
-            if (statesToAdvance != null) for (State stateToAdvance : statesToAdvance) {
-                if (j != stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
-
-                // Make i: X_k → lZ·m
-                DeferredValue prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.get(stateToAdvance));
-                DeferredValue prevForward = addForwardScores.getOrCreate(stateToAdvance, stateSets.forwardScores.get(stateToAdvance));
-
-                final Category Z = stateToAdvance.getActiveCategory();
-
-                Resolvable unitStarScore = new Atom(grammar.getUnitStarScore(Z, Y));
-                Resolvable fw = new ExpressionSemiring.Times(semiring,
-                        new ExpressionSemiring.Times(semiring, unitStarScore, prevForward),
-                        unresolvedCompletedInner
-                );
-
-                Resolvable inner = new ExpressionSemiring.Times(semiring,
-                        new ExpressionSemiring.Times(semiring, unitStarScore, prevInner)
-                        , unresolvedCompletedInner);
-
-                Rule newStateRule = stateToAdvance.rule;
-                int newStateDotPosition = stateToAdvance.advanceDot();
-                int newStateRuleStart = stateToAdvance.ruleStartPosition;
-                State s = State.create(position, newStateRuleStart, newStateDotPosition, newStateRule);
-
-                addForwardScores.plus(
-                        s,
-                        fw
-                );
-
-                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
-                if (
-                        newStateRule.isPassive(newStateDotPosition)/*isCompleted*/
-                                && !newStateRule.isUnitProduction()
-                                && !stateSets.contains(s)) {
-                    if (newStates == null) newStates = new DeferredStateScoreComputations(semiring);
-                    newStates.plus(
-                            s,
-                            fw
+            final Collection<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(j, Yl);
+            if (statesToAdvance != null) statesToAdvance.stream()
+                    .map(stateToAdvance -> getCompletionDelta(
+                            position,
+                            addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.getAtom(stateToAdvance)),
+                            addForwardScores.getOrCreate(stateToAdvance, stateSets.forwardScores.getAtom(stateToAdvance)),
+                            stateSets,
+                            completedState,
+                            unresolvedCompletedInner,
+                            stateToAdvance
+                            )
+                    )
+                    .forEach(delta -> {
+                                addForwardScores.plus(delta.state, delta.addForward);
+                                addInnerScores.plus(delta.state, delta.addInner);
+                                if (delta.newCompletedStateNoUnitProduction) newStates.plus(delta.state, delta.addForward);
+                            }
                     );
-                }
-
-                addInnerScores.plus(s,
-                        inner
-                );
-            }
         }
 
-        if (newStates != null) {
-            Set<State> newCompletedStates = newStates.states.keySet();
-            newCompletedStates.forEach(stateSets::getOrCreate);
-            if (newCompletedStates.size() > 0) Complete.completeNoViterbi(
-                    position,
-                    newCompletedStates,
-                    addForwardScores,
-                    addInnerScores,
-                    grammar,
-                    stateSets,
-                    semiring
-            );
-        }
+        Set<State> newCompletedStates = newStates.states.keySet();
+        newCompletedStates.forEach(stateSets::getOrCreate);
+        if (newCompletedStates.size() > 0) Complete.completeNoViterbi(
+                position,
+                newCompletedStates,
+                addForwardScores,
+                addInnerScores,
+                grammar,
+                stateSets
+        );
+    }
+
+    private static <E> Delta getCompletionDelta(int position,
+                                                DeferredValue prevInner,
+                                                DeferredValue prevForward,
+                                                StateSets<E> stateSets,
+                                                State completedState,
+                                                DeferredValue unresolvedCompletedInner,
+                                                State stateToAdvance) {
+        final int j = completedState.ruleStartPosition;
+        final NonTerminal Yl = completedState.rule.left;
+
+        // Make i: X_k → lZ·m
+        final Category Z = stateToAdvance.getActiveCategory();
+        Grammar<E> grammar = stateSets.grammar;
+        Resolvable unitStarScore = grammar.getUnitStarScore(Z, Yl);
+
+        ExpressionSemiring sr = grammar.semiring;
+        ExpressionSemiring.Times fw = sr.new Times(unitStarScore, prevForward, unresolvedCompletedInner);
+        ExpressionSemiring.Times inner = sr.new Times(unitStarScore, prevInner, unresolvedCompletedInner);
+        if (j != stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
+        final State s = State.create(position, stateToAdvance.ruleStartPosition, stateToAdvance.advanceDot(), stateToAdvance.rule);
+        return new Delta(
+                s,
+                inner,
+                fw,
+                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
+                ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
+                        && !s.rule.isUnitProduction()
+                        && !stateSets.contains(s)))
+
+        );
     }
 
     /**
@@ -137,7 +137,7 @@ public class Complete {
             final Grammar<E> grammar,
             final StateSets<E> stateSets
     ) {
-        final ExpressionSemiring semiring = grammar.getSemiring();
+        final ExpressionSemiring semiring = grammar.semiring;
         final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(semiring);
         final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(semiring);
 
@@ -146,23 +146,23 @@ public class Complete {
                 stateSets.completedStates.getCompletedStatesThatAreNotUnitProductions(i),
                 addForwardScores,
                 addInnerScores,
-                grammar, stateSets, semiring
+                grammar, stateSets
         );
 
         // Resolve and set forward & inner scores
         addForwardScores.states.forEach(
                 (s, score) ->
                         stateSets.forwardScores.put(
-                                stateSets.getOrCreate(s, null),
-                                score.resolve()//todo resolveFinal
+                                stateSets.getOrCreate(s),
+                                score.resolveFinal()
                         )
         );
 
         addInnerScores.states.forEach(
                 (s, score) ->
                         stateSets.innerScores.put(
-                                stateSets.getOrCreate(s, null),
-                                score.resolve()//todo resolveFinal
+                                stateSets.getOrCreate(s),
+                                score.resolveFinal()
                         )
         );
     }
@@ -189,10 +189,10 @@ public class Complete {
             throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
 
         final double completedViterbi = stateSets.viterbiScores.get(completedState).getScore();
-        final NonTerminal Y = completedState.rule.getLeft();
+        final NonTerminal Yl = completedState.rule.left;
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
         int completedPos = completedState.position;
-        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Y, completedState.ruleStartPosition, completedPos);
+        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Yl, completedState.ruleStartPosition, completedPos);
         if (statesToAdvance != null) for (State stateToAdvance : statesToAdvance) {
             if (stateToAdvance.position > completedPos || stateToAdvance.position != completedState.ruleStartPosition)
                 throw new IssueRequest("Index failed. This is a bug.");
@@ -229,5 +229,19 @@ public class Complete {
             for (State resultingState : newCompletedStates)
                 computeViterbiScores(resultingState, sr, stateSets);
 
+    }
+
+    private static class Delta {
+        private final State state;
+        private final Resolvable addInner;
+        private final Resolvable addForward;
+        private final boolean newCompletedStateNoUnitProduction;
+
+        Delta(State state, Resolvable addInner, Resolvable addForward, boolean newCompletedStateNoUnitProduction) {
+            this.state = state;
+            this.addInner = addInner;
+            this.addForward = addForward;
+            this.newCompletedStateNoUnitProduction = newCompletedStateNoUnitProduction;
+        }
     }
 }

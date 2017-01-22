@@ -53,14 +53,14 @@ Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earl
         <dependency>
             <groupId>org.leibnizcenter</groupId>
             <artifactId>probabilistic-earley-parser</artifactId>
-            <version>0.9.9</version>
+            <version>0.9.10</version>
         </dependency>
 </dependencies>
 ```
 
 or Gradle:
 ```groovy
-compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.9'
+compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.10'
 ```
 
 Most applications will want to interface with the static functions in `Parser`:
@@ -153,9 +153,9 @@ new ParseCallbacks.Builder()
                         .withOnPreScan((position, token, chart) -> System.out.println("Scan about to happen for token " + token))
                         .withScanProbability((position, token) -> {
                             if (token.getCategories().contains(anUnexpectedTerminalForThisWord)) {
-                                return grammar.getSemiring().fromProbability(0.5);
+                                return grammar.semiring.fromProbability(0.5);
                             } else {
-                                return grammar.getSemiring().one();
+                                return grammar.semiring.one();
                             }
                         })
                         .withOnPostScan((position, token, chart) -> System.out.println("Scan happened for token " + token))

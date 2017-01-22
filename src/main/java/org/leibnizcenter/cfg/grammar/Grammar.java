@@ -5,10 +5,11 @@ import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
-import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.cat ffddfdgory.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
@@ -62,11 +63,12 @@ public class Grammar<T> {
     /**
      * Reflexive, transitive closure of unit production relations, with the probabilities summed
      */
-    private final LeftCorners unitStarScores;
+    public final UnitStarScores unitStarScores;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
-    private final ExpressionSemiring semiring;
+    public final ExpressionSemiring semiring;
     private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
+    public AtomMap atoms=new AtomMap();
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -81,9 +83,8 @@ public class Grammar<T> {
     public Grammar(String name, MyMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
-
         getAllRules().forEach(rule -> {
-            nonTerminals.add(rule.getLeft());
+            nonTerminals.add(rule.left);
             for (Category c : rule.getRight())
                 if (c instanceof Terminal)//noinspection unchecked
                     terminals.add((Terminal) c);
@@ -92,9 +93,9 @@ public class Grammar<T> {
         });
 
         this.semiring = semiring;
-        leftCorners = new LeftCorners(semiring);
+        leftCorners = new LeftCorners(semiring,atoms);
         setLeftCorners();
-        leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
+        leftStarCorners = getReflexiveTransitiveClosure(atoms,semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
 
         nonTerminals.forEach(Yy -> {
@@ -114,7 +115,7 @@ public class Grammar<T> {
      * <p>
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
-    private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
+    private static LeftCorners getReflexiveTransitiveClosure(AtomMap atoms, DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
         NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalz.length; row++) {
@@ -128,7 +129,7 @@ public class Grammar<T> {
         }
         final Matrix R_L = R_L_inverse.inverse();
 
-        LeftCorners R__L = new LeftCorners(semiring);
+        LeftCorners R__L = new LeftCorners(semiring,atoms);
         /*
          * Copy all matrix values into our {@link LeftCorners} object
          */
@@ -200,24 +201,21 @@ public class Grammar<T> {
         return b.build();
     }
 
-    public ExpressionSemiring getSemiring() {
-        return semiring;
-    }
 
-    private LeftCorners getUnitStarCorners() {
+    private UnitStarScores getUnitStarCorners() {
         // Sum all probabilities for unit relations
-        final LeftCorners P_U = new LeftCorners(semiring);
+        final LeftCorners P_U = new LeftCorners(semiring,atoms);
         nonTerminals.forEach(X -> {
             final Collection<Rule> rules = getRules(X);
             if (rules != null) rules.stream()
                     .filter(Rule::isUnitProduction)
-//                        .map(rule -> Maps.immutableEntry(rule.getLeft(), rule.getRight()[0]))
+//                        .map(rule -> Maps.immutableEntry(rule.left, rule.getRight()[0]))
 //                        .distinct()
                     .forEach(Yrule -> P_U.plus(X, Yrule.getRight()[0], Yrule.getScore()));
         });
 
         // R_U = (I - P_U)
-        return getReflexiveTransitiveClosure(semiring, nonTerminals, P_U);
+        return new UnitStarScores(getReflexiveTransitiveClosure(atoms,semiring, nonTerminals, P_U), semiring,atoms);
     }
 
     //    /**
@@ -327,8 +325,8 @@ public class Grammar<T> {
         return leftStarCorners;
     }
 
-    public double getUnitStarScore(Category LHS, NonTerminal RHS) {
-        return unitStarScores.get(LHS, RHS);
+    public Atom getUnitStarScore(Category LHS, NonTerminal RHS) {
+        return unitStarScores.getAtom(LHS, RHS);
     }
 
     @SuppressWarnings("unused")
@@ -340,9 +338,6 @@ public class Grammar<T> {
         return terminals;
     }
 
-    public LeftCorners getUnitStar() {
-        return unitStarScores;
-    }
 
     public Stream<MapEntry<State, Rule>> streamNonZeroLeftStarRulesWithPrecedingState(final State statePredecessor) {
         final Category Z = statePredecessor.getActiveCategory();

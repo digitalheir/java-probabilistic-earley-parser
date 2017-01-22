@@ -16,6 +16,7 @@ import java.util.Set;
  *
  */
 @SuppressWarnings("unused")
+@Deprecated
 public class StateToDoubleMap {
     private final HashMap<Rule,
                     /*index*/

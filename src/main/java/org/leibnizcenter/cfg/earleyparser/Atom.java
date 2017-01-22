@@ -6,7 +6,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
  * Atomic value
  * Created by maarten on 21/01/17.
  */
-public class Atom implements Resolvable {
+public class Atom extends Resolvable {
     private final double v;
 
     public Atom(double v) {

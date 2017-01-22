@@ -60,7 +60,7 @@ public class Predict {
         final Rule Y_to_v = statePredecessor_Y_to_v.getValue();
 
         final Category Z = statePredecessor.getActiveCategory();
-        final Category Y = Y_to_v.getLeft();
+        final Category Y = Y_to_v.left;
 
         final double prevForward = stateSets.forwardScores.get(statePredecessor);
 
@@ -68,7 +68,7 @@ public class Predict {
         final double Y_to_vProbability = Y_to_v.getScore();
 
         // α' = α * R(Z =*L> Y) * P(Y → v)
-        final double fw = grammar.getSemiring().times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_vProbability);
+        final double fw = grammar.semiring.times(prevForward, grammar.getLeftStarScore(Z, Y), Y_to_vProbability);
 
         State state = State.create(index, index, 0, Y_to_v);
         boolean isNew = !stateSets.contains(state);
