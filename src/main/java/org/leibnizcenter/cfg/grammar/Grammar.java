@@ -5,7 +5,7 @@ import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
-import org.leibnizcenter.cfg.cat ffddfdgory.Category;
+import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
