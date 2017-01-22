@@ -46,7 +46,7 @@ public class LogSemiringTest {
         Assert.assertTrue(semiring.member(semiring.zero()));
         Assert.assertTrue(semiring.member(semiring.one()));
         Assert.assertTrue(semiring.member(semiring.fromProbability(0.0)));
-        // Note: this one is contentious, because we normally only want to deal with probs [0.0, 1.0]
+        // Note: this stateToAdvance is contentious, because we normally only want to deal with probs [0.0, 1.0]
         Assert.assertTrue(semiring.member(semiring.fromProbability(500.0)));
 
         Assert.assertFalse(semiring.member(semiring.fromProbability(-0.5)));

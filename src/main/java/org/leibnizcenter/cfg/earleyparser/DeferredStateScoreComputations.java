@@ -11,13 +11,11 @@ import java.util.Map;
  */
 class DeferredStateScoreComputations {
     final Map<State, DeferredValue> states;
-    private final Resolvable ZERO;
     private final ExpressionSemiring semiring;
 
     DeferredStateScoreComputations(ExpressionSemiring semiring) {
         this.states = new HashMap<>();
         this.semiring = semiring;
-        this.ZERO = semiring.ZERO_EXPRESSION;
     }
 
     DeferredValue getOrCreate(State state,
@@ -34,10 +32,14 @@ class DeferredStateScoreComputations {
     public void plus(State s, Resolvable addValue) {
         DeferredValue current = this.getOrCreate(
                 s,
-                this.ZERO
+                this.semiring.ZERO_EXPRESSION
         );
         current.setExpression(semiring.new Plus(addValue, current.getExpression()));
         this.states.put(s, current);
     }
 
+    public Complete.Delta addForward(Complete.Delta delta) {
+        plus(delta.state, delta.addForward);
+        return delta;
+    }
 }

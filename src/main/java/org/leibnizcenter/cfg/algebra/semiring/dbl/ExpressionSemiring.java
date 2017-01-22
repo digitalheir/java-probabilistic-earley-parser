@@ -1,7 +1,6 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 import org.leibnizcenter.cfg.earleyparser.Atom;
-import org.leibnizcenter.cfg.earleyparser.DeferredValue;
 
 import java.text.DecimalFormat;
 
@@ -46,7 +45,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         private final Resolvable left;
         private final Resolvable right2;
 
-        public Times(Resolvable left, DeferredValue right, DeferredValue right2) {
+        public Times(Resolvable left, Resolvable right, Resolvable right2) {
             this.left = left;
             this.right = right;
             this.right2 = right2;

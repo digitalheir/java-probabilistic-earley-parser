@@ -6,15 +6,16 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
-import org.leibnizcenter.cfg.grammar.LeftCorners;
 import org.leibnizcenter.cfg.grammar.UnitStarScores;
 import org.leibnizcenter.cfg.util.MyMultimap;
+import org.leibnizcenter.cfg.util.Triple;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Represents an index of active states in a chart
- *
+ * <p>
  * Created by maarten on 18-1-17.
  */
 public class ActiveStates<T> {
@@ -26,11 +27,11 @@ public class ActiveStates<T> {
     /**
      * Runs in O(1).
      */
-    public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal Y) {
+    public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal cat) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j))
             return null;
         else
-            return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(Y);
+            return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(cat);
     }
 
     public Set<State> getStatesActiveOnNonTerminal(NonTerminal y, int position, int beforeOrOnPosition) {
@@ -130,5 +131,18 @@ public class ActiveStates<T> {
                 addStateToActiveOnTerminal(position, (Terminal<T>) activeCategory, state);
             else throw new IssueRequest("Neither Terminal nor NonToken...?");
         }
+    }
+
+    public Stream<? extends Triple> streamAllStatesToAdvance(Triple completedState) {
+        final State state = completedState.completedState;
+        final Collection<State> statesActive = getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
+        return statesActive
+                .stream()
+                .map(stateToAdvance -> new Triple(
+                                stateToAdvance,
+                                state,
+                                completedState.completedInner
+                        )
+                );
     }
 }

@@ -40,17 +40,6 @@ public class Parser<T> {
     /**
      * Parses the given list of tokens and returns he parse probability
      *
-     * @param goal   Goal category, typically S for Sentence
-     * @param tokens list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
-     */
-    public double recognize(NonTerminal goal, Iterable<Token<T>> tokens) {
-        return recognize(goal, tokens, null);
-    }
-
-    /**
-     * Parses the given list of tokens and returns he parse probability
-     *
      * @param goal    Goal category, typically S for Sentence
      * @param grammar Grammar to apply to tokens
      * @param tokens  list of tokens to parse
@@ -61,30 +50,6 @@ public class Parser<T> {
                                        Grammar<T> grammar,
                                        Iterable<Token<T>> tokens) {
         return new Parser<>(grammar).recognize(goal, tokens, null);
-    }
-
-    /**
-     * Parses the given list of tokens and returns he parse probability
-     *
-     * @param goal   Goal category, typically S for Sentence
-     * @param tokens list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
-     */
-    public double recognize(NonTerminal goal,
-                            Iterable<Token<T>> tokens,
-                            @SuppressWarnings("SameParameterValue") ParseCallbacks<T> callbacks) {
-        final ChartWithInputPosition<T> parse = parseAndCountTokens(goal, tokens, callbacks);
-        final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.index, Category.START);
-        if (completedStates.size() > 0) {
-            if (completedStates.size() > 1)
-                throw new IssueRequest("Multiple final states found. This is likely an error.");
-            return completedStates.stream().mapToDouble(finalState ->
-                    grammar.semiring.toProbability(
-                            parse.chart.getForwardScore(finalState)
-                    )).sum();
-        } else {
-            return 0.0;
-        }
     }
 
     /**
@@ -103,25 +68,11 @@ public class Parser<T> {
         return new Parser<>(grammar).recognize(goal, tokens, callbacks);
     }
 
-
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens) {
-        return new Parser<>(grammar).parse(S, tokens, (ScanProbability<T>) null);
-    }
-
     @Deprecated
     public static <T> Chart<T> parse(NonTerminal S,
                                      Grammar<T> grammar,
                                      Iterable<Token<T>> tokens) {
         return new Parser<>(grammar).parse(S, tokens, (ScanProbability<T>) null);
-    }
-
-
-    public ParseTree getViterbiParse(
-            NonTerminal S,
-            Iterable<Token<T>> tokens
-    ) {
-        return getViterbiParse(S, tokens, null);
     }
 
     @Deprecated
@@ -131,16 +82,6 @@ public class Parser<T> {
             Iterable<Token<T>> tokens
     ) {
         return new Parser<>(grammar).getViterbiParse(S, tokens, null);
-    }
-
-    public ParseTree getViterbiParse(
-            NonTerminal S,
-            Iterable<Token<T>> tokens,
-            @SuppressWarnings("SameParameterValue") ParseCallbacks<T> callbacks
-    ) {
-        final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, tokens, callbacks);
-        if (viterbiParseWithScore == null) return null;
-        return viterbiParseWithScore.getParseTree();
     }
 
     @Deprecated
@@ -155,13 +96,6 @@ public class Parser<T> {
         return viterbiParseWithScore.getParseTree();
     }
 
-    public ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Iterable<Token<T>> tokens
-    ) {
-        return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, null);
-    }
-
     @Deprecated
     public static <T> ParseTreeWithScore getViterbiParseWithScore(
             NonTerminal S,
@@ -169,21 +103,6 @@ public class Parser<T> {
             Iterable<Token<T>> tokens
     ) {
         return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, null);
-    }
-
-
-    public ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Iterable<Token<T>> tokens,
-            ParseCallbacks<T> callbacks
-    ) {
-        ChartWithInputPosition<T> chart = new Parser<>(grammar).parseAndCountTokens(S, tokens, callbacks);
-        final StateSets<T> stateSets = chart.chart.stateSets;
-        List<ParseTreeWithScore> parses = stateSets.completedStates.getCompletedStates(chart.index, Category.START).stream()
-                .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
-                .collect(Collectors.toList());
-        if (parses.size() > 1) throw new Error("Found more than one Viterbi parses. This is a bug.");
-        return parses.size() == 0 ? null : parses.get(0);
     }
 
     @Deprecated
@@ -209,17 +128,6 @@ public class Parser<T> {
         ).chart;
     }
 
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens,
-                          ScanProbability<T> scanProbability) {
-        final ParseCallbacks<T> build = new ParserCallbacksBuilder<T>().withScanProbability(scanProbability).build();
-        return parseAndCountTokens(
-                S,
-                tokens,
-                build
-        ).chart;
-    }
-
     @Deprecated
     public static <T> Chart<T> parse(NonTerminal S,
                                      Grammar<T> grammar,
@@ -232,82 +140,12 @@ public class Parser<T> {
         ).chart;
     }
 
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens,
-                          ParseCallbacks<T> callbacks) {
-        return parseAndCountTokens(
-                S,
-                tokens,
-                callbacks
-        ).chart;
-    }
-
     @Deprecated
     public static <T> ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
                                                                     Grammar<T> grammar,
                                                                     Iterable<Token<T>> tokens,
                                                                     ParseCallbacks<T> callbacks) {
         return new Parser<>(grammar).parseAndCountTokens(S, tokens, callbacks);
-    }
-
-    public ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
-                                                         Iterable<Token<T>> tokens,
-                                                         ParseCallbacks<T> callbacks) {
-        final Chart<T> chart = new Chart<>(grammar);
-        final DblSemiring sr = grammar.semiring;
-
-        // Initial state
-        chart.addState(
-                new State(Rule.create(sr, 1.0, Category.START, S), 0),
-                sr.one(),
-                sr.one()
-        );
-
-        // Cycle through input
-        final int[] i = {0};
-
-        TokenWithCategories.from(tokens, grammar).forEach((token) -> {
-            predict(callbacks, chart, i[0], token);
-            scan(callbacks, chart, i[0], token);
-            complete(callbacks, chart, i[0], token);
-            i[0]++;
-        });
-        //Set<State> completed = chart.getCompletedStates(i, Category.START);
-        //if (completed.size() > 1) throw new Error("This is a bug");
-        return new ChartWithInputPosition<>(chart, i[0]);
-    }
-
-    private void complete(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
-
-        final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
-        Complete.completeNoViterbi(i + 1, grammar, chart.stateSets);
-        completedStates.forEach(s -> Complete.computeViterbiScores(s, grammar.semiring, chart.stateSets));
-
-        if (callbacks != null) callbacks.onComplete(i, token, chart);
-    }
-
-    private void scan(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
-        if (callbacks != null) callbacks.beforeScan(i, token, chart);
-
-        Scan.scan(
-                i,
-                token,
-                scanProbability,
-                grammar.semiring,
-                chart.stateSets
-        );
-
-        if (callbacks != null) callbacks.onScan(i, token, chart);
-    }
-
-    private void predict(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        if (callbacks != null) callbacks.beforePredict(i, token, chart);
-
-        Predict.predict(i, grammar, chart.stateSets);
-
-        if (callbacks != null) callbacks.onPredict(i, token, chart);
     }
 
     /**
@@ -365,6 +203,166 @@ public class Parser<T> {
                 return T;
             }
         }
+    }
+
+    /**
+     * Parses the given list of tokens and returns he parse probability
+     *
+     * @param goal   Goal category, typically S for Sentence
+     * @param tokens list of tokens to parse
+     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     */
+    public double recognize(NonTerminal goal, Iterable<Token<T>> tokens) {
+        return recognize(goal, tokens, null);
+    }
+
+    /**
+     * Parses the given list of tokens and returns he parse probability
+     *
+     * @param goal   Goal category, typically S for Sentence
+     * @param tokens list of tokens to parse
+     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     */
+    public double recognize(NonTerminal goal,
+                            Iterable<Token<T>> tokens,
+                            @SuppressWarnings("SameParameterValue") ParseCallbacks<T> callbacks) {
+        final ChartWithInputPosition<T> parse = parseAndCountTokens(goal, tokens, callbacks);
+        final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.index, Category.START);
+        if (completedStates.size() > 0) {
+            if (completedStates.size() > 1)
+                throw new IssueRequest("Multiple final states found. This is likely an error.");
+            return completedStates.stream().mapToDouble(finalState ->
+                    grammar.semiring.toProbability(
+                            parse.chart.getForwardScore(finalState)
+                    )).sum();
+        } else {
+            return 0.0;
+        }
+    }
+
+    public Chart<T> parse(NonTerminal S,
+                          Iterable<Token<T>> tokens) {
+        return new Parser<>(grammar).parse(S, tokens, (ScanProbability<T>) null);
+    }
+
+    public ParseTree getViterbiParse(
+            NonTerminal S,
+            Iterable<Token<T>> tokens
+    ) {
+        return getViterbiParse(S, tokens, null);
+    }
+
+    public ParseTree getViterbiParse(
+            NonTerminal S,
+            Iterable<Token<T>> tokens,
+            @SuppressWarnings("SameParameterValue") ParseCallbacks<T> callbacks
+    ) {
+        final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, tokens, callbacks);
+        if (viterbiParseWithScore == null) return null;
+        return viterbiParseWithScore.getParseTree();
+    }
+
+    public ParseTreeWithScore getViterbiParseWithScore(
+            NonTerminal S,
+            Iterable<Token<T>> tokens
+    ) {
+        return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, null);
+    }
+
+    public ParseTreeWithScore getViterbiParseWithScore(
+            NonTerminal S,
+            Iterable<Token<T>> tokens,
+            ParseCallbacks<T> callbacks
+    ) {
+        ChartWithInputPosition<T> chart = new Parser<>(grammar).parseAndCountTokens(S, tokens, callbacks);
+        final StateSets<T> stateSets = chart.chart.stateSets;
+        List<ParseTreeWithScore> parses = stateSets.completedStates.getCompletedStates(chart.index, Category.START).stream()
+                .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
+                .collect(Collectors.toList());
+        if (parses.size() > 1) throw new Error("Found more than one Viterbi parses. This is a bug.");
+        return parses.size() == 0 ? null : parses.get(0);
+    }
+
+    public Chart<T> parse(NonTerminal S,
+                          Iterable<Token<T>> tokens,
+                          ScanProbability<T> scanProbability) {
+        final ParseCallbacks<T> build = new ParserCallbacksBuilder<T>().withScanProbability(scanProbability).build();
+        return parseAndCountTokens(
+                S,
+                tokens,
+                build
+        ).chart;
+    }
+
+    public Chart<T> parse(NonTerminal S,
+                          Iterable<Token<T>> tokens,
+                          ParseCallbacks<T> callbacks) {
+        return parseAndCountTokens(
+                S,
+                tokens,
+                callbacks
+        ).chart;
+    }
+
+    public ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
+                                                         Iterable<Token<T>> tokens,
+                                                         ParseCallbacks<T> callbacks) {
+        final Chart<T> chart = new Chart<>(grammar);
+        final DblSemiring sr = grammar.semiring;
+
+        // Initial state
+        chart.addState(
+                new State(Rule.create(sr, 1.0, Category.START, S), 0),
+                sr.one(),
+                sr.one()
+        );
+
+        // Cycle through input
+        int i = 0;
+        for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
+            predict(callbacks, chart, i, token);
+            scan(callbacks, chart, i, token);
+            complete(callbacks, chart, i, token);
+            i++;
+        }
+        //Set<State> completed = chart.getCompletedStates(i, Category.START);
+        //if (completed.size() > 1) throw new Error("This is a bug");
+        return new ChartWithInputPosition<>(chart, i);
+    }
+
+    private void complete(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
+
+        Complete<T> complete = new Complete<>(chart.stateSets);
+
+        final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
+        complete.completeNoViterbi(i + 1, grammar);
+        completedStates.forEach(complete::computeViterbiScoresForCompletedState);
+
+        if (callbacks != null) callbacks.onComplete(i, token, chart);
+    }
+
+    private void scan(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
+        if (callbacks != null) callbacks.beforeScan(i, token, chart);
+
+        Scan.scan(
+                i,
+                token,
+                scanProbability,
+                grammar.semiring,
+                chart.stateSets
+        );
+
+        if (callbacks != null) callbacks.onScan(i, token, chart);
+    }
+
+    private void predict(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        if (callbacks != null) callbacks.beforePredict(i, token, chart);
+
+        Predict.predict(i, grammar, chart.stateSets);
+
+        if (callbacks != null) callbacks.onPredict(i, token, chart);
     }
 
 }

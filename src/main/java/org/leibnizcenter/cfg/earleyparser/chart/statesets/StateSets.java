@@ -3,12 +3,12 @@ package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.earleyparser.Complete;
 import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
-import org.leibnizcenter.cfg.grammar.AtomMap;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 
@@ -41,17 +41,17 @@ public class StateSets<T> {
     public final ViterbiScores viterbiScores = new ViterbiScores();
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
+    public final Grammar<T> grammar;
     private final Set<State> states = new HashSet<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
-    public final Grammar<T> grammar;
     private Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
 
 
     public StateSets(Grammar<T> grammar) {
         this.grammar = grammar;
         DblSemiring semiring = grammar.semiring;
-        this.forwardScores = new ForwardScores(semiring,grammar.atoms);
-        this.innerScores = new InnerScores(semiring,grammar.atoms);
+        this.forwardScores = new ForwardScores(semiring, grammar.atoms);
+        this.innerScores = new InnerScores(semiring, grammar.atoms);
     }
 
     /**
@@ -171,5 +171,11 @@ public class StateSets<T> {
 
     public State getOrCreate(State s) {
         return getOrCreate(s, null);
+    }
+
+    public void processDelta(Complete.ViterbiDelta delta) {
+        // Add new states to chart
+        if (delta.isNewState) addIfNew(delta.resultingState);
+        if (delta.newViterbiScore != null) viterbiScores.put(delta.newViterbiScore);
     }
 }

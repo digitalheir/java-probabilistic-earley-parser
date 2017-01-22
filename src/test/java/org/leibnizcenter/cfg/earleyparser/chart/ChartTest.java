@@ -11,7 +11,10 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
-import org.leibnizcenter.cfg.earleyparser.*;
+import org.leibnizcenter.cfg.earleyparser.ParseTree;
+import org.leibnizcenter.cfg.earleyparser.Parser;
+import org.leibnizcenter.cfg.earleyparser.Predict;
+import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
@@ -203,7 +206,9 @@ public class ChartTest {
         chart.addState(new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
         Predict.predict(0, grammar, chart.stateSets);
         Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index, token) -> semiring.fromProbability(0.5), grammar.semiring, chart.stateSets);
-        Complete.completeNoViterbi(1, grammar, chart.stateSets);
+
+//        Complete<String> complete=new Complete<>(chart.stateSets);
+//        complete.completeNoViterbi(1, grammar);
 
 //        for (int i = 0; i < 2; i++) {
 //            for (State s : chart.getStates(i)) {
