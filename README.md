@@ -77,6 +77,7 @@ public class Example {
     private static final NonTerminal Mod = Category.nonTerminal("Mod");
 
     // Token types are realized by implementing Terminal, specifically the function hasCategory. Terminal is a functional interface.
+    // Note that tokens can be of multiple terminal types (homographs: "bank" as a noun or "bank" as a verb)
     private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
     private static final Terminal the = new CaseInsenstiveStringTerminal("the");
