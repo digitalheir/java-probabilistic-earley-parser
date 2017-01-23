@@ -145,7 +145,7 @@ Grammar<String> g = Grammar.parse(Paths.get("path", "to", "grammar.cfg"), Charse
 ```
 
 One of the advantages of Earley parsing is the top-down control you can exert while parsing.
-You can pass the parser callbacks to influence the parsing process:
+You can pass the parser callbacks to influence the parsing process. Only use this if you really know what you're doing. It may mess up your results if you are not careful.
 
 
 ```
@@ -162,8 +162,6 @@ new ParseCallbacks.Builder()
                         .withOnPostComplete((position, token, chart) -> System.out.println("Complete happened for token " + token))
                         .build()
 ```
-
-Only use this function if you really know what you're doing. It may mess up your results.
 
 ## Some notes on implementation
 The probability of a parse is defined as the product of the probalities all the applied rules. Usually,
