@@ -34,7 +34,7 @@ public class ParserTest {
 
     @Test
     public void simpleRecursiveGrammar() throws Exception {
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         double p = (0.6);
         double q = (0.4);
         Grammar<String> grammar = new Grammar.Builder<String>()
@@ -179,7 +179,7 @@ public class ParserTest {
                 } else
                     v = sr.toProbability(chart.getViterbiScore(s).getScore());
 
-                //System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] v: " + v);
+                //System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] value: " + value);
             });
         }
         Collection<State> howMany = chart.stateSets.completedStates.getCompletedStates(tokens.size(), Category.START);
@@ -195,7 +195,7 @@ public class ParserTest {
     public void simpleGrammar2() throws Exception {
         double p = (0.6);
         double q = (0.4);
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         // b surrounded by a's, or a single a
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
@@ -217,7 +217,7 @@ public class ParserTest {
     public void simpleGrammar3() throws Exception {
         double p = (0.6);
         double q = (0.4);
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         // a surrounded by b's, or a single a
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
@@ -234,7 +234,7 @@ public class ParserTest {
 
     @Test
     public void viterbi() throws Exception {
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)
@@ -253,7 +253,7 @@ public class ParserTest {
 
     @Test
     public void viterbi2() throws Exception {
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)
@@ -278,7 +278,7 @@ public class ParserTest {
 
     @Test
     public void viterbi3() throws Exception {
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A, A)

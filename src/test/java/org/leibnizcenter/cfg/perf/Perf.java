@@ -31,7 +31,7 @@ public class Perf {
         NonTerminal S = Category.nonTerminal("S");
         Category aa = new ExactStringTerminal("a");
 
-        final LogSemiring sr = new LogSemiring();
+        final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .setSemiring(sr)
                 .addRule(1.0, S, A)

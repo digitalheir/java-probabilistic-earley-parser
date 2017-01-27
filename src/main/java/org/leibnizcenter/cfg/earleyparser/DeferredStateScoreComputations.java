@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  */
 class DeferredStateScoreComputations {
-    final Map<State, DeferredValue> states;
+    final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
 
     DeferredStateScoreComputations(ExpressionSemiring semiring) {
@@ -18,23 +18,23 @@ class DeferredStateScoreComputations {
         this.semiring = semiring;
     }
 
-    DeferredValue getOrCreate(State state,
-                              Resolvable default_) {
+    ExpressionWrapper getOrCreate(State state,
+                                  Resolvable default_) {
         if (this.states.containsKey(state)) {
             return this.states.get(state);
         } else {
-            final DeferredValue deferredValue = new DeferredValue(default_);
-            this.states.put(state, deferredValue);
-            return deferredValue;
+            final ExpressionWrapper expressionWrapper = new ExpressionWrapper(default_);
+            this.states.put(state, expressionWrapper);
+            return expressionWrapper;
         }
     }
 
     public void plus(State s, Resolvable addValue) {
-        DeferredValue current = this.getOrCreate(
+        ExpressionWrapper current = this.getOrCreate(
                 s,
                 this.semiring.ZERO_EXPRESSION
         );
-        current.setExpression(semiring.new Plus(addValue, current.getExpression()));
+        current.setExpression(semiring.plus(addValue, current.getExpression()));
         this.states.put(s, current);
     }
 

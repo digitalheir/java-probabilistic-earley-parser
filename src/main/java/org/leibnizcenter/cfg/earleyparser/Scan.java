@@ -2,7 +2,9 @@ package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
+import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.ForwardScores;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.InnerScores;
@@ -20,12 +22,52 @@ import java.util.stream.Stream;
  * <p>
  * Created by maarten on 31/10/16.
  */
-public final class Scan {
+public final class Scan<T> {
+
+    private final StateSets<T> stateSets;
+    private final DblSemiring sr;
+
+    Scan(StateSets<T> stateSets) {
+        this.stateSets = stateSets;
+        this.sr = stateSets.grammar.semiring;
+    }
+
     /**
-     * Don't instantiate
+     * Function to calculate the new inner score from given values
+     *
+     * @param scanProbability The probability of scanning this particular token
+     * @param sr              The semiring to calculate with
+     * @param previousInner   The previous inner score
+     * @return The inner score for the new state
      */
-    private Scan() {
-        throw new Error();
+
+    private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
+        return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
+    }
+
+    /**
+     * Function to compute the forward score for the new state after scanning the given token.
+     *
+     * @param scanProbability           The probability of scanning this particular token
+     * @param sr                        The semiring to calculate with
+     * @param previousStateForwardScore The previous forward score
+     * @return Computed forward score for the new state
+     */
+    private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
+        return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
+    }
+
+    void scan(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
+        if (callbacks != null) callbacks.beforeScan(i, token, chart);
+
+        scan(
+                i,
+                token,
+                scanProbability
+        );
+
+        if (callbacks != null) callbacks.onScan(i, token, chart);
     }
 
     /**
@@ -35,12 +77,10 @@ public final class Scan {
      * @param tokenWithCategories The token that was scanned.
      * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
-    public static <T> void scan(
+    public void scan(
             final int tokenPosition,
             final TokenWithCategories<T> tokenWithCategories,
-            final ScanProbability<T> scanProbability,
-            final DblSemiring sr,
-            final StateSets<T> stateSets
+            final ScanProbability<T> scanProbability
     ) {
         if (tokenWithCategories == null)
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
@@ -78,32 +118,6 @@ public final class Scan {
                 // After we have calculated everything, we mutate the chart
                 .sequential()
                 .forEach(stateSets::createStateAndSetScores);
-    }
-
-
-    /**
-     * Function to calculate the new inner score from given values
-     *
-     * @param scanProbability The probability of scanning this particular token
-     * @param sr              The semiring to calculate with
-     * @param previousInner   The previous inner score
-     * @return The inner score for the new state
-     */
-
-    private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
-        return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
-    }
-
-    /**
-     * Function to compute the forward score for the new state after scanning the given token.
-     *
-     * @param scanProbability           The probability of scanning this particular token
-     * @param sr                        The semiring to calculate with
-     * @param previousStateForwardScore The previous forward score
-     * @return Computed forward score for the new state
-     */
-    private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
-        return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
     public static class Delta<T> {

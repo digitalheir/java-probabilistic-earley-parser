@@ -5,7 +5,6 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
-import org.leibnizcenter.cfg.earleyparser.callbacks.ParserCallbacksBuilder;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.ChartWithInputPosition;
@@ -19,9 +18,7 @@ import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -120,7 +117,7 @@ public class Parser<T> {
                                      Grammar<T> grammar,
                                      Iterable<Token<T>> tokens,
                                      ScanProbability<T> scanProbability) {
-        final ParseCallbacks<T> build = new ParserCallbacksBuilder<T>().withScanProbability(scanProbability).build();
+        final ParseCallbacks<T> build = new ParseCallbacks.Builder<T>().withScanProbability(scanProbability).build();
         return new Parser<>(grammar).parseAndCountTokens(
                 S,
                 tokens,
@@ -286,7 +283,7 @@ public class Parser<T> {
     public Chart<T> parse(NonTerminal S,
                           Iterable<Token<T>> tokens,
                           ScanProbability<T> scanProbability) {
-        final ParseCallbacks<T> build = new ParserCallbacksBuilder<T>().withScanProbability(scanProbability).build();
+        final ParseCallbacks<T> build = new ParseCallbacks.Builder<T>().withScanProbability(scanProbability).build();
         return parseAndCountTokens(
                 S,
                 tokens,
@@ -319,50 +316,19 @@ public class Parser<T> {
 
         // Cycle through input
         int i = 0;
+
+        final Complete<T> complete = new Complete<>(chart.stateSets, true);
+        final Scan<T> scan = new Scan<T>(chart.stateSets);
+        final Predict<T> predict = new Predict<T>(chart.stateSets);
+
         for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
-            predict(callbacks, chart, i, token);
-            scan(callbacks, chart, i, token);
-            complete(callbacks, chart, i, token);
+            predict.predict(callbacks, chart, i, token);
+            scan.scan(callbacks, chart, i, token);
+            complete.complete(callbacks, chart, i, token);
             i++;
         }
         //Set<State> completed = chart.getCompletedStates(i, Category.START);
         //if (completed.size() > 1) throw new Error("This is a bug");
         return new ChartWithInputPosition<>(chart, i);
     }
-
-    private void complete(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
-
-        Complete<T> complete = new Complete<>(chart.stateSets);
-
-        final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
-        complete.completeNoViterbi(i + 1, grammar);
-        completedStates.forEach(complete::computeViterbiScoresForCompletedState);
-
-        if (callbacks != null) callbacks.onComplete(i, token, chart);
-    }
-
-    private void scan(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
-        if (callbacks != null) callbacks.beforeScan(i, token, chart);
-
-        Scan.scan(
-                i,
-                token,
-                scanProbability,
-                grammar.semiring,
-                chart.stateSets
-        );
-
-        if (callbacks != null) callbacks.onScan(i, token, chart);
-    }
-
-    private void predict(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
-        if (callbacks != null) callbacks.beforePredict(i, token, chart);
-
-        Predict.predict(i, grammar, chart.stateSets);
-
-        if (callbacks != null) callbacks.onPredict(i, token, chart);
-    }
-
 }

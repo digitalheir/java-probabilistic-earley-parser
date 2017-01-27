@@ -67,4 +67,62 @@ public class ParseCallbacks<T> {
         if (this.onPreComplete != null) onPostComplete.on(i, token, chart);
     }
 
+    public static class Builder<T> {
+        private ScanProbability<T> scanProbability;
+
+        private ParseCallback<T> onPostPredict;
+        private ParseCallback<T> onPostScan;
+        private ParseCallback<T> onPostComplete;
+
+        private ParseCallback<T> onPrePredict;
+        private ParseCallback<T> onPreScan;
+        private ParseCallback<T> onPreComplete;
+
+        public Builder<T> withScanProbability(ScanProbability<T> scanProbability) {
+            this.scanProbability = scanProbability;
+            return this;
+        }
+
+        public Builder<T> withOnPostPredict(ParseCallback<T> onPostPredict) {
+            this.onPostPredict = onPostPredict;
+            return this;
+        }
+
+        public Builder<T> withOnPostScan(ParseCallback<T> onPostScan) {
+            this.onPostScan = onPostScan;
+            return this;
+        }
+
+        public Builder<T> withOnPostComplete(ParseCallback<T> onPostComplete) {
+            this.onPostComplete = onPostComplete;
+            return this;
+        }
+
+        public Builder<T> withOnPrePredict(ParseCallback<T> onPrePredict) {
+            this.onPrePredict = onPrePredict;
+            return this;
+        }
+
+        public Builder<T> withOnPreScan(ParseCallback<T> onPreScan) {
+            this.onPreScan = onPreScan;
+            return this;
+        }
+
+        public Builder<T> withOnPreComplete(ParseCallback<T> onPreComplete) {
+            this.onPreComplete = onPreComplete;
+            return this;
+        }
+
+        public ParseCallbacks<T> build() {
+            return new ParseCallbacks<>(
+                    scanProbability,
+                    onPostPredict,
+                    onPostScan,
+                    onPostComplete,
+                    onPrePredict,
+                    onPreScan,
+                    onPreComplete
+            );
+        }
+    }
 }

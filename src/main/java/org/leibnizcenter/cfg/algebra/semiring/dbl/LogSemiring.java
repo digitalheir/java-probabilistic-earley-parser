@@ -15,6 +15,9 @@ public class LogSemiring extends ExpressionSemiring {
             Property.Commutative
     );
 
+    private LogSemiring() {
+    }
+
     public static LogSemiring get(){
         return SINGLETON;
     }

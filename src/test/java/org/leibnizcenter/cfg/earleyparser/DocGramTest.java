@@ -43,7 +43,7 @@ public class DocGramTest {
     public static final ExactStringTerminal TERMINAL_TEXT = new ExactStringTerminal("TEXT_BLOCK");
     public static final ExactStringTerminal TERMINAL_NEWLINE = new ExactStringTerminal("NEWLINE");
     public final static Grammar<String> grammar = new Grammar.Builder<String>()
-            .setSemiring(new LogSemiring())
+            .setSemiring(LogSemiring.get())
             .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)
 
             .addRule(0.7, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE)

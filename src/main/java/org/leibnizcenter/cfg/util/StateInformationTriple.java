@@ -6,12 +6,12 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 /**
  * Created by maarten on 22/01/17.
  */
-public class Triple {
+public class StateInformationTriple {
     public final State stateToAdvance;
     public final State completedState;
     public final Resolvable completedInner;
 
-    public Triple(
+    public StateInformationTriple(
             State stateToAdvance,
             State completedState,
             Resolvable completedInner

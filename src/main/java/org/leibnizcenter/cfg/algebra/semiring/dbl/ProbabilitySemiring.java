@@ -14,6 +14,14 @@ public class ProbabilitySemiring extends ExpressionSemiring {
             Property.RightSemiring,
             Property.Commutative
     );
+    private static final ProbabilitySemiring SINGLETON = new ProbabilitySemiring();
+
+    private ProbabilitySemiring() {
+    }
+
+    public static ProbabilitySemiring get() {
+        return SINGLETON;
+    }
 
     @Override
     public double plus(double w1, double w2) {

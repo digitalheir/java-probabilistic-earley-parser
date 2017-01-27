@@ -8,6 +8,7 @@ import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.LinkedList;
 import java.util.List;
+
 /**
  * A parse tree that represents the derivation of a string based on the
  * rules in a {@link Grammar}. Parse trees recursively contain
@@ -73,28 +74,6 @@ public abstract class ParseTree {
         return children;
     }
 
-
-    /**
-     * Gets a string representation of this parse tree.
-     *
-     * @return For the string &quot;the boy left&quot;, possibly something like:
-     * <blockquote><code>[S[NP[Det[the]][N[boy]]][VP[left]]]</code></blockquote>
-     * (The actual string would depend on the grammar rules in effect for the
-     * parse).
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder("[");
-        sb.append(category.toString());
-
-        // recursively append children
-        if (children != null) for (ParseTree child : children) sb.append(child.toString());
-
-        sb.append(']');
-
-        return sb.toString();
-    }
-
     void addRightMost(ParseTree tree) {
         children.addLast(tree);
     }
@@ -108,6 +87,25 @@ public abstract class ParseTree {
 
         return category.equals(parseTree.category) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
 
+    }
+
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        toString(sb, "", true);
+        return sb.toString();
+    }
+
+    private void toString(StringBuilder sb, String prefix, boolean isTail) {
+        sb.append(prefix + (isTail ? "└── " : "├── ") + category.toString() + "\n");
+        if (children != null) {
+            for (int i = 0; i < children.size() - 1; i++) {
+                children.get(i).toString(sb, prefix + (isTail ? "    " : "│   "), false);
+            }
+            if (children.size() > 0) {
+                children.get(children.size() - 1)
+                        .toString(sb, prefix + (isTail ? "    " : "│   "), true);
+            }
+        }
     }
 
     @Override

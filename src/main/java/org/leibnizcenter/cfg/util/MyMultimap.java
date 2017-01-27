@@ -31,8 +31,14 @@ public class MyMultimap<T, T1> {
         return map.containsKey(s);
     }
 
+    public boolean lock() {
+        map = Collections.unmodifiableMap(map);
+        values = Collections.unmodifiableSet(values);
+        return true;
+    }
+
     public Collection<T1> values() {
-        return Collections.unmodifiableSet(values);
+        return values;
     }
 
 }

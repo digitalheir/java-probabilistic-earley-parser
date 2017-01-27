@@ -4,15 +4,21 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
+import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
-import org.leibnizcenter.cfg.util.Triple;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
+import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Complete stage
@@ -21,99 +27,26 @@ import java.util.stream.Collectors;
  */
 public class Complete<T> {
     private final StateSets<T> stateSets;
+    private final boolean parallelize;
+    private final ExpressionSemiring semiring;
 
     /**
      */
-    Complete(StateSets<T> stateSets) {
+    Complete(StateSets<T> stateSets, boolean parallelize) {
         this.stateSets = stateSets;
+        this.semiring = stateSets.grammar.semiring;
+        this.parallelize = parallelize;
     }
 
     private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, State.ViterbiScore newViterbiScore) {
         return viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0;
     }
 
-    /**
-     * Completes states exhaustively and makes resolvable expressions for the forward and inner scores.
-     * Note that these expressions can only be resolved to actual values after finishing completion, because they may depend on one another.
-     *
-     * @param position         State position
-     * @param states           Completed states to use for deducing what states to proceed
-     * @param addForwardScores Container / helper for adding to forward score expressions
-     * @param addInnerScores   Container / helper for adding to inner score expressions
-     *                         //     * @param completedStatesAlreadyHandled The completed states that we don't want to reiterate.
-     *                         //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
-     *                         //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
-     */
-    private static <E> void completeNoViterbi(final int position,
-                                              final Collection<State> states,
-                                              final DeferredStateScoreComputations addForwardScores,
-                                              final DeferredStateScoreComputations addInnerScores,
-                                              final StateSets<E> stateSets
-    ) {
-        if (states == null || states.size() <= 0) return;
-
-
-        final DeferredStateScoreComputations newStates = new DeferredStateScoreComputations(stateSets.grammar.semiring);
-        final Set<State> newCompletedStates = states.stream()
-                // For all states
-                //      i: Y<sub>j</sub> → v·    [a",y"]
-                //      j: X<sub>k</suv> → l·Zm  [a',y']
-                //
-                //  such that the R*(Z =*> Y) is nonzero
-                //  and Y → v is not a unit production
-
-                // WARNING: shared mutated mutability
-                .map(completedState -> new Triple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))))
-
-                /* Safe to parallelize here */
-                .parallel()
-                .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
-                .parallel()
-                .map(stateInformation -> completeNoViterbiForTriple(
-                        position,
-                        addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
-                        addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.getAtom(stateInformation.stateToAdvance)),
-                        stateSets,
-                        stateInformation
-                        )
-                )
-
-                /* */
-
-                .sequential()
-
-                /* WARNING: shared mutable state mutated*/
-
-                .filter(delta -> {
-                            addForwardScores.plus(delta.state, delta.addForward);
-                            addInnerScores.plus(delta.state, delta.addInner);
-                            return delta.newCompletedStateNoUnitProduction;
-                        }
-                )
-                .map(newStates::addForward)
-                .map(Delta::getState)
-
-                /* */
-
-                .collect(Collectors.toSet());
-        // recurse
-        if (newCompletedStates.size() > 0) {
-            newCompletedStates.forEach(stateSets::getOrCreate);
-            Complete.completeNoViterbi(
-                    position,
-                    newCompletedStates,
-                    addForwardScores,
-                    addInnerScores,
-                    stateSets
-            );
-        }
-    }
-
     private static <E> Delta completeNoViterbiForTriple(int position,
                                                         Resolvable prevInner,
                                                         Resolvable prevForward,
                                                         StateSets<E> stateSets,
-                                                        Triple t) {
+                                                        StateInformationTriple t) {
         final int j = t.completedState.ruleStartPosition;
         final NonTerminal Yl = t.completedState.rule.left;
 
@@ -122,8 +55,9 @@ public class Complete<T> {
         final Grammar<E> grammar = stateSets.grammar;
         final Resolvable unitStarScore = grammar.getUnitStarScore(Z, Yl);
 
-        final ExpressionSemiring.Times fw = grammar.semiring.new Times(unitStarScore, prevForward, t.completedInner);
-        final ExpressionSemiring.Times inner = grammar.semiring.new Times(unitStarScore, prevInner, t.completedInner);
+        final Resolvable fw = grammar.semiring.times(unitStarScore, prevForward, t.completedInner);
+        final Resolvable inner = grammar.semiring.times(unitStarScore, prevInner, t.completedInner);
+
         if (j != t.stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
         final State s = State.create(
                 position,
@@ -142,6 +76,80 @@ public class Complete<T> {
                                 && !stateSets.contains(s)))
 
                 );
+    }
+
+    /**
+     * Completes states exhaustively and makes resolvable expressions for the forward and inner scores.
+     * Note that these expressions can only be resolved to actual values after finishing completion, because they may depend on one another.
+     *
+     * @param position         State position
+     * @param states           Completed states to use for deducing what states to proceed
+     * @param addForwardScores Container / helper for adding to forward score expressions
+     * @param addInnerScores   Container / helper for adding to inner score expressions
+     *                         //     * @param completedStatesAlreadyHandled The completed states that we don't want to reiterate.
+     *                         //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
+     *                         //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
+     */
+    private void completeNoViterbi(final int position,
+                                   final Collection<State> states,
+                                   final DeferredStateScoreComputations addForwardScores,
+                                   final DeferredStateScoreComputations addInnerScores
+    ) {
+        if (states == null || states.size() <= 0) return;
+
+
+        final DeferredStateScoreComputations newStates = new DeferredStateScoreComputations(stateSets.grammar.semiring);
+        Stream<StateInformationTriple> stream = states.stream()
+                // For all states
+                //      i: Y<sub>j</sub> → value·    [a",y"]
+                //      j: X<sub>k</suv> → l·Zm  [a',y']
+                //
+                //  such that the R*(Z =*> Y) is nonzero
+                //  and Y → value is not a unit production
+
+                // WARNING: shared mutated mutability
+                .sequential()
+                .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))));
+
+        /* Safe to parallelize here */
+        if (parallelize) stream = stream.parallel();
+        stream = stream.flatMap(stateSets.activeStates::streamAllStatesToAdvance);
+        if (parallelize) stream = stream.parallel();
+
+        List<Delta> deltas = stream
+                .map(stateInformation -> completeNoViterbiForTriple(
+                        position,
+                        addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
+                        addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.getAtom(stateInformation.stateToAdvance)),
+                        stateSets,
+                        stateInformation
+                        )
+                )
+                .collect(Collectors.toList());
+
+                /* */
+        Collection<State> newCompletedStates = null;
+        for (Delta delta : deltas) {
+            //todo these plus operation may be parallelized a little?
+            addForwardScores.plus(delta.state, delta.addForward);
+            addInnerScores.plus(delta.state, delta.addInner);
+
+            if (delta.newCompletedStateNoUnitProduction) {
+                newStates.addForward(delta);
+                if (newCompletedStates == null) newCompletedStates = new HashSet<>(deltas.size());
+                newCompletedStates.add(delta.getState());
+            }
+        }
+        // recurse
+        if (newCompletedStates != null && newCompletedStates.size() > 0) {
+            newCompletedStates.forEach(stateSets::getOrCreate);
+            completeNoViterbi(
+                    position,
+                    newCompletedStates,
+                    addForwardScores,
+                    addInnerScores
+            );
+        }
     }
 
     /**
@@ -165,9 +173,10 @@ public class Complete<T> {
         int completedPos = completedState.position;
         final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Yl, completedState.ruleStartPosition, completedPos);
         if (statesToAdvance != null && statesToAdvance.size() > 0) {
-            Collection<ViterbiDelta> newStates = statesToAdvance.stream()
+            Stream<State> stream = statesToAdvance.stream();
                     /* Safe to parallelize here */
-                    .parallel()
+            if (parallelize) stream = stream.parallel();
+            Collection<ViterbiDelta> newStates = stream
                     .map((stateToAdvance) -> computeViterbiForState(completedState, completedViterbi, stateToAdvance))
                     .filter(d -> d != null)
                     .collect(Collectors.toSet());
@@ -222,18 +231,16 @@ public class Complete<T> {
      * @param i The index to make completions at.
      */
     void completeNoViterbi(
-            final int i,
-            final Grammar<T> grammar
+            final int i
     ) {
-        final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(grammar.semiring);
-        final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(grammar.semiring);
+        final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(semiring);
+        final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(semiring);
 
         completeNoViterbi(
                 i,
                 stateSets.completedStates.getCompletedStatesThatAreNotUnitProductions(i),
                 addForwardScores,
-                addInnerScores,
-                stateSets
+                addInnerScores
         );
 
         // Resolve and set forward & inner scores
@@ -250,6 +257,17 @@ public class Complete<T> {
                         score.resolveFinal()
                 )
         );
+    }
+
+    void complete(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
+
+
+        final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
+        completeNoViterbi(i + 1);
+        completedStates.forEach(this::computeViterbiScoresForCompletedState);
+
+        if (callbacks != null) callbacks.onComplete(i, token, chart);
     }
 
 

@@ -38,7 +38,7 @@ public class StateSets<T> {
      * a certain non-terminal X
      */
     public final InnerScores innerScores;
-    public final ViterbiScores viterbiScores = new ViterbiScores();
+    public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<State, State.ViterbiScore>();
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
     public final Grammar<T> grammar;
@@ -133,7 +133,7 @@ public class StateSets<T> {
         }
 
 
-        this.viterbiScores.put(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
+        setViterbiScore(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
         this.forwardScores.add(delta.predicted, delta.fw);
         this.innerScores.put(delta.predicted, delta.Y_to_vProbability);
     }
@@ -159,9 +159,11 @@ public class StateSets<T> {
                 score.postScanInner
         );
         // Set Viterbi score
-        this.viterbiScores.put(
-                new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr)
-        );
+        setViterbiScore(new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr));
+    }
+
+    public void setViterbiScore(State.ViterbiScore viterbiScore) {
+        this.viterbiScores.put(viterbiScore.getResultingState(), viterbiScore);
     }
 
     public ScannedToken<T> getScannedToken(State state) {
@@ -176,6 +178,6 @@ public class StateSets<T> {
     public void processDelta(Complete.ViterbiDelta delta) {
         // Add new states to chart
         if (delta.isNewState) addIfNew(delta.resultingState);
-        if (delta.newViterbiScore != null) viterbiScores.put(delta.newViterbiScore);
+        if (delta.newViterbiScore != null) setViterbiScore(delta.newViterbiScore);
     }
 }

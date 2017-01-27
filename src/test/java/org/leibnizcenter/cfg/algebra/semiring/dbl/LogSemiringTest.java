@@ -9,7 +9,7 @@ import org.junit.Test;
  * Created by Maarten on 31-7-2016.
  */
 public class LogSemiringTest {
-    private static final LogSemiring semiring = new LogSemiring();
+    private static final LogSemiring semiring = LogSemiring.get();
 
     @Test
     public void plus() throws Exception {

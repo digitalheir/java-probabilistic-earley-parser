@@ -66,7 +66,7 @@ public class Chart<T> {
         stateSets.innerScores.put(state, inner);
         stateSets.forwardScores.put(state, forward);
         if (stateSets.viterbiScores.get(state) == null)
-            stateSets.viterbiScores.put(new State.ViterbiScore(grammar.semiring.one(), null, state, grammar.semiring));
+            stateSets.setViterbiScore(new State.ViterbiScore(grammar.semiring.one(), null, state, grammar.semiring));
     }
 
     @SuppressWarnings("unused")

@@ -8,7 +8,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.UnitStarScores;
 import org.leibnizcenter.cfg.util.MyMultimap;
-import org.leibnizcenter.cfg.util.Triple;
+import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -133,16 +133,17 @@ public class ActiveStates<T> {
         }
     }
 
-    public Stream<? extends Triple> streamAllStatesToAdvance(Triple completedState) {
+    public Stream<? extends StateInformationTriple> streamAllStatesToAdvance(StateInformationTriple completedState) {
         final State state = completedState.completedState;
         final Collection<State> statesActive = getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
-        return statesActive
+        return statesActive == null ? Stream.empty() : statesActive
                 .stream()
-                .map(stateToAdvance -> new Triple(
+                .map(stateToAdvance -> new StateInformationTriple(
                                 stateToAdvance,
                                 state,
                                 completedState.completedInner
                         )
                 );
     }
+
 }

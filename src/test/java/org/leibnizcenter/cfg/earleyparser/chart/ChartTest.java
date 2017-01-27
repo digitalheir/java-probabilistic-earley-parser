@@ -14,12 +14,10 @@ import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
 import org.leibnizcenter.cfg.earleyparser.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.earleyparser.Predict;
-import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
-import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.token.Tokens;
 
 import java.util.List;
@@ -50,7 +48,7 @@ public class ChartTest {
     private static final Terminal<String> with = new ExactStringTerminal("with");
 
     private static final Grammar<String> grammar = new Grammar.Builder<String>("test")
-            .setSemiring(new LogSemiring()) // If not set, defaults to Log semiring which is probably what you want
+            .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want
             .addRule(
                     1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
                     S,     // Left hand side of the rule
@@ -112,7 +110,7 @@ public class ChartTest {
         double PSVP = 0.9;
         double PSNP = 1 - PSVP;
         Grammar<String> grammar = new Grammar.Builder<String>("test")
-                .setSemiring(new LogSemiring())
+                .setSemiring(LogSemiring.get())
                 .addRule(PSVP, S, NP, VP)
                 .addRule(PSNP, S, NP)
                 .addRule(NP, Det, N)
@@ -164,7 +162,7 @@ public class ChartTest {
         State initialState = new State(Rule.create(sr, Category.START, S), 0);
         chart.addState(initialState, sr.one(), sr.one());
 
-        Predict.predict(0, chart.grammar, chart.stateSets);
+        new Predict(chart.stateSets).predict(0);
 
         Assert.assertTrue(chart.getStates(0).contains(initialState));
         Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, p, S, a), 0)));
@@ -181,7 +179,7 @@ public class ChartTest {
 
     @Test
     public final void parse() {
-        final LogSemiring semiring = new LogSemiring();
+        final LogSemiring semiring = LogSemiring.get();
         final Rule ruleB = Rule.create(semiring, 0.5, B, C);
         final Rule ruleC = Rule.create(semiring, 0.5, C, D);
         final Rule ruleD = Rule.create(semiring, 0.5, D, E);
@@ -204,8 +202,8 @@ public class ChartTest {
         Chart<String> chart = new Chart<>(grammar);
 
         chart.addState(new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
-        Predict.predict(0, grammar, chart.stateSets);
-        Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index, token) -> semiring.fromProbability(0.5), grammar.semiring, chart.stateSets);
+//        Predict.predict(0, grammar, chart.stateSets);
+//        Scan.scan(0, new TokenWithCategories<>(new Token<>("a"), a), (index, token) -> semiring.fromProbability(0.5), grammar.semiring, chart.stateSets);
 
 //        Complete<String> complete=new Complete<>(chart.stateSets);
 //        complete.completeNoViterbi(1, grammar);

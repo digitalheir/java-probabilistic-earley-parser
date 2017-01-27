@@ -1,19 +1,14 @@
 package org.leibnizcenter.cfg.token;
 
-import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.terminal.Terminal;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Spliterator;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
- * Utility classes for {@link Token}
+ * Utility functions for {@link Token}
  * <p>
  * Created by maarten on 10-6-16.
  */
@@ -59,25 +54,11 @@ public final class Tokens {
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> boolean hasCategory(Token<T> token, Category category) {
-        return Category.isTerminal(category) && ((Terminal) category).hasCategory(token);
-    }
-
     @SafeVarargs
     public static <T> List<Token<T>> tokenize(T... objs) {
         return Arrays.stream(objs).map(Token::new).collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unused")
-    public static <T> List<Token<T>> tokenize(Spliterator<T> objs, boolean parallel) {
-        return StreamSupport.stream(objs, parallel).map(Token::new).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unused")
-    public static <T> List<Token<T>> tokenize(Spliterator<T> objs) {
-        return StreamSupport.stream(objs, false).map(Token::new).collect(Collectors.toList());
-    }
 
     @SuppressWarnings("unused")
     public static <T> List<Token<T>> tokenize(Collection<T> objs) {

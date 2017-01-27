@@ -49,8 +49,8 @@ public class ParseTreeWithScore {
     @Override
     public String toString() {
         return "ParseTree{" +
-                "p = " + getProbability() +
-                ", parseTree = " + parseTree +
+                "\np = " + getProbability() +
+                ", \nparseTree = \n" + parseTree +
                 '}';
     }
 }

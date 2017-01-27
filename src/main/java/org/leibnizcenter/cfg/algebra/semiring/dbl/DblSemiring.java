@@ -82,46 +82,27 @@ public interface DblSemiring {
      */
     EnumSet<Property> properties();
 
-    /**
-     * NATURAL ORDER
-     * <p>
-     * By definition: a <= b iff a + b = a
-     * <p>
-     * The natural order is a negative partial order iff the semiring is
-     * idempotent. It is trivially monotonic for operator. It is left (resp. right)
-     * monotonic for times iff the semiring is left (resp. right) distributive.
-     * It is a total order iff the semiring has the path property.
-     * <p>
-     * See Mohri,
-     * "Semiring Framework and Algorithms for Shortest-Distance Problems",
-     * Journal of Automata, Languages and Combinatorics 7(3):321-350, 2002.
-     * <p>
-     * We define the strict version of this order below.
-     */
-    @SuppressWarnings("unused")
-    default boolean naturalLess(double w1, double w2) {
-        return (this.plus(w1, w2) == w1) && (w1 != w2);
-    }
-
-    // Remember that the operators are associative
-    default double plus(double a, double b, double... rest) {
-        double runningTotal = plus(a, b);
-        for (double aRest : rest) runningTotal = plus(runningTotal, aRest);
-        return runningTotal;
-    }
-
-    // Remember that the operators are associative
-    default double times(double a, double b, double c) {
-        return times(a, times(b, c));
-    }
-
-    // Remember that the operators are associative
-    @SuppressWarnings("unused")
-    default double times(double a, double b, double... c) {
-        double runningTotal = plus(a, b);
-        for (double aRest : c) runningTotal = times(runningTotal, aRest);
-        return runningTotal;
-    }
+//    /**
+//     * NATURAL ORDER
+//     * <p>
+//     * By definition: a <= b iff a + b = a
+//     * <p>
+//     * The natural order is a negative partial order iff the semiring is
+//     * idempotent. It is trivially monotonic for operator. It is left (resp. right)
+//     * monotonic for times iff the semiring is left (resp. right) distributive.
+//     * It is a total order iff the semiring has the path property.
+//     * <p>
+//     * See Mohri,
+//     * "Semiring Framework and Algorithms for Shortest-Distance Problems",
+//     * Journal of Automata, Languages and Combinatorics 7(3):321-350, 2002.
+//     * <p>
+//     * We define the strict version of this order below.
+//     */
+//    @SuppressWarnings("unused")
+//    default boolean naturalLess(double w1, double w2) {
+//        return (this.plus(w1, w2) == w1) && (w1 != w2);
+//    }
+//
 
     double fromProbability(double x);
 

@@ -4,10 +4,10 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 
 @SuppressWarnings("WeakerAccess")
-public class DeferredValue extends Resolvable {
+public class ExpressionWrapper extends Resolvable {
     private Resolvable expression;
 
-    public DeferredValue(Resolvable expression) {
+    public ExpressionWrapper(Resolvable expression) {
         this.expression = expression;
     }
 

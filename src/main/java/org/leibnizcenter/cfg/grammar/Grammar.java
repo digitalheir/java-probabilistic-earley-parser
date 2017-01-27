@@ -48,6 +48,11 @@ public class Grammar<T> {
     private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     @SuppressWarnings("WeakerAccess")
     public final String name;
+    /**
+     * Reflexive, transitive closure of unit production relations, with the probabilities summed
+     */
+    public final UnitStarScores unitStarScores;
+    public final ExpressionSemiring semiring;
     private final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
@@ -60,15 +65,10 @@ public class Grammar<T> {
      * Reflexive, transitive closure of leftCorners, with the probabilities summed
      */
     private final LeftCorners leftStarCorners;
-    /**
-     * Reflexive, transitive closure of unit production relations, with the probabilities summed
-     */
-    public final UnitStarScores unitStarScores;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
-    public final ExpressionSemiring semiring;
-    private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
     public AtomMap atoms=new AtomMap();
+    private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -83,6 +83,7 @@ public class Grammar<T> {
     public Grammar(String name, MyMultimap<Category, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
+        rules.lock();
         getAllRules().forEach(rule -> {
             nonTerminals.add(rule.left);
             for (Category c : rule.getRight())
@@ -280,7 +281,6 @@ public class Grammar<T> {
     /**
      * Gets every rule in this grammar.
      */
-    @SuppressWarnings("WeakerAccess")
     public Collection<Rule> getAllRules() {
         return rules.values();
     }
@@ -350,7 +350,7 @@ public class Grammar<T> {
     public static class Builder<E> {
         private final MyMultimap<Category, Rule> rules;
         private String name;
-        private ExpressionSemiring semiring = new LogSemiring();
+        private ExpressionSemiring semiring = LogSemiring.get();
         private RuleFactory rf = new RuleFactory(semiring);
 
         public Builder(String name) {

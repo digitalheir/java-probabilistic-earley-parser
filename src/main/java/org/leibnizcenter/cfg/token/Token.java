@@ -2,7 +2,7 @@ package org.leibnizcenter.cfg.token;
 
 /**
  * Test Token
- *
+ * <p>
  * Created by Maarten on 2016-06-06.
  */
 public class Token<T> {
@@ -17,6 +17,10 @@ public class Token<T> {
     public static <T> Token<T> from(T t) {
         if (t == null) return null;
         else return new Token<>(t);
+    }
+
+    public static <T> Token<T> of(T source) {
+        return new Token<>(source);
     }
 
     @Override

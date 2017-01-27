@@ -19,7 +19,7 @@ public class RuleFactory {
 
     @SuppressWarnings("unused")
     public RuleFactory() {
-        this(new LogSemiring());
+        this(LogSemiring.get());
     }
 
     /**

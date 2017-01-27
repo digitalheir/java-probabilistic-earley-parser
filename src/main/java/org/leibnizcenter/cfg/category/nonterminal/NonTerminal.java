@@ -24,15 +24,8 @@ public class NonTerminal implements Category {
         this.name = name;
     }
 
-    /**
-     * Gets the name of this category.
-     *
-     * @return The value specified for this category's name when it was
-     * constructed.
-     */
-    @SuppressWarnings("unused")
-    public String getName() {
-        return name;
+    public static NonTerminal of(String name) {
+        return new NonTerminal(name);
     }
 
     @Override

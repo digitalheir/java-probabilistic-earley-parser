@@ -87,7 +87,7 @@ public class Example {
     private static final Terminal with = new ExactStringTerminal("with");
     
     private static final Grammar grammar = new Grammar.Builder("test")
-            .setSemiring(new LogSemiring()) // If not set, defaults to Log semiring which is probably what you want
+            .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want
             .addRule(
                     1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
                     S,     // Left hand side of the rule
@@ -169,7 +169,7 @@ The probability of a parse is defined as the product of the probalities all the 
 we define probability as a number between 0 and 1 inclusive, and use common algebraic notions of addition and
 multiplication.
 
-This code makes it possible to use *any* [semiring](https://en.wikipedia.org/wiki/Semiring) that can have its elements
+This code makes it possible to use *any* commutative [semiring](https://en.wikipedia.org/wiki/Semiring) that can have its elements
 represented as doubles. My use for this is to avoid arithmetic underflow: imagine a computation like 0.1 * 0.1 * ... * 0.1.
 At some point, floating point arithmetic will be unable to represent a number so small. To counter, we use the Log
 semiring which holds the minus log of the probability. So that maps the numbers 0 and 1 to the numbers
