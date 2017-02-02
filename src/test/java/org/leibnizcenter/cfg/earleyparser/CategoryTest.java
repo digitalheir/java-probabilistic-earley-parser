@@ -6,8 +6,7 @@ import org.junit.Test;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.A;
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.a;
+import static org.leibnizcenter.cfg.earleyparser.Fixture.A;
 
 
 /**
@@ -46,7 +45,8 @@ public class CategoryTest {
     @Test
     public final void testIsTerminal() {
         Assert.assertEquals(false, Category.isTerminal(A));
-        Assert.assertEquals(true, Category.isTerminal(a));
+
+        Assert.assertEquals(true, Category.isTerminal(new ExactStringTerminal("a")));
     }
 
     /**

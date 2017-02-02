@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
+ * Tests for {@link Atom}
  * Created by maarten on 27-1-17.
  */
 public class AtomTest {

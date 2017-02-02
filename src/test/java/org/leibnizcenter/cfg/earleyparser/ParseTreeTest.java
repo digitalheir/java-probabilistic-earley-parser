@@ -14,11 +14,15 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
-
 /**
  */
 public class ParseTreeTest {
+    private static final NonTerminal S = Category.nonTerminal("S");
+    private static final NonTerminal NP = Category.nonTerminal("NP");
+    private static final NonTerminal VP = Category.nonTerminal("VP");
+    private static final NonTerminal Det = Category.nonTerminal("Det");
+    private static final NonTerminal N = Category.nonTerminal("N");
+
     private static NonTerminal VS = Category.nonTerminal("VS"),
             VI = Category.nonTerminal("VI"),
             VT = Category.nonTerminal("VT");

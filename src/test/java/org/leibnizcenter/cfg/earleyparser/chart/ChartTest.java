@@ -22,7 +22,7 @@ import org.leibnizcenter.cfg.token.Tokens;
 
 import java.util.List;
 
-import static org.leibnizcenter.cfg.earleyparser.PepFixture.*;
+import static org.leibnizcenter.cfg.earleyparser.Fixture.*;
 
 
 /**
@@ -183,7 +183,7 @@ public class ChartTest {
         final Rule ruleB = Rule.create(semiring, 0.5, B, C);
         final Rule ruleC = Rule.create(semiring, 0.5, C, D);
         final Rule ruleD = Rule.create(semiring, 0.5, D, E);
-        final Rule ruleE = Rule.create(semiring, 0.5, E, e);
+        final Rule ruleE = Rule.create(semiring, 0.5, E, (Category) new ExactStringTerminal("e"));
         final Rule rule1 = Rule.create(semiring, 1.0, A, B, C, D, E);
         final Rule ruleAa = Rule.create(semiring, 1.0, A, a);
         final Rule rule3 = Rule.create(semiring, 1.0, X, Y, Z);
