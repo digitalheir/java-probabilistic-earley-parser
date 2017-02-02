@@ -49,27 +49,40 @@ Create a UTF8-encoded `.cfg` file that contains your grammar, such as the follow
 ```
 # grammar.cfg
 
-S -> NP VP (1.0)  # Use '->'
-NP → i   (0.5)    # or '→'
-VP → eat          # probability defaults to 1.0
+S  -> NP VP  (1.0)    # specify probability between 0 and 1 by appending between parentheses
+NP -> D N             # probability defaults to 1.0
+VP →  V NP            # Use '->' or '→'
+D  →  the
+N  →  noses   (0.7)
+V  →  noses   (0.3)
+V  →  sniff   (0.9)
+N  →  sniff   (0.1)
 ```
-
 
 Execute runnable jar on the terminal:
 ```
-java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S I EAT
+java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S the noses sniff the noses
 ```
 
-This will give the Viterbi parse to the **S**entence "I EAT":
+This will give the Viterbi parse to the Sentence "the noses sniff the noses":
 
 ```
-0.5
+0.44099999999999995 (= 0.7 * 0.7 * 0.9)
 └── <start>
     └── S
         ├── NP
-        │   └── i (I)
+        │   ├── D
+        │   │   └── the (the)
+        │   └── N
+        │       └── noses (noses)
         └── VP
-            └── eat (EAT)
+            ├── V
+            │   └── sniff (sniff)
+            └── NP
+                ├── D
+                │   └── the (the)
+                └── N
+                    └── noses (noses)
 ```
 
 ### Java library
