@@ -42,19 +42,19 @@ You can use this project as a library in your Java application or as a standalon
 
 Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest)
 
-Create a UTF8-encoded `.cfg` file that contains your grammar, such as the following: 
- 
+By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler if you call the API from Java code. 
+
+Create a UTF8-encoded `.cfg` file that contains your grammar, such as the following:
 
 ```
 # grammar.cfg
 
-S -> NP VP (1.0)  # Use '->'  
+S -> NP VP (1.0)  # Use '->'
 NP → i   (0.5)    # or '→'
 VP → eat          # probability defaults to 1.0
 ```
 
-By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler if you call the API from Java code. 
- 
+
 Execute runnable jar on the terminal:
 ```
 probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S I EAT
