@@ -57,7 +57,7 @@ VP → eat          # probability defaults to 1.0
 
 Execute runnable jar on the terminal:
 ```
-probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S I EAT
+java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S I EAT
 ```
 
 This will give the Viterbi parse to the **S**entence "I EAT":
