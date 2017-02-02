@@ -67,10 +67,10 @@ Execute runnable jar on the terminal:
 java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S the heavy heave
 ```
 
-This will give the Viterbi parse to the ambigious sentence "the heavy heave" ("a heave that is heavy" or "heavy people heave"):
+This will give the Viterbi parse to the ambiguous sentence "the heavy heave":
 
 ```
-0.128
+0.128 (= 0.8 * 0.2 * 0.8)
 └── <start>
     └── S
         ├── NP
@@ -83,9 +83,12 @@ This will give the Viterbi parse to the ambigious sentence "the heavy heave" ("a
                 └── heave (heave)
 ```
 
-FYI: the other, less likely, parse was:
+This is the parse with the semantic of "heavy people heave"
+
+In contrast, the less likely parse was "a heave that is heavy":
+
 ```
-0.032
+0.032 (= 0.2 * 0.8 * 0.2)
 └── <start>
     └── S
         └── NP
