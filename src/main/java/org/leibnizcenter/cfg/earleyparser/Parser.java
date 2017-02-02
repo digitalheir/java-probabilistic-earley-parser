@@ -273,7 +273,8 @@ public class Parser<T> {
     ) {
         ChartWithInputPosition<T> chart = new Parser<>(grammar).parseAndCountTokens(S, tokens, callbacks);
         final StateSets<T> stateSets = chart.chart.stateSets;
-        List<ParseTreeWithScore> parses = stateSets.completedStates.getCompletedStates(chart.index, Category.START).stream()
+        final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.index, Category.START);
+        List<ParseTreeWithScore> parses = completedStates.stream()
                 .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
                 .collect(Collectors.toList());
         if (parses.size() > 1) throw new Error("Found more than one Viterbi parses. This is a bug.");

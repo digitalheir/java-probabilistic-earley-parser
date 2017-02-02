@@ -49,40 +49,53 @@ Create a UTF8-encoded `.cfg` file that contains your grammar, such as the follow
 ```
 # grammar.cfg
 
-S  -> NP VP  (1.0)    # specify probability between 0 and 1 by appending between parentheses
-NP -> D N             # probability defaults to 1.0
-VP →  V NP            # Use '->' or '→'
-D  →  the
-N  →  noses   (0.7)
-V  →  noses   (0.3)
-V  →  sniff   (0.9)
-N  →  sniff   (0.1)
+S   -> NP VP   (0.8)    # specify probability between 0 and 1 by appending between parentheses
+S   -> NP      (0.2)
+NP  -> Det N            # probability defaults to 1.0
+NP  -> Det Nom
+Nom -> Adj N
+VP  →  V                # Use '->' or '→'
+Det →  the              # probability defaults to 1.0
+N   →  heavy   (0.2)
+Adj →  heavy   (0.8)
+V   →  heave   (0.8)
+N   →  heave   (0.2)
 ```
 
 Execute runnable jar on the terminal:
 ```
-java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S the noses sniff the noses
+java -jar probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S the heavy heave
 ```
 
-This will give the Viterbi parse to the Sentence "the noses sniff the noses":
+This will give the Viterbi parse to the ambigious sentence "the heavy heave" ("a heave that is heavy" or "heavy people heave"):
 
 ```
-0.44099999999999995 (= 0.7 * 0.7 * 0.9)
+0.128
 └── <start>
     └── S
         ├── NP
-        │   ├── D
+        │   ├── Det
         │   │   └── the (the)
         │   └── N
-        │       └── noses (noses)
+        │       └── heavy (heavy)
         └── VP
-            ├── V
-            │   └── sniff (sniff)
-            └── NP
-                ├── D
-                │   └── the (the)
+            └── V
+                └── heave (heave)
+```
+
+FYI: the other, less likely, parse was:
+```
+0.032
+└── <start>
+    └── S
+        └── NP
+            ├── Det
+            │   └── the (the)
+            └── Nom
+                ├── Adj
+                │   └── heavy (heavy)
                 └── N
-                    └── noses (noses)
+                    └── heave (heave)
 ```
 
 ### Java library
