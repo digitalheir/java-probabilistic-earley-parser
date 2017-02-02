@@ -46,21 +46,59 @@ Furthermore, I needed a efficient parser that does not limit token types
 to strings.
    
 ## Usage
-Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest) or grab from Maven:
+You can use this project as a library in your Java application or as a standalone command-line app.
+ 
+### Command line
+
+Download [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest)
+
+Create a UTF8-encoded `.cfg` file that contains your grammar, such as the following: 
+ 
+
+```
+# grammar.cfg
+
+S -> NP VP (1.0)  # Use '->'  
+NP → i   (0.5)    # or '→'
+VP → eat          # probability defaults to 1.0
+```
+
+By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler if you call the API from Java code. 
+ 
+Execute runnable jar on the terminal:
+```
+probabilistic-earley-parser-jar-with-dependencies.jar -i grammar.cfg -goal S I EAT
+```
+
+This will give the Viterbi parse to the **S**entence "I EAT":
+
+```
+0.5
+└── <start>
+    └── S
+        ├── NP
+        │   └── i (I)
+        └── VP
+            └── eat (EAT)
+```
+
+### Java library
+
+Grab from Maven:
 
 ```xml
 <dependencies>
         <dependency>
             <groupId>org.leibnizcenter</groupId>
             <artifactId>probabilistic-earley-parser</artifactId>
-            <version>0.9.10</version>
+            <version>0.9.11</version>
         </dependency>
 </dependencies>
 ```
 
 or Gradle:
 ```groovy
-compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.10'
+compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.11'
 ```
 
 Most applications will want to interface with the static functions in `Parser`:
@@ -129,17 +167,8 @@ public class Example {
     }
 }
 ```
-
-You can parse a text file describing your CFG. 
-By default, the parser will assume that you distinguish non-terminals from terminals by capitalizing them. You can also add a custom category handler.
-
-```
-# grammar.cfg
-
-S -> NP VP (1.0)  # Use '->'  
-NP → i   (0.5)    # or '→'
-VP → eat          # probability defaults to 1.0
-```
+ 
+You can parse `.cfg` files as follows:
 
 ```java
 Grammar<String> g = Grammar.parse(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));

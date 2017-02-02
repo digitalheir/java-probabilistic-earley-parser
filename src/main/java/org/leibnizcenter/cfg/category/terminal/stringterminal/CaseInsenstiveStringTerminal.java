@@ -42,6 +42,11 @@ public class CaseInsenstiveStringTerminal implements StringTerminal {
     }
 
     @Override
+    public String toString() {
+        return string;
+    }
+
+    @Override
     public int hashCode() {
         int result = string.hashCode();
         result = 31 * result + locale.hashCode();

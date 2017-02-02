@@ -82,14 +82,22 @@ public class RuleTest {
     public void parse() throws Exception {
         assertEquals(
                 Rule.create(LogSemiring.get(), new NonTerminal("S"), new NonTerminal("NP"), new NonTerminal("VP")),
-                Rule.parse("S -> NP VP",
+                Rule.fromString("S -> NP VP",
                         s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
                         LogSemiring.get()
                 )
         );
         assertEquals(
                 Rule.create(LogSemiring.get(), new NonTerminal("S"), new CaseInsenstiveStringTerminal("Np"), new CaseInsenstiveStringTerminal("Vp")),
-                Rule.parse("S -> nP vP",
+                Rule.fromString("S -> nP vP",
+                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                        LogSemiring.get()
+                )
+        );
+
+        assertEquals(
+                Rule.create(LogSemiring.get(), 0.5, new NonTerminal("S"), new CaseInsenstiveStringTerminal("Np"), new CaseInsenstiveStringTerminal("Vp")),
+                Rule.fromString("S -> nP vP(0.5)",
                         s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
                         LogSemiring.get()
                 )

@@ -96,7 +96,9 @@ public abstract class ParseTree {
     }
 
     private void toString(StringBuilder sb, String prefix, boolean isTail) {
-        sb.append(prefix + (isTail ? "└── " : "├── ") + category.toString() + "\n");
+        sb.append(prefix + (isTail ? "└── " : "├── ") + (
+                category.toString() + ((this instanceof Token) ? (" (" + ((Token) this).token + ")") : "")
+        ) + "\n");
         if (children != null) {
             for (int i = 0; i < children.size() - 1; i++) {
                 children.get(i).toString(sb, prefix + (isTail ? "    " : "│   "), false);

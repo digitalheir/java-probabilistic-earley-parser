@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * @see Grammar
  */
 public class Rule {
-    private static Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s]+\\s*)+)\\s*(\\([0-9](?:[0-9]+)?\\))?\\s*");
+    private static Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s(]+\\s*)+)\\s*(?:\\(([0-9](?:[.,][0-9]+)?)\\))?\\s*");
     private static Pattern WHITESPACE = Pattern.compile("\\s+");
     public final NonTerminal left;
     public final Category[] right;
@@ -149,9 +149,16 @@ public class Rule {
 //        return (isPreterminal() && right.length == 1);
 //    }
 
-    public static Rule parse(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
+    /**
+     * @param line          Of the form "S -> NP VP"
+     * @param parseCategory how to parse category string into category
+     * @param semiring
+     * @return Parsed rule
+     */
+    public static Rule fromString(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
         Matcher m = RULE.matcher(line);
-        if(!m.matches()) throw new IllegalArgumentException("String was not a valid rule: "+line);
+        if (!m.matches())
+            throw new IllegalArgumentException("String was not a valid rule: " + line);
         else{
             final NonTerminal LHS = new NonTerminal(m.group(1));
 

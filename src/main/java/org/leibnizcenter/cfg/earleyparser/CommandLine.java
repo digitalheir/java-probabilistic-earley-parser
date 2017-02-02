@@ -34,11 +34,10 @@ public class CommandLine {
      */
     public static void main(String[] args) {
         HandleArguments handleArguments = new HandleArguments(args).invoke();
-        //todo Token.of
         ParseTreeWithScore parse = Parser.getViterbiParseWithScore(
                 handleArguments.getGoal(),
                 handleArguments.getGrammar(),
-                Stream.of(handleArguments.getTokens()).map(Token::new).collect(Collectors.toList())
+                Stream.of(handleArguments.getTokens()).map(Token::of).collect(Collectors.toList())
         );
 
         System.out.println(parse.score.semiring.toProbability(parse.score.getScore()));
@@ -69,6 +68,9 @@ public class CommandLine {
         }
 
         HandleArguments invoke() {
+            if (args.length < 2) {
+                throw new IllegalArgumentException("No arguments specified.\n\n" + USAGE);
+            }
             int lastOption = 0;
             final Map<String, String> options = new HashMap<>();
             for (int i = 0; i < args.length; i++) {
@@ -104,7 +106,6 @@ public class CommandLine {
                 throw new IllegalArgumentException("No goal category specified. \n" + USAGE);
             }
 
-            //NonTerminal.of//TODO
             goal = Category.nonTerminal(options.get(OPTION_GOAL));
             if (!grammar.getNonTerminals().contains(goal)) {
                 throw new IllegalArgumentException("Grammar does not contains non-terminal \"" + goal + "\". \n" + USAGE);

@@ -152,7 +152,7 @@ public class Grammar<T> {
         b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
-                .map(line -> Rule.parse(line, parseCategory, semiring)).collect(Collectors.toSet())
+                .map(line -> Rule.fromString(line, parseCategory, semiring)).collect(Collectors.toSet())
         );
         return b.build();
     }
@@ -171,7 +171,7 @@ public class Grammar<T> {
         final Collection<Rule> rules = Files.lines(path, charset)
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
-                .map(line -> Rule.parse(line, parseCategory, semiring)).collect(Collectors.toSet());
+                .map(line -> Rule.fromString(line, parseCategory, semiring)).collect(Collectors.toSet());
         b.addRules(rules);
         return b.build();
     }
@@ -195,7 +195,7 @@ public class Grammar<T> {
         while (line != null) {
             line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
             if (!line.isEmpty())
-                rules.add(Rule.parse(line, parseCategory, semiring));
+                rules.add(Rule.fromString(line, parseCategory, semiring));
             line = reader.readLine();
         }
         b.addRules(rules);
