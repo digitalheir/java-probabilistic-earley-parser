@@ -14,17 +14,17 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
     public final Atom ZERO_EXPRESSION = new Atom(zero());
 
-    public Resolvable times(Resolvable x, Resolvable y, Resolvable z) {
-        if (isMultiplicativeIdentity(x)) return times(y, z);
-        else if (isMultiplicativeIdentity(y)) return times(x, z);
-        else if (isMultiplicativeIdentity(z)) return times(x, y);
-        return new Times(x, y, z);
+    public Resolvable times(Resolvable r1, Resolvable r2, Resolvable r3) {
+        if (isMultiplicativeIdentity(r1)) return times(r2, r3);
+        else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
+        else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
+        return new Times(r1, r2, r3);
     }
 
-    private Resolvable times(Resolvable x, Resolvable y) {
-        if (isMultiplicativeIdentity(x)) return y;
-        else if (isMultiplicativeIdentity(y)) return x;
-        return new Times(x, y);
+    private Resolvable times(Resolvable r1, Resolvable r2) {
+        if (isMultiplicativeIdentity(r1)) return r2;
+        else if (isMultiplicativeIdentity(r2)) return r1;
+        return new Times(r1, r2);
     }
 
     private boolean isMultiplicativeIdentity(Resolvable r) {
@@ -35,13 +35,14 @@ public abstract class ExpressionSemiring implements DblSemiring {
         return x instanceof Atom && ((Atom) x).value == this.zero();
     }
 
-    public Resolvable plus(Resolvable x, Resolvable y) {
-        if (isAdditiveIdentity(x)) return y;
-        else if (isAdditiveIdentity(y)) return x;
-        else return new Plus(x, y);
+    public Resolvable plus(Resolvable r1, Resolvable r2) {
+        if (isAdditiveIdentity(r1)) return r2;
+        else if (isAdditiveIdentity(r2)) return r1;
+        else return new Plus(r1, r2);
     }
 
 
+    @SuppressWarnings("WeakerAccess")
     public final class Plus extends Resolvable {
         private final Resolvable right;
         private final Resolvable left;
@@ -67,6 +68,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     }
 
 
+    @SuppressWarnings("WeakerAccess")
     public final class Times extends Resolvable {
         private final Resolvable right;
         private final Resolvable left;
@@ -102,11 +104,8 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             Times times = (Times) o;
 
-            if (!right.equals(times.right)) return false;
-            if (!left.equals(times.left)) return false;
-            if (right2 != null ? !right2.equals(times.right2) : times.right2 != null) return false;
+            return right.equals(times.right) && left.equals(times.left) && (right2 != null ? right2.equals(times.right2) : times.right2 == null);
 
-            return true;
         }
 
         @Override

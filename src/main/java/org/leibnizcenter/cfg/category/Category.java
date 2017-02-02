@@ -9,7 +9,7 @@ import java.util.function.Function;
 
 /**
  * A category in a grammar, also known as a type.
- * Categories are the atomic subparts that make up
+ * Categories are the atomic sub-parts that make up
  * {@link Rule grammar rules}.
  * <p>
  * Categories can either be <em>terminal</em> or <em>non-terminal</em>. A

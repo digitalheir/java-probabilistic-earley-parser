@@ -9,16 +9,17 @@ import java.util.Locale;
  * <p>
  * Created by maarten on 11-6-16.
  */
-public class CaseInsenstiveStringTerminal implements StringTerminal {
+public class CaseInsensitiveStringTerminal implements StringTerminal {
     public final String string;
+    @SuppressWarnings("WeakerAccess")
     public final Locale locale;
 
-    public CaseInsenstiveStringTerminal(String s) {
+    public CaseInsensitiveStringTerminal(String s) {
         this.locale = Locale.ROOT;
         this.string = s.toLowerCase(locale);
     }
 
-    public CaseInsenstiveStringTerminal(String s, Locale locale) {
+    public CaseInsensitiveStringTerminal(String s, Locale locale) {
         this.locale = locale;
         this.string = s.toLowerCase(locale);
     }
@@ -33,7 +34,7 @@ public class CaseInsenstiveStringTerminal implements StringTerminal {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        CaseInsenstiveStringTerminal that = (CaseInsenstiveStringTerminal) o;
+        CaseInsensitiveStringTerminal that = (CaseInsensitiveStringTerminal) o;
 
         if (!string.equals(that.string)) return false;
         if (!locale.equals(that.locale)) return false;

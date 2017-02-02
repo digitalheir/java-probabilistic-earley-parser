@@ -130,7 +130,7 @@ public class Complete<T> {
                 /* */
         Collection<State> newCompletedStates = null;
         for (Delta delta : deltas) {
-            //todo these plus operation may be parallelized a little?
+            //todo these plus operation may be parallellized a little?
             addForwardScores.plus(delta.state, delta.addForward);
             addInnerScores.plus(delta.state, delta.addInner);
 

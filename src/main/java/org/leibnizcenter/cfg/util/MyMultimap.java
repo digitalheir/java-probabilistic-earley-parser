@@ -9,6 +9,7 @@ import java.util.*;
 public class MyMultimap<T, T1> {
     private Map<T, Set<T1>> map = new HashMap<>();
     private Set<T1> values = new HashSet<>();
+    private boolean isLocked = false;
 
     public Collection<T1> get(T y) {
         if (map.containsKey(y)) return map.get(y);
@@ -34,7 +35,10 @@ public class MyMultimap<T, T1> {
     public boolean lock() {
         map = Collections.unmodifiableMap(map);
         values = Collections.unmodifiableSet(values);
-        return true;
+
+        boolean wasLocked = isLocked;
+        isLocked = true;
+        return wasLocked;
     }
 
     public Collection<T1> values() {

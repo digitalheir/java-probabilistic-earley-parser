@@ -38,13 +38,13 @@ public class StateSets<T> {
      * a certain non-terminal X
      */
     public final InnerScores innerScores;
-    public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<State, State.ViterbiScore>();
+    public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>();
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
     public final Grammar<T> grammar;
     private final Set<State> states = new HashSet<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
-    private Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
+    private final Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
 
 
     public StateSets(Grammar<T> grammar) {

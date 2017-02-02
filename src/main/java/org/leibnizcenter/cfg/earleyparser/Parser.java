@@ -40,7 +40,7 @@ public class Parser<T> {
      * @param goal    Goal category, typically S for Sentence
      * @param grammar Grammar to apply to tokens
      * @param tokens  list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     @Deprecated
     public static <T> double recognize(NonTerminal goal,
@@ -55,7 +55,7 @@ public class Parser<T> {
      * @param goal    Goal category, typically S for Sentence
      * @param grammar Grammar to apply to tokens
      * @param tokens  list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     @Deprecated
     public static <T> double recognize(NonTerminal goal,
@@ -207,7 +207,7 @@ public class Parser<T> {
      *
      * @param goal   Goal category, typically S for Sentence
      * @param tokens list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     public double recognize(NonTerminal goal, Iterable<Token<T>> tokens) {
         return recognize(goal, tokens, null);
@@ -218,7 +218,7 @@ public class Parser<T> {
      *
      * @param goal   Goal category, typically S for Sentence
      * @param tokens list of tokens to parse
-     * @return Probability that given string of tokens mathces gven non-terminal with given grammar
+     * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     public double recognize(NonTerminal goal,
                             Iterable<Token<T>> tokens,
@@ -318,8 +318,8 @@ public class Parser<T> {
         int i = 0;
 
         final Complete<T> complete = new Complete<>(chart.stateSets, true);
-        final Scan<T> scan = new Scan<T>(chart.stateSets);
-        final Predict<T> predict = new Predict<T>(chart.stateSets);
+        final Scan<T> scan = new Scan<>(chart.stateSets);
+        final Predict<T> predict = new Predict<>(chart.stateSets);
 
         for (TokenWithCategories<T> token : TokenWithCategories.from(tokens, grammar)) {
             predict.predict(callbacks, chart, i, token);

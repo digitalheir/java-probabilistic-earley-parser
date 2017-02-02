@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.earleyparser.chart.state;
 import org.junit.Test;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ProbabilitySemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import static org.junit.Assert.*;
@@ -13,8 +13,8 @@ import static org.junit.Assert.*;
  */
 public class StateTest {
 
-    public static final CaseInsenstiveStringTerminal TERMINAL = new CaseInsenstiveStringTerminal("a");
-    public static final CaseInsenstiveStringTerminal TERMINAL_2 = new CaseInsenstiveStringTerminal("b");
+    public static final CaseInsensitiveStringTerminal TERMINAL = new CaseInsensitiveStringTerminal("a");
+    public static final CaseInsensitiveStringTerminal TERMINAL_2 = new CaseInsensitiveStringTerminal("b");
     public static final NonTerminal NON_TERMINAL = NonTerminal.of("S");
     public static final ProbabilitySemiring SEMIRING = ProbabilitySemiring.get();
 

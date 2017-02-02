@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.rule;
 import org.junit.Test;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -83,22 +83,22 @@ public class RuleTest {
         assertEquals(
                 Rule.create(LogSemiring.get(), new NonTerminal("S"), new NonTerminal("NP"), new NonTerminal("VP")),
                 Rule.fromString("S -> NP VP",
-                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                         LogSemiring.get()
                 )
         );
         assertEquals(
-                Rule.create(LogSemiring.get(), new NonTerminal("S"), new CaseInsenstiveStringTerminal("Np"), new CaseInsenstiveStringTerminal("Vp")),
+                Rule.create(LogSemiring.get(), new NonTerminal("S"), new CaseInsensitiveStringTerminal("Np"), new CaseInsensitiveStringTerminal("Vp")),
                 Rule.fromString("S -> nP vP",
-                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                         LogSemiring.get()
                 )
         );
 
         assertEquals(
-                Rule.create(LogSemiring.get(), 0.5, new NonTerminal("S"), new CaseInsenstiveStringTerminal("Np"), new CaseInsenstiveStringTerminal("Vp")),
+                Rule.create(LogSemiring.get(), 0.5, new NonTerminal("S"), new CaseInsensitiveStringTerminal("Np"), new CaseInsensitiveStringTerminal("Vp")),
                 Rule.fromString("S -> nP vP(0.5)",
-                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                        s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                         LogSemiring.get()
                 )
         );

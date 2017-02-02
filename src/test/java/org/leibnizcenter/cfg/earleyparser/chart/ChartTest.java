@@ -8,7 +8,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
 import org.leibnizcenter.cfg.earleyparser.ParseTree;
@@ -40,8 +40,8 @@ public class ChartTest {
     // Token types are realized by implementing Terminal, and implementing hasCategory. This is a functional interface.
     private static final Terminal<String> transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
-    private static final Terminal<String> the = new CaseInsenstiveStringTerminal("the");
-    private static final Terminal<String> a = new CaseInsenstiveStringTerminal("a");
+    private static final Terminal<String> the = new CaseInsensitiveStringTerminal("the");
+    private static final Terminal<String> a = new CaseInsensitiveStringTerminal("a");
     private static final Terminal<String> man = new ExactStringTerminal("man");
     @SuppressWarnings("unused")
     private static final Terminal<String> stick = new ExactStringTerminal("stick");

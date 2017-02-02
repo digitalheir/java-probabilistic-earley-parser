@@ -38,7 +38,7 @@ class DeferredStateScoreComputations {
         this.states.put(s, current);
     }
 
-    public Complete.Delta addForward(Complete.Delta delta) {
+    Complete.Delta addForward(Complete.Delta delta) {
         plus(delta.state, delta.addForward);
         return delta;
     }

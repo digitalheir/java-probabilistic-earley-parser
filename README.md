@@ -26,24 +26,14 @@ For example:
 
 This library allows you to do these things [efficiently](https://github.com/digitalheir/probabilistic-earley-parser-javascript#runtime-complexity), as long as you can describe the rules as a [Context-free Grammar](https://en.wikipedia.org/wiki/Context-free_grammar) (CFG).
 
-The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences: we can order them by probability.
+The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences: we can order them by probability. Furthermore, this parser does not limit token types to strings.
 
-The parser seems to work correctly and efficiently, but is still < v1.0 because I have not added as much utility functions and tests as I would like.
+The parser seems to work correctly and efficiently, but is still < v1.0 because I still
+want some extra utility functions and tests.
 
 For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Probabilistic Context-Free
            Parsing Algorithm that Computes Prefix
            Probabilities*](http://www.aclweb.org/anthology/J95-2002).
-  
-## Motivation
-I made this library because I could not find an existing Java 
-implementation of the Probabilistic Earley Parser. 
-
-I have made a stochastic CYK parser before, but I wanted something
-more top down that makes it easier to intervene in the parsing process,
-for instance when an unexpected token is encountered.
- 
-Furthermore, I needed a efficient parser that does not limit token types 
-to strings.
    
 ## Usage
 You can use this project as a library in your Java application or as a standalone command-line app.
@@ -118,8 +108,8 @@ public class Example {
     // Note that tokens can be of multiple terminal types (homographs: "bank" as a noun or "bank" as a verb)
     private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
-    private static final Terminal the = new CaseInsenstiveStringTerminal("the");
-    private static final Terminal a = new CaseInsenstiveStringTerminal("a");
+    private static final Terminal the = new CaseInsensitiveStringTerminal("the");
+    private static final Terminal a = new CaseInsensitiveStringTerminal("a");
     private static final Terminal man = new ExactStringTerminal("man");
     private static final Terminal stick = new ExactStringTerminal("stick");
     private static final Terminal with = new ExactStringTerminal("with");
@@ -194,7 +184,7 @@ new ParseCallbacks.Builder()
 ```
 
 ## Some notes on implementation
-The probability of a parse is defined as the product of the probalities all the applied rules. Usually,
+The probability of a parse is defined as the product of the probabilities all the applied rules. Usually,
 we define probability as a number between 0 and 1 inclusive, and use common algebraic notions of addition and
 multiplication.
 

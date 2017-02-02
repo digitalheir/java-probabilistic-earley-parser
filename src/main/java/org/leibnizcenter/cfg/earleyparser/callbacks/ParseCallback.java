@@ -4,7 +4,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 /**
- * Optional code runned before/after parse phase
+ * Optional code ran before/after parse phase
  *
  * Created by maarten on 16/01/17.
  */

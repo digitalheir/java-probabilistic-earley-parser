@@ -9,17 +9,17 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by maarten on 27-1-17.
  */
-public class CaseInsenstiveStringTerminalTest {
+public class CaseInsensitiveStringTerminalTest {
     @Test
     public void hasCategory() throws Exception {
-        final CaseInsenstiveStringTerminal aaA = new CaseInsenstiveStringTerminal("aaA");
+        final CaseInsensitiveStringTerminal aaA = new CaseInsensitiveStringTerminal("aaA");
         assertTrue(aaA.hasCategory(Token.of("Aaa")));
     }
 
     @Test
     public void testEquals() throws Exception {
-        final CaseInsenstiveStringTerminal Aaa = new CaseInsenstiveStringTerminal("Aaa");
-        final CaseInsenstiveStringTerminal aaA = new CaseInsenstiveStringTerminal("aaA");
+        final CaseInsensitiveStringTerminal Aaa = new CaseInsensitiveStringTerminal("Aaa");
+        final CaseInsensitiveStringTerminal aaA = new CaseInsensitiveStringTerminal("aaA");
 
         assertEquals(Aaa, aaA);
         assertTrue(Aaa.hashCode() == aaA.hashCode());

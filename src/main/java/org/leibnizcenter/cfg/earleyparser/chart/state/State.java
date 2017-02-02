@@ -174,7 +174,7 @@ public class State {
     }
 
     /**
-     * Immutable class represeting a Viterbi score coming from a certain state, transition to a result state computing
+     * Immutable class representing a Viterbi score coming from a certain state, transition to a result state computing
      * using a certain semiring
      */
     public static final class ViterbiScore implements Comparable<ViterbiScore> {

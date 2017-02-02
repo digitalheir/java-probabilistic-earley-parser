@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * Interface for runnable jar
  * Created by maarten on 27-1-17.
  */
 public class CommandLine {
@@ -34,11 +35,11 @@ public class CommandLine {
      */
     public static void main(String[] args) {
         HandleArguments handleArguments = new HandleArguments(args).invoke();
-        ParseTreeWithScore parse = Parser.getViterbiParseWithScore(
-                handleArguments.getGoal(),
-                handleArguments.getGrammar(),
-                Stream.of(handleArguments.getTokens()).map(Token::of).collect(Collectors.toList())
-        );
+        ParseTreeWithScore parse = new Parser<>(handleArguments.getGrammar())
+                .getViterbiParseWithScore(
+                        handleArguments.getGoal(),
+                        Stream.of(handleArguments.getTokens()).map(Token::of).collect(Collectors.toList())
+                );
 
         System.out.println(parse.score.semiring.toProbability(parse.score.getScore()));
         System.out.println(parse.parseTree);
@@ -46,7 +47,7 @@ public class CommandLine {
 
 
     private static class HandleArguments {
-        private String[] args;
+        final private String[] args;
         private String[] tokens;
         private Grammar<String> grammar;
         private NonTerminal goal;

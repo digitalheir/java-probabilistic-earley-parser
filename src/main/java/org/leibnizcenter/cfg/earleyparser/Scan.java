@@ -77,6 +77,7 @@ public final class Scan<T> {
      * @param tokenWithCategories The token that was scanned.
      * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
+    @SuppressWarnings("WeakerAccess")
     public void scan(
             final int tokenPosition,
             final TokenWithCategories<T> tokenWithCategories,

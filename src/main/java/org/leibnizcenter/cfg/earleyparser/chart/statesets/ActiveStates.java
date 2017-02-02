@@ -27,6 +27,7 @@ public class ActiveStates<T> {
     /**
      * Runs in O(1).
      */
+    @SuppressWarnings("WeakerAccess")
     public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal cat) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j))
             return null;

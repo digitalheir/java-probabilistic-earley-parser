@@ -37,6 +37,7 @@ public class Predict<T> {
         final Rule Y_to_v = statePredecessor_Y_to_v.getValue();
 
         final Category Z = statePredecessor.getActiveCategory();
+        //noinspection SuspiciousNameCombination
         final Category Y = Y_to_v.left;
 
         final double prevForward = stateSets.forwardScores.get(statePredecessor);

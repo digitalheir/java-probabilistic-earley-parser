@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
  * @see Grammar
  */
 public class Rule {
-    private static Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s(]+\\s*)+)\\s*(?:\\(([0-9](?:[.,][0-9]+)?)\\))?\\s*");
-    private static Pattern WHITESPACE = Pattern.compile("\\s+");
+    private static final Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s(]+\\s*)+)\\s*(?:\\(([0-9](?:[.,][0-9]+)?)\\))?\\s*");
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     public final NonTerminal left;
     public final Category[] right;
     /**
@@ -57,7 +57,7 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    protected Rule(double rawProbability, NonTerminal left, Category... right) {
+    Rule(double rawProbability, NonTerminal left, Category... right) {
         this.rawProbability = rawProbability == -0.0 ? 0.0 : rawProbability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
@@ -82,7 +82,7 @@ public class Rule {
 
 
     /**
-     * Instiantiates a new rule with a rawProbability score of 1.0 (assuming we use the Probability semiring, which
+     * Instantiates a new rule with a rawProbability score of 1.0 (assuming we use the Probability semiring, which
      * has 1.0 for "one")
      *
      * @param left  LHS
@@ -94,7 +94,7 @@ public class Rule {
     }
 
     /**
-     * Instiantiates a new rule with a rawProbability score of one (whatever that means for the given semiring)
+     * Instantiates a new rule with a rawProbability score of one (whatever that means for the given semiring)
      *
      * @param semiring Semiring to query for the rawProbability of "one"
      * @param left     LHS
@@ -152,7 +152,7 @@ public class Rule {
     /**
      * @param line          Of the form "S -> NP VP"
      * @param parseCategory how to parse category string into category
-     * @param semiring
+     * @param semiring      semiring to use
      * @return Parsed rule
      */
     public static Rule fromString(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
@@ -256,7 +256,6 @@ public class Rule {
      * @return &quot;<code>S → NP VP</code>&quot; for a rule with a left side
      * category of <code>S</code> and a right side sequence
      * <code>[NP, VP]</code>.
-     * @see Category#toString()
      */
     @Override
     public String toString() {

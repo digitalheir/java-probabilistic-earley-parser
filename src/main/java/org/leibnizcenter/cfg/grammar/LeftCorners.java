@@ -5,7 +5,6 @@ import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.Collection;
@@ -18,8 +17,8 @@ import java.util.Map;
  */
 public class LeftCorners {
     final Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
-    private final MyMultimap<Category, Category> nonZeroScores = new MyMultimap<>();
     final MyMultimap<Category, NonTerminal> nonZeroNonTerminalScores = new MyMultimap<>();
+    private final MyMultimap<Category, Category> nonZeroScores = new MyMultimap<>();
     private final DblSemiring semiring;
     private final AtomMap atoms;
 

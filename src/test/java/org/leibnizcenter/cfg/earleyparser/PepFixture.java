@@ -4,7 +4,7 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.junit.Test;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
@@ -46,12 +46,12 @@ public final class PepFixture {
     public final static Category girl = new ExactStringTerminal("girl");
     public final static Category left = new ExactStringTerminal("left");
 
-    public final static Category aA = new CaseInsenstiveStringTerminal("a");
-    public final static Category bB = new CaseInsenstiveStringTerminal("b");
-    public final static Category ThE = new CaseInsenstiveStringTerminal("the");
-    public final static Category bOy = new CaseInsenstiveStringTerminal("boy");
-    public final static Category GirL = new CaseInsenstiveStringTerminal("girl");
-    public final static Category LefT = new CaseInsenstiveStringTerminal("left");
+    public final static Category aA = new CaseInsensitiveStringTerminal("a");
+    public final static Category bB = new CaseInsensitiveStringTerminal("b");
+    public final static Category ThE = new CaseInsensitiveStringTerminal("the");
+    public final static Category bOy = new CaseInsensitiveStringTerminal("boy");
+    public final static Category GirL = new CaseInsensitiveStringTerminal("girl");
+    public final static Category LefT = new CaseInsensitiveStringTerminal("left");
 
     public final static Rule rule1 = Rule.create(1.0, A, B, C, D, E);
     public final static Rule rule2 = Rule.create(1.0, A, a);

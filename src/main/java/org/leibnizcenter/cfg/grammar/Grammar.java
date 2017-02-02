@@ -8,7 +8,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsenstiveStringTerminal;
+import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
@@ -53,6 +53,7 @@ public class Grammar<T> {
      */
     public final UnitStarScores unitStarScores;
     public final ExpressionSemiring semiring;
+    public final AtomMap atoms = new AtomMap();
     private final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
@@ -67,8 +68,7 @@ public class Grammar<T> {
     private final LeftCorners leftStarCorners;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
-    public AtomMap atoms=new AtomMap();
-    private Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
+    private final Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -102,11 +102,11 @@ public class Grammar<T> {
         nonTerminals.forEach(Yy -> {
             final Collection<Category> nonZeroScores = leftStarCorners.getNonZeroScores(Yy);
             if (nonZeroScores != null) {
-                final Set<Rule> rulez = nonZeroScores.stream().flatMap(Y -> {
+                final Set<Rule> ruleSet = nonZeroScores.stream().flatMap(Y -> {
                     final Collection<Rule> rulesForY = getRules(Y);
                     return rulesForY == null ? Stream.empty() : rulesForY.stream();
                 }).collect(Collectors.toSet());
-                nonZeroLeftStartRules.put(Yy, rulez);
+                nonZeroLeftStartRules.put(Yy, ruleSet);
             }
         });
     }
@@ -117,12 +117,12 @@ public class Grammar<T> {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private static LeftCorners getReflexiveTransitiveClosure(AtomMap atoms, DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
-        NonTerminal[] nonterminalz = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
+        NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
-        for (int row = 0; row < nonterminalz.length; row++) {
-            NonTerminal X = nonterminalz[row];
-            for (int col = 0; col < nonterminalz.length; col++) {
-                NonTerminal Y = nonterminalz[col];
+        for (int row = 0; row < nonterminalsArr.length; row++) {
+            NonTerminal X = nonterminalsArr[row];
+            for (int col = 0; col < nonterminalsArr.length; col++) {
+                NonTerminal Y = nonterminalsArr[col];
                 final double prob = semiring.toProbability(P.get(X, Y));
                 // I - P_L
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
@@ -136,14 +136,14 @@ public class Grammar<T> {
          */
         IntStream.range(0, R_L.getRowDimension()).forEach(row ->
                 IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        R__L.set(nonterminalz[row], nonterminalz[col], semiring.fromProbability(R_L.get(row, col)))
+                        R__L.set(nonterminalsArr[row], nonterminalsArr[col], semiring.fromProbability(R_L.get(row, col)))
                 )
         );
         return R__L;
     }
 
     public static Grammar<String> parse(String str) {
-        return parse(str, s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+        return parse(str, s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                 LogSemiring.get());
     }
 
@@ -161,7 +161,7 @@ public class Grammar<T> {
         return parse(
                 path,
                 charset,
-                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                 LogSemiring.get()
         );
     }
@@ -179,7 +179,7 @@ public class Grammar<T> {
 
     public static Grammar<String> parse(InputStream inputStream, Charset charset) throws IOException {
         return parse(inputStream, charset,
-                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsenstiveStringTerminal(s),
+                s -> Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s),
                 LogSemiring.get());
     }
 
@@ -246,7 +246,7 @@ public class Grammar<T> {
             final Collection<Rule> rules = getRules(X);
             if (rules != null) rules.stream()
                     .filter(yRule -> yRule.getRight().length > 0 && yRule.getRight()[0] instanceof NonTerminal)
-                    .forEach(Yrule -> leftCorners.plus(X, Yrule.getRight()[0], Yrule.getScore()));
+                    .forEach(YRule -> leftCorners.plus(X, YRule.getRight()[0], YRule.getScore()));
         });
     }
 
@@ -269,7 +269,7 @@ public class Grammar<T> {
      * @param LHS The {@link Rule#getLeft() left side} of the rules to find.
      * @return A set containing the rules in this grammar whose
      * {@link Rule#getLeft() left side} is
-     * {@link Category#equals(Object) the same} as <code>left</code>, or
+     * the same as <code>left</code>, or
      * <code>null</code> if no such rules are contained in this grammar. The
      * rule set returned by this method is <em>not</em> guaranteed to contain
      * the rules in the order in which they were {@link Builder#addRule(Rule) added}.

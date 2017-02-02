@@ -14,7 +14,7 @@ package org.leibnizcenter.cfg.algebra.semiring;
 @SuppressWarnings("unused")
 public interface Semiring<T> {
 //    @Deprecated
-//    static boolean isRighSemiring(Semiring semiring) {
+//    static boolean isRightSemiring(Semiring semiring) {
 //        return isRightSemiring(semiring);
 //    }
 //
