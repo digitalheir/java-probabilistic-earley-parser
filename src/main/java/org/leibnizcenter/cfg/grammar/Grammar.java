@@ -13,6 +13,7 @@ import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
+import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.util.MapEntry;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
@@ -69,6 +70,7 @@ public class Grammar<T> {
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
     private final Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
+    private final Map<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new HashMap<>();
 
     /**
      * Creates a grammar with the given name, and given rules.
@@ -94,9 +96,9 @@ public class Grammar<T> {
         });
 
         this.semiring = semiring;
-        leftCorners = new LeftCorners(semiring,atoms);
+        leftCorners = new LeftCorners(semiring, atoms);
         setLeftCorners();
-        leftStarCorners = getReflexiveTransitiveClosure(atoms,semiring, nonTerminals, leftCorners);
+        leftStarCorners = getReflexiveTransitiveClosure(atoms, semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
 
         nonTerminals.forEach(Yy -> {
@@ -130,7 +132,7 @@ public class Grammar<T> {
         }
         final Matrix R_L = R_L_inverse.inverse();
 
-        LeftCorners R__L = new LeftCorners(semiring,atoms);
+        LeftCorners R__L = new LeftCorners(semiring, atoms);
         /*
          * Copy all matrix values into our {@link LeftCorners} object
          */
@@ -205,7 +207,7 @@ public class Grammar<T> {
 
     private UnitStarScores getUnitStarCorners() {
         // Sum all probabilities for unit relations
-        final LeftCorners P_U = new LeftCorners(semiring,atoms);
+        final LeftCorners P_U = new LeftCorners(semiring, atoms);
         nonTerminals.forEach(X -> {
             final Collection<Rule> rules = getRules(X);
             if (rules != null) rules.stream()
@@ -216,7 +218,7 @@ public class Grammar<T> {
         });
 
         // R_U = (I - P_U)
-        return new UnitStarScores(getReflexiveTransitiveClosure(atoms,semiring, nonTerminals, P_U), semiring,atoms);
+        return new UnitStarScores(getReflexiveTransitiveClosure(atoms, semiring, nonTerminals, P_U), semiring, atoms);
     }
 
     //    /**
@@ -344,6 +346,20 @@ public class Grammar<T> {
         return nonZeroLeftStartRules.get(Z)
                 .stream()
                 .map(Y_to_v -> new MapEntry<>(statePredecessor, Y_to_v));
+    }
+
+    /**
+     * Runs in O(N) for N is the number of terminals. Caches tokens on {@link Token#equals(Object)} to make subsequent
+     * calls potentially quicker.
+     *
+     * @return set of all terminals that match given token, usually a singleton set.
+     */
+    public Set<Terminal<T>> getCategories(Token<T> token) {
+        if (!tokenToTerminalsCache.containsKey(token))
+            tokenToTerminalsCache.put(token,
+                    terminals.stream().filter(category -> category.hasCategory(token)).collect(Collectors.toSet())
+            );
+        return tokenToTerminalsCache.get(token);
     }
 
 

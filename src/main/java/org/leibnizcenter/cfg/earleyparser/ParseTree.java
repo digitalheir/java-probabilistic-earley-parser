@@ -2,12 +2,16 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A parse tree that represents the derivation of a string based on the
@@ -25,7 +29,7 @@ import java.util.List;
 public abstract class ParseTree {
     public final Category category;
     @SuppressWarnings("WeakerAccess")
-    public final LinkedList<ParseTree> children;
+    public final List<ParseTree> children;
 
     /**
      * Creates a new parse tree with the specified category and parent parse
@@ -46,7 +50,7 @@ public abstract class ParseTree {
      *                 order.
      */
     @SuppressWarnings("WeakerAccess")
-    public ParseTree(Category category, LinkedList<ParseTree> children) {
+    public ParseTree(Category category, List<ParseTree> children) {
         this.category = category;
         this.children = children;
     }
@@ -75,7 +79,7 @@ public abstract class ParseTree {
     }
 
     void addRightMost(ParseTree tree) {
-        children.addLast(tree);
+        children.add(tree);
     }
 
     @Override
@@ -124,6 +128,23 @@ public abstract class ParseTree {
         return children == null || children.size() > 0;
     }
 
+    public ParseTree flatten(NonTerminal... terminalsToKeep) {
+        List<ParseTree> c = flatten(Stream.of(terminalsToKeep).collect(Collectors.toSet()), false).collect(Collectors.toList());
+        return new NonToken(category, c);
+    }
+
+    public Stream<ParseTree> flatten(Set<NonTerminal> nonTerminalsToKeep, boolean keepTerminals) {
+        return children.stream().flatMap(child -> {
+                    if (child instanceof Token)
+                        return keepTerminals ? Stream.of(child) : Stream.empty();
+                    else if (nonTerminalsToKeep.stream().filter(t -> t.equals(child.category)).findAny().isPresent())
+                        return Stream.of(new NonToken(child.category, child.flatten(nonTerminalsToKeep, true).collect(Collectors.toList())));
+                    else
+                        return child.flatten(nonTerminalsToKeep, keepTerminals);
+                }
+        );
+    }
+
     public static class Token<E> extends ParseTree {
         public final org.leibnizcenter.cfg.token.Token<E> token;
 
@@ -154,7 +175,7 @@ public abstract class ParseTree {
             super(node);
         }
 
-        public NonToken(Category node, LinkedList<ParseTree> children) {
+        public NonToken(Category node, List<ParseTree> children) {
             super(node, children);
         }
 

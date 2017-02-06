@@ -101,7 +101,9 @@ In contrast, the less likely parse was "a heave that is heavy":
                     └── heave (heave)
 ```
 
-### Java library
+The command line interface is meant for quickly trying out a simple grammar. For actual real-life parsing stuff, you probably want to use the Java API. 
+
+### Java API
 
 Grab from Maven:
 
@@ -120,6 +122,8 @@ or Gradle:
 compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.11'
 ```
 
+Or just include the [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest) in your project.
+
 Most applications will want to interface with the static functions in `Parser`:
 
 ```java
@@ -133,15 +137,15 @@ public class Example {
     private static final NonTerminal N = Category.nonTerminal("N");
     private static final NonTerminal Mod = Category.nonTerminal("Mod");
 
-    // Token types are realized by implementing Terminal, specifically the function hasCategory. Terminal is a functional interface.
-    // Note that tokens can be of multiple terminal types (homographs: "bank" as a noun or "bank" as a verb)
-    private static final Terminal transitiveVerb = (StringTerminal) token -> token.obj.matches("(hit|chased)");
+    // Terminal types are realized by implementing the Terminal interface, specifically the function hasCategory. Terminal is a functional interface.
+    // Note that tokens can be of multiple terminal types (homographs: "bank" as a noun or "bank" as a verb), so you can use this method to pool many words to a single terminal 
+    private static final Terminal<String> transitiveVerb = token -> token.obj.matches("(hit|chased)");
     // Some utility terminal types are pre-defined:
-    private static final Terminal the = new CaseInsensitiveStringTerminal("the");
-    private static final Terminal a = new CaseInsensitiveStringTerminal("a");
-    private static final Terminal man = new ExactStringTerminal("man");
-    private static final Terminal stick = new ExactStringTerminal("stick");
-    private static final Terminal with = new ExactStringTerminal("with");
+    private static final Terminal<String> the = new CaseInsensitiveStringTerminal("the");
+    private static final Terminal<String> a = new CaseInsensitiveStringTerminal("a");
+    private static final Terminal<String> man = new ExactStringTerminal("man");
+    private static final Terminal<String> stick = new ExactStringTerminal("stick");
+    private static final Terminal<String> with = new ExactStringTerminal("with");
     
     private static final Grammar grammar = new Grammar.Builder("test")
             .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want

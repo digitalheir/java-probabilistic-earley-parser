@@ -1,9 +1,16 @@
 package org.leibnizcenter.cfg.token;
 
+import org.leibnizcenter.cfg.category.terminal.Terminal;
+
 /**
- * Test Token
  * <p>
+ * Represents an abstract word. A list of tokens makes a sentence. A token can be of a category / type,
+ * which must be a {@link Terminal}.  {@link Terminal}
+ * implements a function that returns, given a token, whether given token is of that {@link org.leibnizcenter.cfg.category.Category Category}.
+ * </p>
  * Created by Maarten on 2016-06-06.
+ *
+ * @see org.leibnizcenter.cfg.category.nonterminal.NonTerminal
  */
 public class Token<T> {
     public final T obj;
@@ -43,4 +50,6 @@ public class Token<T> {
     public int hashCode() {
         return obj.hashCode();
     }
+
+
 }

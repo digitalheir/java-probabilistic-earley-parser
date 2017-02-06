@@ -7,11 +7,7 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 /**
@@ -30,8 +26,7 @@ import java.util.stream.Collectors;
  * @see Grammar
  */
 public class Rule {
-    private static final Pattern RULE = Pattern.compile("\\s*([^\\s]+)\\s*(?:->|→)((?:\\s*[^\\s(]+\\s*)+)\\s*(?:\\(([0-9](?:[.,][0-9]+)?)\\))?\\s*");
-    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+
     public final NonTerminal left;
     public final Category[] right;
     /**
@@ -156,27 +151,9 @@ public class Rule {
      * @return Parsed rule
      */
     public static Rule fromString(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
-        Matcher m = RULE.matcher(line);
-        if (!m.matches())
-            throw new IllegalArgumentException("String was not a valid rule: " + line);
-        else{
-            final NonTerminal LHS = new NonTerminal(m.group(1));
-
-            List<Category> lRHS = Arrays.stream(WHITESPACE.split(m.group(2).trim()))
-                    .map(parseCategory)
-                    .collect(Collectors.toList());
-            Category[] RHS = new Category[lRHS.size()];
-            RHS = lRHS.toArray(RHS);
-
-            final String prob = m.group(3);
-            final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
-            return new Rule(
-                    probability,
-                    LHS,
-                    RHS
-            );
-        }
+        return RuleParser.fromString(line, parseCategory, semiring);
     }
+
 
     /**
      * Gets the active category in the underlying rule, if any.
@@ -287,7 +264,7 @@ public class Rule {
             if (i == dotPosition) sb.append(" ·"); // insert dot at position
 
             if (i < right.length) {
-                sb.append(' '); // space between category
+                sb.append(' '); // space between categories
                 sb.append(right[i].toString());
             }
         }

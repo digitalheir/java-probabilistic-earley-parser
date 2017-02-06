@@ -87,7 +87,7 @@ public final class Scan<T> {
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
 
         final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition, tokenWithCategories);
-        final Token<T> token = tokenWithCategories.getToken();
+        final Token<T> token = tokenWithCategories.token;
         final ForwardScores forwardScores = stateSets.forwardScores;
         final InnerScores innerScores = stateSets.innerScores;
         final int nextPosition = tokenPosition + 1;
@@ -98,7 +98,7 @@ public final class Scan<T> {
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
-        tokenWithCategories.getCategories().stream()
+        tokenWithCategories.categories.stream()
                 .parallel()
                 .flatMap((final Terminal<T> terminalType) -> {
                     final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
