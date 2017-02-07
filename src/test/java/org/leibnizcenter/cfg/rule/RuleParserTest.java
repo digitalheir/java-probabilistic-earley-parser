@@ -35,7 +35,7 @@ public class RuleParserTest {
 
     @Test
     public void parseRhs() throws Exception {
-        RuleParser.parseRHS(s -> new CaseInsensitiveStringTerminal(s), "/ [a]+A / patrone Patrone");
+        RuleParser.parseRHS(s -> new CaseInsensitiveStringTerminal(s), "/ [a]+A /ii \\/p/atro//n/e Pat/rone//");
     }
 
 }

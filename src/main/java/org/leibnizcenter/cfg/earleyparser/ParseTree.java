@@ -2,14 +2,15 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +54,22 @@ public abstract class ParseTree {
     public ParseTree(Category category, List<ParseTree> children) {
         this.category = category;
         this.children = children;
+    }
+
+    private static Stream<ParseTree> getFlattenedStream(
+            BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep,
+            List<ParseTree> parents,
+            ParseTree tree) {
+        switch (subTreesToKeep.apply(parents, tree)) {
+            case REMOVE:
+                return Stream.empty();
+            case KEEP:
+                return Stream.of(tree.flatten(parents, subTreesToKeep));
+            case KEEP_ONLY_CHILDREN:
+                return tree.children.stream().flatMap(c -> getFlattenedStream(subTreesToKeep, parents, c));
+            default:
+                throw new NullPointerException();
+        }
     }
 
     /**
@@ -128,21 +145,45 @@ public abstract class ParseTree {
         return children == null || children.size() > 0;
     }
 
-    public ParseTree flatten(NonTerminal... terminalsToKeep) {
-        List<ParseTree> c = flatten(Stream.of(terminalsToKeep).collect(Collectors.toSet()), false).collect(Collectors.toList());
-        return new NonToken(category, c);
+    /**
+     * Removes all superfluous categories from this tree. What is superfluous is determined by given function.
+     *
+     * @param subTreesToKeep A function that returns the {@link FlattenOption} that specifies how to deal with the given tree node.
+     * @return
+     */
+    public ParseTree flatten(BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
+        return flatten(new ArrayList<>(), subTreesToKeep);
     }
 
-    public Stream<ParseTree> flatten(Set<NonTerminal> nonTerminalsToKeep, boolean keepTerminals) {
-        return children.stream().flatMap(child -> {
-                    if (child instanceof Token)
-                        return keepTerminals ? Stream.of(child) : Stream.empty();
-                    else if (nonTerminalsToKeep.stream().filter(t -> t.equals(child.category)).findAny().isPresent())
-                        return Stream.of(new NonToken(child.category, child.flatten(nonTerminalsToKeep, true).collect(Collectors.toList())));
-                    else
-                        return child.flatten(nonTerminalsToKeep, keepTerminals);
-                }
-        );
+    private ParseTree flatten(List<ParseTree> parents, BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
+        List<ParseTree> parents2 = new ArrayList<>(parents);
+        parents2.add(this);
+
+
+        return this instanceof NonToken ? new NonToken(
+                category,
+                children.stream()
+                        .flatMap(child -> getFlattenedStream(subTreesToKeep, parents2, child))
+                        .collect(Collectors.toList())
+        ) : this;
+    }
+
+    /**
+     * Specifies how to {@link #flatten(Function) flatten} a {@link ParseTree}.
+     */
+    public enum FlattenOption {
+        /**
+         * Remove node and all children
+         */
+        REMOVE,
+        /**
+         * Retain node and all children
+         */
+        KEEP,
+        /**
+         * Remove node, but keep children
+         */
+        KEEP_ONLY_CHILDREN
     }
 
     public static class Token<E> extends ParseTree {
