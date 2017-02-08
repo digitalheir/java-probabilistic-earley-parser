@@ -217,15 +217,6 @@ new ParseCallbacks.Builder()
 ```
 
 ## Some notes on implementation
-The probability of a parse is defined as the product of the probabilities all the applied rules. Usually,
-we define probability as a number between 0 and 1 inclusive, and use common algebraic notions of addition and
-multiplication.
-
-This code makes it possible to use *any* commutative [semiring](https://en.wikipedia.org/wiki/Semiring) that can have its elements
-represented as doubles. My use for this is to avoid arithmetic underflow: imagine a computation like 0.1 * 0.1 * ... * 0.1.
-At some point, floating point arithmetic will be unable to represent a number so small. To counter, we use the Log
-semiring which holds the minus log of the probability. So that maps the numbers 0 and 1 to the numbers
-between infinity and zero, skewed towards lower probabilities:
 
 ### Runtime complexity
 The Earley algorithm has nice complexity properties. In particular, it can
@@ -235,9 +226,9 @@ parse:
 * unambiguous CFGs in O(n²)
 * left-recursive unambiguous grammars in O(n)
 
-Note that this implementation does not apply innovations such as [Joop Leo's improvement](http://www.sciencedirect.com/science/article/pii/030439759190180A) to run linearly on on right-recursive grammars as well. It might be complicated to implement this, and still have a probabilistic parser.
+Note that this implementation does not apply innovations such as [Joop Leo's improvement](http://www.sciencedirect.com/science/article/pii/030439759190180A) to run linearly on on right-recursive grammars as well. It might be complicated to implement these ideas and still have a probabilistic parser.
 
-For a faster parser that work on non-probabilistic grammars, look into [Marpa](http://lukasatkinson.de/2015/marpa-overview/#earley-and-marpa). Marpa is a C library with a Perl interface, and a Lua interface is underway. It is currently painful to embed within a Java project, however.
+For an efficient parser that works only on non-probabilistic context-free grammars, look into [Marpa](http://lukasatkinson.de/2015/marpa-overview/#earley-and-marpa). Marpa is a C library with a Perl interface, and a Lua interface is underway. It is currently painful to embed within a Java project, however.
 
 ### Limitations
 * I have not provisioned for ε-rules
@@ -246,6 +237,16 @@ For a faster parser that work on non-probabilistic grammars, look into [Marpa](h
 * Viterbi parsing only returns one single parse. In the case of an ambiguous sentence, the returned parse is not guaranteed the left-most parse.
 * Behavior for strangely defined grammars is not defined, such as when the same rule is defined multiple times with
   a different probability
+
+### Semirings
+The probability of a parse is defined as the product of the probabilities of all the applied rules. Usually,
+we define probability as a number between 0 and 1 inclusive, and use common algebraic notions of addition and
+multiplication.
+
+Implementing this naively can lead to problems: imagine a computation like 0.1 * 0.1 * ... * 0.1. At some point, floating point arithmetic will be unable to represent a number so small (arithmetic underflow). To counter, we map numbers between 0 and 1 to numbers between 0 and infinity with the Log semiring, which allows us to represent a lot more numbers (everything between 0 and `Double.MAX_VALUE`). 
+
+This project makes it possible to use *any* commutative [semiring](https://en.wikipedia.org/wiki/Semiring) that can have its elements
+represented as doubles. I can't really imagine a use case for using another semiring than the Log semiring, but who knows, maybe you can.
 
 ## License
 This software is licensed under a permissive [MIT license](https://opensource.org/licenses/MIT).
