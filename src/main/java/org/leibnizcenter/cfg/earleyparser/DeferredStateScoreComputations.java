@@ -9,17 +9,17 @@ import java.util.Map;
 
 /**
  */
-class DeferredStateScoreComputations {
-    final Map<State, ExpressionWrapper> states;
+public class DeferredStateScoreComputations {
+    public final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
 
-    DeferredStateScoreComputations(ExpressionSemiring semiring) {
+    public DeferredStateScoreComputations(ExpressionSemiring semiring) {
         this.states = new HashMap<>();
         this.semiring = semiring;
     }
 
-    ExpressionWrapper getOrCreate(State state,
-                                  Resolvable default_) {
+    public ExpressionWrapper getOrCreate(State state,
+                                         Resolvable default_) {
         if (this.states.containsKey(state)) {
             return this.states.get(state);
         } else {
@@ -38,7 +38,7 @@ class DeferredStateScoreComputations {
         this.states.put(s, current);
     }
 
-    Complete.Delta addForward(Complete.Delta delta) {
+    public Complete.Delta addForward(Complete.Delta delta) {
         plus(delta.state, delta.addForward);
         return delta;
     }

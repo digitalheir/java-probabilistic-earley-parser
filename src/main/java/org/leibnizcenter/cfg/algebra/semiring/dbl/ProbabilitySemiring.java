@@ -51,10 +51,6 @@ public class ProbabilitySemiring extends ExpressionSemiring {
                 && (candidate >= 0.0); // and positive
     }
 
-    @Override
-    public EnumSet<Property> properties() {
-        return properties;
-    }
 
     @Override
     public double fromProbability(double x) {

@@ -46,7 +46,6 @@ public class RegexTerminal implements StringTerminal {
 
     @Override
     public String toString() {
-        return "Regex{" + pattern +
-                '}';
+        return "Regex{" + pattern + '}';
     }
 }

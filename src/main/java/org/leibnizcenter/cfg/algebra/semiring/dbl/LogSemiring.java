@@ -53,13 +53,6 @@ public class LogSemiring extends ExpressionSemiring {
         return 0.;
     }
 
-
-    @Override
-    public EnumSet<Property> properties() {
-        return properties;
-    }
-
-
     @Override
     public boolean member(double w) {
         return (!Double.isNaN(w)) // not a NaN

@@ -13,7 +13,6 @@ import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTermina
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
 import org.leibnizcenter.cfg.earleyparser.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.Parser;
-import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.scan.TokenNotInLexiconException;
 import org.leibnizcenter.cfg.grammar.Grammar;
@@ -166,7 +165,7 @@ public class ChartTest {
         State initialState = new State(Rule.create(sr, Category.START, S), 0);
         chart.addState(initialState, sr.one(), sr.one());
 
-        new Predict(chart.stateSets).predict(0);
+        chart.predict(0);
 
         Assert.assertTrue(chart.getStates(0).contains(initialState));
         Assert.assertTrue(chart.getStates(0).contains(new State(Rule.create(sr, p, S, a), 0)));

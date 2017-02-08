@@ -18,9 +18,7 @@ import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.util.Collections2;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Helper function for parsing
@@ -276,8 +274,10 @@ public class Parser<T> {
         final StateSets<T> stateSets = chart.chart.stateSets;
         final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.index, Category.START);
 
-        if (completedStates.size() > 1) throw new Error("Found more than one Viterbi parse. This is a bug.");
-        else if (completedStates.size() < 1) throw new RuntimeException("Could not parse sentence with goal " + S);
+        if (completedStates.size() > 1)
+            throw new Error("Found more than one Viterbi parse. This is a bug.");
+        else if (completedStates.size() < 1)
+            throw new RuntimeException("Could not parse sentence with goal " + S);
         else return completedStates.stream().findAny()
                     .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
                     .get();
@@ -307,18 +307,15 @@ public class Parser<T> {
     public ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
                                                          Iterable<Token<T>> tokens,
                                                          ParseOptions<T> callbacks) {
-        final Chart<T> chart = new Chart<>(grammar);
+        final Chart<T> chart = new Chart<>(grammar, callbacks);
         final DblSemiring sr = grammar.semiring;
 
         // Initial state
         chart.addInitialState(S);
 
-        // Cycle through input
-        int i = 0;
-
-        final Complete<T> complete = new Complete<>(chart.stateSets, true);
-        final Scan<T> scan = new Scan<>(chart.stateSets);
-        final Predict<T> predict = new Predict<>(chart.stateSets);
+        // These could be different because we might drop tokens
+        int chartIndex = 0;
+        int tokenIndex = 0;
 
 //        /**
 //         * @param tokens  Iterable of tokens
@@ -330,13 +327,15 @@ public class Parser<T> {
         final Iterator<Token<T>> iterator = tokens.iterator();
 
         //TODO make this thing a state machine to make it easier to handle errors?
+        List<Throwable> incidents = new ArrayList<>();
         for (Token<T> t : tokens) {
             Set<Terminal<T>> categories = grammar.getCategories(t);
 
-            if (Collections2.nullOrEmpty(categories))
-                if (callbacks == null)
-                    throw new TokenNotInLexiconException(t);
-                else switch (callbacks.scanMode) {
+            if (Collections2.nullOrEmpty(categories)) {
+                final TokenNotInLexiconException notInLexiconException = new TokenNotInLexiconException(t, tokenIndex);
+                incidents.add(notInLexiconException);
+                if (callbacks == null) throw notInLexiconException;
+                switch (callbacks.scanMode) {
                     case DROP:
                         // Wait this one out
                         break;
@@ -347,20 +346,23 @@ public class Parser<T> {
                     case STRICT:
                     default:
                         // Throw an exception
-                        throw new TokenNotInLexiconException(t);
+                        throw notInLexiconException;
                 }
+            }
             if (!Collections2.nullOrEmpty(categories)) {
                 TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
-                predict.predict(callbacks, chart, i, token);
-                scan.scan(callbacks, chart, i, token);
-                complete.complete(callbacks, chart, i, token);
-                i++;
+                chart.predict(chartIndex, token);
+                chart.scan(chartIndex, token);
+                chart.complete(chartIndex, token);
+                chartIndex++;
             }
+            tokenIndex++;
         }
+
 
         //Set<State> completed = chart.getCompletedStates(i, Category.START);
         //if (completed.size() > 1) throw new Error("This is a bug");
-        return new ChartWithInputPosition<>(chart, i);
+        return new ChartWithInputPosition<>(chart, chartIndex);
     }
 
 

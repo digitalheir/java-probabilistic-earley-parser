@@ -6,8 +6,11 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.scan.ScanMode;
+import org.leibnizcenter.cfg.earleyparser.scan.TokenNotInLexiconException;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
@@ -298,5 +301,49 @@ public class ParserTest {
         ParseTreeWithScore parse = Parser.getViterbiParseWithScore(S, grammar, tokens);
 
         Assert.assertEquals(parse.getProbability(), 0.6561, 0.0001);
+    }
+
+
+    @Test
+    public void scanModeDrop() throws Exception {
+        double p = (0.6);
+        Grammar<String> grammar = new Grammar.Builder<String>()
+                .addRule(p, S, a)
+                .build();
+        List<Token<String>> tokens = Tokens.tokenize("b a");
+
+        ParseOptions cb = new ParseOptions.Builder<>().withScanMode(ScanMode.DROP).build();
+        ParseTreeWithScore parse = new Parser(grammar).getViterbiParseWithScore(S, tokens, cb);
+        Assert.assertEquals(p, parse.getProbability(), 0.00001);
+    }
+
+    @Test(expected = TokenNotInLexiconException.class)
+    public void scanModeStrict() throws Exception {
+        double p = (0.6);
+        Grammar<String> grammar = new Grammar.Builder<String>()
+                .addRule(p, S, a)
+                .build();
+        List<Token<String>> tokens = Tokens.tokenize("b a");
+
+        ParseOptions cb = new ParseOptions.Builder<>().withScanMode(ScanMode.STRICT).build();
+        ParseTreeWithScore parse = new Parser(grammar).getViterbiParseWithScore(S, tokens, cb);
+        Assert.assertEquals(p, parse.getProbability(), 0.00001);
+    }
+
+    @Test
+    public void scanModeWildcard() throws Exception {
+        double p = (0.6);
+        final double q = 0.666;
+        Grammar<String> grammar = new Grammar.Builder<String>()
+                .addRule(p, S, a, a)
+                .addRule(q, S, b, a)
+                .build();
+        List<Token<String>> tokens = Tokens.tokenize("z a");
+
+        ParseOptions cb = new ParseOptions.Builder<>().withScanMode(ScanMode.WILDCARD).build();
+        ParseTreeWithScore parse = new Parser(grammar).getViterbiParseWithScore(S, tokens, cb);
+        Assert.assertEquals(q, parse.getProbability(), 0.00001);
+
+        System.out.println(parse);
     }
 }

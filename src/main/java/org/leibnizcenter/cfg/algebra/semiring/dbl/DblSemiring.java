@@ -1,10 +1,6 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 
-import org.leibnizcenter.cfg.algebra.semiring.Property;
-
-import java.util.EnumSet;
-
 /**
  * Semiring defined on double primitives.
  * <p>
@@ -17,30 +13,30 @@ import java.util.EnumSet;
  * Created by maarten on 19-6-16.
  */
 public interface DblSemiring {
-    @SuppressWarnings("unused")
-    static boolean isRightSemiring(DblSemiring semiring) {
-        return semiring.properties().contains(Property.RightSemiring);
-    }
-
-    @SuppressWarnings("unused")
-    static boolean isLeftSemiring(DblSemiring semiring) {
-        return semiring.properties().contains(Property.LeftSemiring);
-    }
-
-    @SuppressWarnings("unused")
-    static boolean isIdempotent(DblSemiring semiring) {
-        return semiring.properties().contains(Property.Idempotent);
-    }
-
-    @SuppressWarnings("unused")
-    static boolean isCommutative(DblSemiring semiring) {
-        return semiring.properties().contains(Property.Commutative);
-    }
-
-    @SuppressWarnings("unused")
-    static boolean isPath(DblSemiring semiring) {
-        return semiring.properties().contains(Property.Path);
-    }
+//    @SuppressWarnings("unused")
+//    static boolean isRightSemiring(DblSemiring semiring) {
+//        return semiring.properties().contains(Property.RightSemiring);
+//    }
+//
+//    @SuppressWarnings("unused")
+//    static boolean isLeftSemiring(DblSemiring semiring) {
+//        return semiring.properties().contains(Property.LeftSemiring);
+//    }
+//
+//    @SuppressWarnings("unused")
+//    static boolean isIdempotent(DblSemiring semiring) {
+//        return semiring.properties().contains(Property.Idempotent);
+//    }
+//
+//    @SuppressWarnings("unused")
+//    static boolean isCommutative(DblSemiring semiring) {
+//        return semiring.properties().contains(Property.Commutative);
+//    }
+//
+//    @SuppressWarnings("unused")
+//    static boolean isPath(DblSemiring semiring) {
+//        return semiring.properties().contains(Property.Path);
+//    }
 
     /**
      * Semiring's operator operation
@@ -70,18 +66,18 @@ public interface DblSemiring {
      */
     boolean member(double m);
 
-    /**
-     * Integer bitmap of this semirings properties:
-     * <ul>
-     * <li>LeftSemiring: indicates Ts form a left semiring</li>
-     * <li>RightSemiring: indicates Ts form a right semiring</li>
-     * <li>Commutative: ∀ a,b: Times(a, b) = Times(b, a)</li>
-     * <li>Idempotent: ∀ a: a ⊕ a = a.</li>
-     * <li>Path: ∀ a, b: a ⊕ b = a or a ⊕ b = b.</li>
-     * </ul>
-     */
-    EnumSet<Property> properties();
-
+//    /**
+//     * Integer bitmap of this semirings properties:
+//     * <ul>
+//     * <li>LeftSemiring: indicates Ts form a left semiring</li>
+//     * <li>RightSemiring: indicates Ts form a right semiring</li>
+//     * <li>Commutative: ∀ a,b: Times(a, b) = Times(b, a)</li>
+//     * <li>Idempotent: ∀ a: a ⊕ a = a.</li>
+//     * <li>Path: ∀ a, b: a ⊕ b = a or a ⊕ b = b.</li>
+//     * </ul>
+//     */
+//    EnumSet<Property> properties();
+//
 //    /**
 //     * NATURAL ORDER
 //     * <p>
