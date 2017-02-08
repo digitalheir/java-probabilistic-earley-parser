@@ -47,6 +47,8 @@ public class Chart<T> {
     public final Grammar<T> grammar;
     private final ParseOptions<T> callbacks;
 
+    private boolean parallelizePredict = false;
+    private boolean parallelizeScan = false;
     private boolean parallelizeComplete = true;
 
     /**
@@ -221,19 +223,20 @@ public class Chart<T> {
     void predict(int index) {
         // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
         final Set<State> activeOnNonTerminals = stateSets.activeStates.getActiveOnNonTerminals(index);
-        if (activeOnNonTerminals != null)
+        if (activeOnNonTerminals != null) {
             // Copy set to avoid concurrent modification
-            new HashSet<>(activeOnNonTerminals).stream().parallel()
-
+            HashSet<State> activeOnNonTerminalsCp = new HashSet<>(activeOnNonTerminals);
+            (parallelizePredict ? activeOnNonTerminalsCp.parallelStream() : activeOnNonTerminalsCp.stream())
                     // For all productions Y → value such that R(Z =*L> Y) is nonzero
-                    .flatMap(grammar::streamNonZeroLeftStarRulesWithPrecedingState).parallel()
-
+                    .flatMap(grammar::streamNonZeroLeftStarRulesWithPrecedingState)
                     // we predict state <code>i: Y<sub>i</sub> → ·value</code>
                     .map(statePredecessor_Y_to_v -> predictNextStateAndScores(index, statePredecessor_Y_to_v))
 
                     // Now that we've calculated the scores, add to chart...
                     .sequential()
+
                     .forEach(stateSets::setScores);
+        }
     }
 
     public void scan(int i, TokenWithCategories<T> token) {
@@ -257,7 +260,7 @@ public class Chart<T> {
      * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
     @SuppressWarnings("WeakerAccess")
-    public void scan(
+    void scan(
             final int tokenPosition,
             final TokenWithCategories<T> tokenWithCategories,
             final ScanProbability<T> scanProbability
@@ -277,15 +280,14 @@ public class Chart<T> {
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
-        tokenWithCategories.categories.stream()
-                .parallel()
+        final Set<Terminal<T>> categories = tokenWithCategories.categories;
+        (parallelizeScan ? categories.parallelStream() : categories.stream())
                 .flatMap((final Terminal<T> terminalType) -> {
                     final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
                     return statesActiveOnTerminals == null
                             ? Stream.empty()
                             : statesActiveOnTerminals.stream();
                 })
-                .parallel() // Parallellize for performance: everything we do in map does not mutate state
                 .map(preScanState -> new Scan.Delta<>(
                         token,
                         preScanState,
@@ -335,10 +337,9 @@ public class Chart<T> {
 
         /* Safe to parallelize here */
         if (parallelizeComplete) stream = stream.parallel();
-        stream = stream.flatMap(stateSets.activeStates::streamAllStatesToAdvance);
-        if (parallelizeComplete) stream = stream.parallel();
 
         List<Complete.Delta> deltas = stream
+                .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
                 .map(stateInformation -> completeNoViterbiForTriple(
                         position,
                         addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
@@ -383,7 +384,7 @@ public class Chart<T> {
      * @param completedState Completed state to calculate Viterbi score for
      */
     @SuppressWarnings("WeakerAccess")
-    public void computeViterbiScoresForCompletedState(
+    private void computeViterbiScoresForCompletedState(
             final State completedState
     ) {
         if (stateSets.viterbiScores.get(completedState) == null)
@@ -435,15 +436,22 @@ public class Chart<T> {
                 : null;
     }
 
-    private State.ViterbiScore getNewViterbiScore(State completedState, double completedViterbi, State stateToAdvance, State resultingState) {
+    private State.ViterbiScore getNewViterbiScore(
+            State completedState,
+            double completedViterbi,
+            State stateToAdvance,
+            State resultingState
+    ) {
+        final double oldViterbiScore = getViterbiScore(stateToAdvance).innerScore;
+
         return new State.ViterbiScore(
-                stateSets.grammar.semiring.times(
+                grammar.semiring.times(
                         completedViterbi,
-                        stateSets.viterbiScores.get(stateToAdvance).innerScore // must be set
+                        oldViterbiScore // must be set
                 ),
                 completedState,
                 resultingState,
-                stateSets.grammar.semiring
+                grammar.semiring
         );
     }
 
@@ -452,7 +460,7 @@ public class Chart<T> {
      *
      * @param i The index to make completions at.
      */
-    void completeNoViterbi(
+    private void completeNoViterbi(
             final int i
     ) {
         ExpressionSemiring semiring = grammar.semiring;
