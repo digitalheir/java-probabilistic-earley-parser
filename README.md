@@ -112,14 +112,14 @@ Grab from Maven:
         <dependency>
             <groupId>org.leibnizcenter</groupId>
             <artifactId>probabilistic-earley-parser</artifactId>
-            <version>0.9.11</version>
+            <version>0.9.12</version>
         </dependency>
 </dependencies>
 ```
 
 or Gradle:
 ```groovy
-compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.11'
+compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.12'
 ```
 
 Or just include the [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest) in your project.
