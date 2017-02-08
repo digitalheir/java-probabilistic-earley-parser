@@ -2,7 +2,7 @@ package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
@@ -57,7 +57,7 @@ public final class Scan<T> {
         return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
-    void scan(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+    void scan(ParseOptions<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
         final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
         if (callbacks != null) callbacks.beforeScan(i, token, chart);
 

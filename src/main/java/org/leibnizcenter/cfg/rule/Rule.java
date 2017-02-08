@@ -7,7 +7,6 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Arrays;
-import java.util.function.Function;
 
 
 /**
@@ -143,16 +142,6 @@ public class Rule {
 //    public boolean isSingletonPreterminal() {
 //        return (isPreterminal() && right.length == 1);
 //    }
-
-    /**
-     * @param line          Of the form "S -> NP VP"
-     * @param parseCategory how to parse category string into category
-     * @param semiring      semiring to use
-     * @return Parsed rule
-     */
-    public static Rule fromString(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
-        return RuleParser.fromString(line, parseCategory, semiring);
-    }
 
 
     /**

@@ -1,7 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
@@ -53,7 +53,7 @@ public class Predict<T> {
         return new Delta(isNew, state, Y_to_vProbability, fw, statePredecessor);
     }
 
-    void predict(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+    void predict(ParseOptions<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
         if (callbacks != null) callbacks.beforePredict(i, token, chart);
 
         predict(i);

@@ -1,8 +1,11 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
+import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.grammar.Grammar;
+import org.leibnizcenter.cfg.rule.Rule;
 
 import java.util.Set;
 
@@ -60,8 +63,7 @@ public class Chart<T> {
         return stateSets.toString();
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void addState(State state, double forward, double inner) {
+    void addState(State state, double forward, double inner) {
         stateSets.getOrCreate(state);
         stateSets.innerScores.put(state, inner);
         stateSets.forwardScores.put(state, forward);
@@ -85,5 +87,13 @@ public class Chart<T> {
 
     public State.ViterbiScore getViterbiScore(State s) {
         return stateSets.viterbiScores.get(s);
+    }
+
+    public void addInitialState(Category goal) {
+        ExpressionSemiring sr = grammar.semiring;
+        addState(new State(Rule.create(sr, 1.0, Category.START, goal), 0),
+                sr.one(),
+                sr.one()
+        );
     }
 }

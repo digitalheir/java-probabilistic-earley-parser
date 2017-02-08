@@ -13,6 +13,7 @@ import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
+import org.leibnizcenter.cfg.rule.RuleParser;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.util.MapEntry;
 import org.leibnizcenter.cfg.util.MyMultimap;
@@ -151,10 +152,12 @@ public class Grammar<T> {
 
     public static Grammar<String> parse(String s, Function<String, Category> parseCategory, DblSemiring semiring) {
         Builder<String> b = new Builder<>();
+
+        RuleParser parser = new RuleParser(parseCategory, semiring);
         b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
-                .map(line -> Rule.fromString(line, parseCategory, semiring)).collect(Collectors.toSet())
+                .map(parser::fromString).collect(Collectors.toSet())
         );
         return b.build();
     }
@@ -170,10 +173,12 @@ public class Grammar<T> {
 
     public static Grammar<String> parse(Path path, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
         Builder<String> b = new Builder<>();
-        final Collection<Rule> rules = Files.lines(path, charset)
+        RuleParser ruleParser = new RuleParser(parseCategory, semiring);
+        final Collection<Rule> rules = Files.lines(path, charset).parallel()
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
-                .map(line -> Rule.fromString(line, parseCategory, semiring)).collect(Collectors.toSet());
+                .map(ruleParser::fromString)
+                .collect(Collectors.toSet());
         b.addRules(rules);
         return b.build();
     }
@@ -189,15 +194,14 @@ public class Grammar<T> {
         Builder<String> b = new Builder<>();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
-
-        System.out.println("Reading File line by line using BufferedReader");
+        RuleParser ruleParser = new RuleParser(parseCategory, semiring);
 
         String line = reader.readLine();
         Collection<Rule> rules = new HashSet<>();
         while (line != null) {
             line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
             if (!line.isEmpty())
-                rules.add(Rule.fromString(line, parseCategory, semiring));
+                rules.add(ruleParser.fromString(line));
             line = reader.readLine();
         }
         b.addRules(rules);
@@ -299,14 +303,12 @@ public class Grammar<T> {
      */
     @Override
     public String toString() {
-        return "[" + getClass().getSimpleName() +
-                ' ' +
-                name +
+        return name +
                 ": {" +
                 rules.values().stream()
                         .map(Object::toString)
-                        .collect(Collectors.joining(", ")) +
-                "}]";
+                        .collect(Collectors.joining(",\n")) +
+                "}";
     }
 
     public int size() {

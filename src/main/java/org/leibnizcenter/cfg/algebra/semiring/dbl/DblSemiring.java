@@ -107,4 +107,9 @@ public interface DblSemiring {
     double fromProbability(double x);
 
     double toProbability(double x);
+
+    /**
+     * @return As in {@link Double#compare(double, double)}
+     */
+    int compare(double x, double y);
 }

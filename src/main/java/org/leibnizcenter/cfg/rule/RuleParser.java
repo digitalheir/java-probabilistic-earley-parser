@@ -27,6 +27,7 @@ import static java.lang.Character.isWhitespace;
  * Created by maarten on 6-2-17.
  */
 public class RuleParser {
+
     private static final NonTerminal RHS = NonTerminal.of("S");
     private static final NonTerminal Cate = NonTerminal.of("Category");
     private static final NonTerminal CategoryContent = NonTerminal.of("CategoryContent");
@@ -70,7 +71,18 @@ public class RuleParser {
 
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
-    private RuleParser() {
+    private final Function<String, Category> parseCategory;
+    private final DblSemiring semiring;
+
+    /**
+     * @param line          Of the form "S -> NP VP"
+     * @param parseCategory how to parse category string into category
+     * @param semiring      semiring to use
+     * @return Parsed rule
+     */
+    public RuleParser(Function<String, Category> parseCategory, DblSemiring semiring) {
+        this.parseCategory = parseCategory;
+        this.semiring = semiring;
     }
 
     static List<RhsToken> lexRhs(char[] chars) {
@@ -79,7 +91,7 @@ public class RuleParser {
         StringBuilder sb = new StringBuilder(chars.length);
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
-            final boolean isEscapedRegexDelimiter = sb.length() > 0 && chars[i - 1] == '\\';
+            final boolean isEscapedRegexDelimiter = (c == '/') && sb.length() > 0 && chars[i - 1] == '\\';
             if ((c == '/') && !(isEscapedRegexDelimiter)) {
                 if (sb.length() > 0) {
                     l.add(new RhsToken(sb.toString()));
@@ -92,40 +104,17 @@ public class RuleParser {
                 l.add(new RhsToken(sb.toString()));
                 sb = new StringBuilder(chars.length - 1 - i);
 
-                if (isEscapedRegexDelimiter) sb.deleteCharAt(sb.length() - 1);
+                if (isEscapedRegexDelimiter)
+                    sb.deleteCharAt(sb.length() - 1);
                 sb.append(c);
             } else {
+                if (isEscapedRegexDelimiter)
+                    sb.deleteCharAt(sb.length() - 1);
                 sb.append(c);
             }
         }
         if (sb.length() > 0) l.add(new RhsToken(sb.toString()));
         return l;
-    }
-
-    static Category[] parseRHS(Function<String, Category> parseCategory, String rhsStr) {
-        ParseTree viterbi = new Parser(grammarRHS)
-                .getViterbiParse(RHS, lexRhs(rhsStr.toCharArray()));
-        if (viterbi == null) throw new IllegalArgumentException("Could not parse grammar");
-        viterbi = viterbi.flatten(RuleParser::getFlattenOption);
-        List<Category> rhsList = viterbi.getChildren().stream()
-                .map(parseTree -> getCategory(parseCategory, parseTree))
-                .collect(Collectors.toList());
-
-        Category[] RHS = new Category[rhsList.size()];
-        RHS = rhsList.toArray(RHS);
-        return RHS;
-    }
-
-    private static Category getCategory(Function<String, Category> parseCategory, ParseTree parseTree) {
-        final boolean isSimpleCategory = parseTree.category.equals(Cate);
-        final boolean isRegex = parseTree.category.equals(Regex);
-        if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
-
-
-        return isRegex ? parseRegexTerminal(parseTree) : parseCategory.apply(parseTree.children.stream()
-                .map(t -> (ParseTree.Token<String>) t)
-                .map(t -> t.token.obj)
-                .collect(Collectors.joining()));
     }
 
     private static RegexTerminal parseRegexTerminal(ParseTree parseTree) {
@@ -136,7 +125,9 @@ public class RuleParser {
         for (; i >= 0; i--) {
             final ParseTree child = children.get(i);
             if (child.category.equals(RegexDelimiter)) break;
-            modifiers.add(((ParseTree.Token<String>) child).token.obj.toLowerCase(Locale.ROOT));
+
+            final char[] chars = ((ParseTree.Token<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
+            for (char c : chars) modifiers.add(Character.toString(c));
         }
         int flag = 0;
         if (modifiers.contains("x")) flag = flag | Pattern.COMMENTS;
@@ -172,14 +163,40 @@ public class RuleParser {
             return ParseTree.FlattenOption.REMOVE;
     }
 
-    public static Rule fromString(String line, Function<String, Category> parseCategory, DblSemiring semiring) {
+    Category[] parseRHS(String rhsStr) {
+        ParseTree viterbi = new Parser(grammarRHS)
+                .getViterbiParse(RHS, lexRhs(rhsStr.toCharArray()));
+        if (viterbi == null) throw new IllegalArgumentException("Could not parse grammar");
+        viterbi = viterbi.flatten(RuleParser::getFlattenOption);
+        List<Category> rhsList = viterbi.getChildren().stream()
+                .map(this::getCategory)
+                .collect(Collectors.toList());
+
+        Category[] RHS = new Category[rhsList.size()];
+        RHS = rhsList.toArray(RHS);
+        return RHS;
+    }
+
+    private Category getCategory(ParseTree parseTree) {
+        final boolean isSimpleCategory = parseTree.category.equals(Cate);
+        final boolean isRegex = parseTree.category.equals(Regex);
+        if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
+
+
+        return isRegex ? parseRegexTerminal(parseTree) : parseCategory.apply(parseTree.children.stream()
+                .map(t -> (ParseTree.Token<String>) t)
+                .map(t -> t.token.obj)
+                .collect(Collectors.joining()));
+    }
+
+    public Rule fromString(String line) {
         Matcher m = RULE.matcher(line);
         if (!m.matches())
             throw new IllegalArgumentException("String was not a valid rule: " + line);
         else {
             final NonTerminal LHS = new NonTerminal(m.group(1));
 
-            Category[] RHS = parseRHS(parseCategory, m.group(2).trim());
+            Category[] RHS = parseRHS(m.group(2).trim());
 
             final String prob = m.group(3);
             final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
@@ -198,7 +215,7 @@ public class RuleParser {
         public RhsToken(String s) {
             super(s);
             this.isWhitespace = WHITESPACE.matcher(s).matches();
-            this.isRegexDelimiter = s.charAt(0) == '/';
+            this.isRegexDelimiter = s.length() == 1 && s.charAt(0) == '/';
         }
 
         @Override

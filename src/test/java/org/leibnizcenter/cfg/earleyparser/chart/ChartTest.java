@@ -15,6 +15,7 @@ import org.leibnizcenter.cfg.earleyparser.ParseTree;
 import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.scan.TokenNotInLexiconException;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
@@ -76,6 +77,7 @@ public class ChartTest {
             )
             .addRule(Det, the)
             .addRule(N, man)
+            .addRule(N, stick)
             .addRule(TV, transitiveVerb)
             .addRule(Mod, with, NP) // eg. with a stick
             .build();
@@ -89,7 +91,6 @@ public class ChartTest {
         final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with the stick");
         ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
         System.out.println(parseTree);
-
     }
 
     @Test
@@ -142,10 +143,13 @@ public class ChartTest {
         // Unparsable
         Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("girl left")), 0.0, 0.0001);
         Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the")), 0.0, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
-
     }
 
+
+    @Test(expected = TokenNotInLexiconException.class)
+    public final void unparseable() {
+        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+    }
 
     @Test
     public final void paper_example() {

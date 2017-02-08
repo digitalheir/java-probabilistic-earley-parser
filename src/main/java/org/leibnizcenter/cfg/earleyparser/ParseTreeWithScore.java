@@ -21,7 +21,7 @@ public class ParseTreeWithScore {
     }
 
     double getProbability() {
-        return semiring.toProbability(score.getScore());
+        return score.getProbability();
     }
 
     

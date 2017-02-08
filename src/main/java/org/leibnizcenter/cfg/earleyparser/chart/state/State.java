@@ -197,8 +197,12 @@ public class State {
             this.hashCode = computeHashCode();
         }
 
-        public final double getScore() {
+        public final double getRawScore() {
             return innerScore;
+        }
+
+        public final double getProbability() {
+            return semiring.toProbability(innerScore);
         }
 
         public final State getOrigin() {
@@ -207,7 +211,7 @@ public class State {
 
         @Override
         public final int compareTo(ViterbiScore other) {
-            return Double.compare(semiring.toProbability(innerScore), semiring.toProbability(other.getScore()));
+            return semiring.compare(innerScore, other.innerScore);
         }
 
         public final State getResultingState() {
@@ -246,7 +250,7 @@ public class State {
         public final String toString() {
             return "ViterbiScore{" +
                     "origin=" + origin +
-                    ", score=" + semiring.toProbability(innerScore) +
+                    ", score=" + getProbability() +
                     ", resultingState=" + resultingState +
                     '}';
         }

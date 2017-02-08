@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser.callbacks;
 
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
+import org.leibnizcenter.cfg.earleyparser.scan.ScanMode;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 /**
@@ -9,18 +10,21 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
  * Created by maarten on 16/01/17.
  */
 @SuppressWarnings("WeakerAccess")
-public class ParseCallbacks<T> {
+public class ParseOptions<T> {
     public final ScanProbability<T> scanProbability;
 
-    public final ParseCallback<T> onPostPredict;
-    public final ParseCallback<T> onPostScan;
-    public final ParseCallback<T> onPostComplete;
-
     public final ParseCallback<T> onPrePredict;
-    public final ParseCallback<T> onPreScan;
-    public final ParseCallback<T> onPreComplete;
+    public final ParseCallback<T> onPostPredict;
 
-    public ParseCallbacks(
+    public final ParseCallback<T> onPreScan;
+    //public final ParseCallback<T> onScanFailNoTokenFound;
+    public final ParseCallback<T> onPostScan;
+
+    public final ParseCallback<T> onPreComplete;
+    public final ParseCallback<T> onPostComplete;
+    public final ScanMode scanMode;
+
+    public ParseOptions(
             ScanProbability<T> scanProbability,
 
             ParseCallback<T> onPostPredict,
@@ -29,7 +33,9 @@ public class ParseCallbacks<T> {
 
             ParseCallback<T> onPrePredict,
             ParseCallback<T> onPreScan,
-            ParseCallback<T> onPreComplete
+            ParseCallback<T> onPreComplete,
+
+            ScanMode scanMode
 
     ) {
         this.scanProbability = scanProbability;
@@ -41,6 +47,8 @@ public class ParseCallbacks<T> {
         this.onPrePredict = onPrePredict;
         this.onPreScan = onPreScan;
         this.onPreComplete = onPreComplete;
+
+        this.scanMode = scanMode;
     }
 
     public void onPredict(int i, TokenWithCategories<T> token, Chart<T> chart) {
@@ -67,6 +75,7 @@ public class ParseCallbacks<T> {
         if (this.onPreComplete != null) onPostComplete.on(i, token, chart);
     }
 
+
     public static class Builder<T> {
         private ScanProbability<T> scanProbability;
 
@@ -78,50 +87,58 @@ public class ParseCallbacks<T> {
         private ParseCallback<T> onPreScan;
         private ParseCallback<T> onPreComplete;
 
+        private ScanMode scanMode;
+
         public Builder<T> withScanProbability(ScanProbability<T> scanProbability) {
             this.scanProbability = scanProbability;
             return this;
         }
 
-        public Builder<T> withOnPostPredict(ParseCallback<T> onPostPredict) {
+        public Builder<T> onPostPredict(ParseCallback<T> onPostPredict) {
             this.onPostPredict = onPostPredict;
             return this;
         }
 
-        public Builder<T> withOnPostScan(ParseCallback<T> onPostScan) {
+        public Builder<T> onPostScan(ParseCallback<T> onPostScan) {
             this.onPostScan = onPostScan;
             return this;
         }
 
-        public Builder<T> withOnPostComplete(ParseCallback<T> onPostComplete) {
+        public Builder<T> onPostComplete(ParseCallback<T> onPostComplete) {
             this.onPostComplete = onPostComplete;
             return this;
         }
 
-        public Builder<T> withOnPrePredict(ParseCallback<T> onPrePredict) {
+        public Builder<T> onPrePredict(ParseCallback<T> onPrePredict) {
             this.onPrePredict = onPrePredict;
             return this;
         }
 
-        public Builder<T> withOnPreScan(ParseCallback<T> onPreScan) {
+        public Builder<T> onPreScan(ParseCallback<T> onPreScan) {
             this.onPreScan = onPreScan;
             return this;
         }
 
-        public Builder<T> withOnPreComplete(ParseCallback<T> onPreComplete) {
+        public Builder<T> onPreComplete(ParseCallback<T> onPreComplete) {
             this.onPreComplete = onPreComplete;
             return this;
         }
 
-        public ParseCallbacks<T> build() {
-            return new ParseCallbacks<>(
+        public Builder<T> withScanMode(ScanMode scanMode) {
+            this.scanMode = scanMode;
+            return this;
+        }
+
+        public ParseOptions<T> build() {
+            return new ParseOptions<>(
                     scanProbability,
                     onPostPredict,
                     onPostScan,
                     onPostComplete,
                     onPrePredict,
                     onPreScan,
-                    onPreComplete
+                    onPreComplete,
+                    scanMode
             );
         }
     }

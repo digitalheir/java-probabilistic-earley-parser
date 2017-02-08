@@ -18,7 +18,7 @@ public class LogSemiring extends ExpressionSemiring {
     private LogSemiring() {
     }
 
-    public static LogSemiring get(){
+    public static LogSemiring get() {
         return SINGLETON;
     }
 
@@ -74,5 +74,10 @@ public class LogSemiring extends ExpressionSemiring {
     @Override
     public double toProbability(double x) {
         return Math.exp(-x);
+    }
+
+    @Override
+    public int compare(double x, double y) {
+        return Double.compare(y, x);
     }
 }

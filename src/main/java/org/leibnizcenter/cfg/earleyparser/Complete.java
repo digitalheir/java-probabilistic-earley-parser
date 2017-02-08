@@ -4,7 +4,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.earleyparser.callbacks.ParseCallbacks;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
@@ -167,7 +167,7 @@ public class Complete<T> {
         if (stateSets.viterbiScores.get(completedState) == null)
             throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
 
-        final double completedViterbi = stateSets.viterbiScores.get(completedState).getScore();
+        final double completedViterbi = stateSets.viterbiScores.get(completedState).innerScore;
         final NonTerminal Yl = completedState.rule.left;
         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
         int completedPos = completedState.position;
@@ -217,7 +217,7 @@ public class Complete<T> {
         return new State.ViterbiScore(
                 stateSets.grammar.semiring.times(
                         completedViterbi,
-                        stateSets.viterbiScores.get(stateToAdvance).getScore() // must be set
+                        stateSets.viterbiScores.get(stateToAdvance).innerScore // must be set
                 ),
                 completedState,
                 resultingState,
@@ -259,7 +259,7 @@ public class Complete<T> {
         );
     }
 
-    void complete(ParseCallbacks<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
+    void complete(ParseOptions<T> callbacks, Chart<T> chart, int i, TokenWithCategories<T> token) {
         if (callbacks != null) callbacks.beforeComplete(i, token, chart);
 
 

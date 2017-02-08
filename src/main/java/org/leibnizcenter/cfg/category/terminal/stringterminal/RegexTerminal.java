@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
  * Created by maarten on 7-2-17.
  */
 public class RegexTerminal implements StringTerminal {
-    private final Pattern pattern;
+    public final Pattern pattern;
 
     public RegexTerminal(Pattern pattern) {
         this.pattern = pattern;
@@ -42,5 +42,11 @@ public class RegexTerminal implements StringTerminal {
     @Override
     public int hashCode() {
         return pattern.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Regex{" + pattern +
+                '}';
     }
 }

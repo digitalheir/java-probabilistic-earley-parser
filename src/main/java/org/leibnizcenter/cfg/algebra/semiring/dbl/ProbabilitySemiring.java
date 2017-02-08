@@ -65,4 +65,9 @@ public class ProbabilitySemiring extends ExpressionSemiring {
     public double toProbability(double x) {
         return x;
     }
+
+    @Override
+    public int compare(double x, double y) {
+        return Double.compare(x, y);
+    }
 }
