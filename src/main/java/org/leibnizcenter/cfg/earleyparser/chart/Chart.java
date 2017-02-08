@@ -321,9 +321,8 @@ public class Chart<T> {
     ) {
         if (states == null || states.size() <= 0) return;
 
-
         final DeferredStateScoreComputations newStates = new DeferredStateScoreComputations(stateSets.grammar.semiring);
-        Stream<StateInformationTriple> stream = states.stream()
+        List<Complete.Delta> deltas = states.stream()
                 // For all states
                 //      i: Y<sub>j</sub> → value·    [a",y"]
                 //      j: X<sub>k</suv> → l·Zm  [a',y']
@@ -333,13 +332,10 @@ public class Chart<T> {
 
                 // WARNING: shared mutated mutability
                 .sequential()
-                .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))));
-
-        /* Safe to parallelize here */
-        if (parallelizeComplete) stream = stream.parallel();
-
-        List<Complete.Delta> deltas = stream
+                .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))))
+                // TODO can/want parallelize this?
                 .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
+                .sequential()
                 .map(stateInformation -> completeNoViterbiForTriple(
                         position,
                         addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
@@ -396,9 +392,7 @@ public class Chart<T> {
         int completedPos = completedState.position;
         final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Yl, completedState.ruleStartPosition, completedPos);
         if (statesToAdvance != null && statesToAdvance.size() > 0) {
-            Stream<State> stream = statesToAdvance.stream();
-                    /* Safe to parallelize here */
-            if (parallelizeComplete) stream = stream.parallel();
+            Stream<State> stream = (parallelizeComplete ? statesToAdvance.parallelStream() : statesToAdvance.stream());
             Collection<Complete.ViterbiDelta> newStates = stream
                     .map((stateToAdvance) -> computeViterbiForState(completedState, completedViterbi, stateToAdvance))
                     .filter(d -> d != null)
