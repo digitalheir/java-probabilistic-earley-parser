@@ -59,7 +59,7 @@ Det →  the              # probability defaults to 1.0
 N   →  heavy   (0.2)
 Adj →  heavy   (0.8)
 V   →  heave   (0.8)
-N   →  heave   (0.2)
+N   →  /heave[r]?/i   (0.2) # You can specify terminals as regular expressions by enclosing them in '/'. 
 ```
 
 Execute runnable jar on the terminal:
@@ -148,9 +148,9 @@ public class Example {
     private static final Terminal<String> with = new ExactStringTerminal("with");
     
     private static final Grammar grammar = new Grammar.Builder("test")
-            .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want
+            .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want. The builder takes care of converting probabilties to semiring elements
             .addRule(
-                    1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
+                    1.0,   // Probability between 0.0 and 1.0, defaults to 1.0
                     S,     // Left hand side of the rule
                     NP, VP // Right hand side of the rule
             )
