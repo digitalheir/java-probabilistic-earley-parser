@@ -5,6 +5,7 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.earleyparser.Parser;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.Tokens;
@@ -14,7 +15,7 @@ import java.util.List;
 
 /**
  * Test performance todo linear / exponential regression
- *
+ * <p>
  * Created by Maarten on 23-8-2016.
  */
 public class Perf {
@@ -52,9 +53,15 @@ public class Perf {
         for (int i = 0; i <= 1; i++) {
             tokens.add(a);
         }
+        final ParseOptions parseOptions = new ParseOptions.Builder()
+                .parallelizeScan()
+                .parallelizeComplete()
+                .parallelizePredict()
+                .build();
+        Parser p = new Parser(grammar);
         for (int i = 0; i <= 200; i++) {
             long timeStart = System.currentTimeMillis();
-            Parser.getViterbiParseWithScore(S, grammar, tokens);
+            p.getViterbiParseWithScore(S, tokens, parseOptions);
             long timeEnd = System.currentTimeMillis();
             final long time = timeEnd - timeStart;
             l.add(new long[]{i, time});

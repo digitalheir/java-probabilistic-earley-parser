@@ -45,23 +45,23 @@ import java.util.stream.Stream;
 public class Chart<T> {
     public final StateSets<T> stateSets;
     public final Grammar<T> grammar;
-    private final ParseOptions<T> callbacks;
-
-    private boolean parallelizePredict = false;
-    private boolean parallelizeScan = false;
-    private boolean parallelizeComplete = true;
+    private final ParseOptions<T> parseOptions;
 
     /**
      * Creates a new chart, initializing its internal data structure.
      */
     public Chart(Grammar<T> grammar) {
-        this(grammar, null);
+        this(
+                grammar,
+                null
+        );
     }
 
-    public Chart(Grammar<T> grammar, ParseOptions<T> callbacks) {
+    public Chart(Grammar<T> grammar, ParseOptions<T> parseOptions
+    ) {
         this.stateSets = new StateSets<>(grammar);
         this.grammar = grammar;
-        this.callbacks = callbacks;
+        this.parseOptions = parseOptions;
     }
 
     /**
@@ -205,11 +205,11 @@ public class Chart<T> {
 
     public void predict(int i, TokenWithCategories<T> token) {
         Chart<T> chart = this;
-        if (callbacks != null) callbacks.beforePredict(i, token, chart);
+        if (parseOptions != null) parseOptions.beforePredict(i, token, chart);
 
         predict(i);
 
-        if (callbacks != null) callbacks.onPredict(i, token, chart);
+        if (parseOptions != null) parseOptions.onPredict(i, token, chart);
     }
 
     /**
@@ -226,7 +226,7 @@ public class Chart<T> {
         if (activeOnNonTerminals != null) {
             // Copy set to avoid concurrent modification
             HashSet<State> activeOnNonTerminalsCp = new HashSet<>(activeOnNonTerminals);
-            (parallelizePredict ? activeOnNonTerminalsCp.parallelStream() : activeOnNonTerminalsCp.stream())
+            (parseOptions.parallelizePredict ? activeOnNonTerminalsCp.parallelStream() : activeOnNonTerminalsCp.stream())
                     // For all productions Y → value such that R(Z =*L> Y) is nonzero
                     .flatMap(grammar::streamNonZeroLeftStarRulesWithPrecedingState)
                     // we predict state <code>i: Y<sub>i</sub> → ·value</code>
@@ -240,8 +240,8 @@ public class Chart<T> {
     }
 
     public void scan(int i, TokenWithCategories<T> token) {
-        final ScanProbability<T> scanProbability = callbacks != null ? callbacks.scanProbability : null;
-        if (callbacks != null) callbacks.beforeScan(i, token, this);
+        final ScanProbability<T> scanProbability = parseOptions != null ? parseOptions.scanProbability : null;
+        if (parseOptions != null) parseOptions.beforeScan(i, token, this);
 
         scan(
                 i,
@@ -249,7 +249,7 @@ public class Chart<T> {
                 scanProbability
         );
 
-        if (callbacks != null) callbacks.onScan(i, token, this);
+        if (parseOptions != null) parseOptions.onScan(i, token, this);
     }
 
     /**
@@ -281,7 +281,7 @@ public class Chart<T> {
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         final Set<Terminal<T>> categories = tokenWithCategories.categories;
-        (parallelizeScan ? categories.parallelStream() : categories.stream())
+        (parseOptions.parallelizeScan ? categories.parallelStream() : categories.stream())
                 .flatMap((final Terminal<T> terminalType) -> {
                     final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
                     return statesActiveOnTerminals == null
@@ -378,8 +378,7 @@ public class Chart<T> {
         int completedPos = completedState.position;
         final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Yl, completedState.ruleStartPosition, completedPos);
         if (statesToAdvance != null && statesToAdvance.size() > 0) {
-            Stream<State> stream = (parallelizeComplete ? statesToAdvance.parallelStream() : statesToAdvance.stream());
-            Collection<Complete.ViterbiDelta> newStates = stream
+            Collection<Complete.ViterbiDelta> newStates = (parseOptions.parallelizeComplete ? statesToAdvance.parallelStream() : statesToAdvance.stream())
                     .map((stateToAdvance) -> computeViterbiForState(completedState, completedViterbi, stateToAdvance))
                     .filter(d -> d != null)
                     .collect(Collectors.toSet());
@@ -465,13 +464,13 @@ public class Chart<T> {
     public void complete(int i, TokenWithCategories<T> token) {
         Chart<T> chart = this;
 
-        if (callbacks != null) callbacks.beforeComplete(i, token, chart);
+        if (parseOptions != null) parseOptions.beforeComplete(i, token, chart);
 
 
         final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
         completeNoViterbi(i + 1);
         completedStates.forEach(this::computeViterbiScoresForCompletedState);
 
-        if (callbacks != null) callbacks.onComplete(i, token, chart);
+        if (parseOptions != null) parseOptions.onComplete(i, token, chart);
     }
 }
