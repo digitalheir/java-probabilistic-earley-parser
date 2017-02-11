@@ -20,11 +20,7 @@ public class Atom extends Resolvable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Atom atom = (Atom) o;
-        if (Double.compare(atom.value, value) != 0) return false;
-        return true;
+        return this == o || !(o == null || getClass() != o.getClass()) && Double.compare(((Atom) o).value, value) == 0;
     }
 
     @Override

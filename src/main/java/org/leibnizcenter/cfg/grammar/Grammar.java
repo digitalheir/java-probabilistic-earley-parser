@@ -56,6 +56,7 @@ public class Grammar<T> {
     public final UnitStarScores unitStarScores;
     public final ExpressionSemiring semiring;
     public final AtomMap atoms = new AtomMap();
+    public final Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
     private final MyMultimap<Category, Rule> rules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
@@ -70,7 +71,6 @@ public class Grammar<T> {
     private final LeftCorners leftStarCorners;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
     private final Set<Terminal<T>> terminals = new HashSet<>();
-    private final Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
     private final Map<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new HashMap<>();
 
     /**

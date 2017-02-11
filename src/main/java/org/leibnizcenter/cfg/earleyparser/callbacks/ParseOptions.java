@@ -24,9 +24,9 @@ public class ParseOptions<T> {
     public final ParseCallback<T> onPostComplete;
     public final ScanMode scanMode;
 
-    public final boolean parallelizePredict;
-    public final boolean parallelizeScan;
-    public final boolean parallelizeComplete;
+//    public final boolean parallelizePredict;
+//    public final boolean parallelizeScan;
+//    public final boolean parallelizeComplete;
 
     public ParseOptions(
             ScanProbability<T> scanProbability,
@@ -39,11 +39,12 @@ public class ParseOptions<T> {
             ParseCallback<T> onPreScan,
             ParseCallback<T> onPreComplete,
 
-            ScanMode scanMode,
+            ScanMode scanMode/*,
 
             boolean parallelizePredict,
             boolean parallelizeScan,
-            boolean parallelizeComplete) {
+            boolean parallelizeComplete*/
+    ) {
         this.scanProbability = scanProbability;
 
         this.onPostPredict = onPostPredict;
@@ -56,31 +57,9 @@ public class ParseOptions<T> {
 
         this.scanMode = scanMode;
 
-        this.parallelizePredict = parallelizePredict;
-        this.parallelizeScan = parallelizeScan;
-        this.parallelizeComplete = parallelizeComplete;
-    }
-
-    public ParseOptions(
-            ScanProbability<T> scanProbability,
-            ParseCallback<T> onPostPredict,
-            ParseCallback<T> onPostScan,
-            ParseCallback<T> onPostComplete,
-            ParseCallback<T> onPrePredict,
-            ParseCallback<T> onPreScan,
-            ParseCallback<T> onPreComplete,
-
-            ScanMode scanMode) {
-        this(scanProbability,
-                onPostPredict,
-                onPostScan,
-                onPostComplete,
-                onPrePredict,
-                onPreScan,
-                onPreComplete, scanMode,
-                false,
-                false,
-                false);
+//        this.parallelizePredict = parallelizePredict;
+//        this.parallelizeScan = parallelizeScan;
+//        this.parallelizeComplete = parallelizeComplete;
     }
 
     public void onPredict(int i, TokenWithCategories<T> token, Chart<T> chart) {
@@ -120,9 +99,9 @@ public class ParseOptions<T> {
         private ParseCallback<T> onPreComplete;
 
         private ScanMode scanMode;
-        private boolean parallelizePredict = false;
-        private boolean parallelizeScan = false;
-        private boolean parallelizeComplete = false;
+//        private boolean parallelizePredict = false;
+//        private boolean parallelizeScan = false;
+//        private boolean parallelizeComplete = false;
 
         public Builder<T> withScanProbability(ScanProbability<T> scanProbability) {
             this.scanProbability = scanProbability;
@@ -173,26 +152,23 @@ public class ParseOptions<T> {
                     onPrePredict,
                     onPreScan,
                     onPreComplete,
-                    scanMode,
-                    parallelizePredict,
-                    parallelizeScan,
-                    parallelizeComplete
+                    scanMode
             );
         }
 
-        public Builder<T> parallelizeScan() {
-            this.parallelizeScan = true;
-            return this;
-        }
-
-        public Builder<T> parallelizePredict() {
-            this.parallelizePredict = true;
-            return this;
-        }
-
-        public Builder<T> parallelizeComplete() {
-            this.parallelizeComplete = true;
-            return this;
-        }
+//        public Builder<T> parallelizeScan() {
+//            this.parallelizeScan = true;
+//            return this;
+//        }
+//
+//        public Builder<T> parallelizePredict() {
+//            this.parallelizePredict = true;
+//            return this;
+//        }
+//
+//        public Builder<T> parallelizeComplete() {
+//            this.parallelizeComplete = true;
+//            return this;
+//        }
     }
 }

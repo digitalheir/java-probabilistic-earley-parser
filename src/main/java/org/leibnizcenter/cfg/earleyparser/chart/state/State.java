@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart.state;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import java.text.DecimalFormat;
@@ -46,6 +47,9 @@ public class State {
     @SuppressWarnings("WeakerAccess")
     public final int position;
     private final int hashCode;
+
+    public double forwardScore = Double.NaN;
+    public Atom forwardScoreAtom = null;
 
     /**
      * Makes a predicted State based on the specified rule, with the specified

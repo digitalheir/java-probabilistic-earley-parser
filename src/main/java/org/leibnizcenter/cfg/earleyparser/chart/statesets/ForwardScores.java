@@ -6,6 +6,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.AtomMap;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,11 +18,14 @@ public class ForwardScores {
     private final TObjectDoubleMap<State> forwardScores;
     private final Map<State, Atom> forwardScoresAtom = new HashMap<>(500);
     private final AtomMap atoms;
+    private final Atom zeroA;
 
-    ForwardScores(DblSemiring semiring, AtomMap atoms) {
-        this.semiring = semiring;
-        this.atoms = atoms;
-        this.forwardScores = new TObjectDoubleHashMap(500, 0.5F, semiring.zero());
+    ForwardScores(Grammar grammar) {
+        this.semiring = grammar.semiring;
+        this.atoms = grammar.atoms;
+        double zero = semiring.zero();
+        zeroA = atoms.getAtom(zero);
+        this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, zero);
     }
 
 
@@ -46,7 +50,7 @@ public class ForwardScores {
     /**
      * Runs in O(1).
      */
-    public void add(State state, double increment) {
+    public void increment(State state, double increment) {
         final double newForwardScore = semiring.plus(forwardScores.get(state)/*default zero*/, increment);
         put(state, newForwardScore);
     }
@@ -59,6 +63,6 @@ public class ForwardScores {
      * @return inner score so far
      */
     public Atom getAtom(State state) {
-        return forwardScoresAtom.get(state);
+        return forwardScoresAtom.containsKey(state) ? forwardScoresAtom.get(state) : zeroA;
     }
 }

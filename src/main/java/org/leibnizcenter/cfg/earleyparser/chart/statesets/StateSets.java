@@ -52,7 +52,7 @@ public class StateSets<T> {
     public StateSets(Grammar<T> grammar) {
         this.grammar = grammar;
         DblSemiring semiring = grammar.semiring;
-        this.forwardScores = new ForwardScores(semiring, grammar.atoms);
+        this.forwardScores = new ForwardScores(grammar);
         this.innerScores = new InnerScores(semiring, grammar.atoms);
         viterbiScoresDbl = new TObjectDoubleHashMap<>(500, 0.5F, Double.NaN);
     }
@@ -107,9 +107,16 @@ public class StateSets<T> {
         return byIndex.get(index);
     }
 
-    public void addIfNew(State state) {
-        if (!contains(state))
-            addState(state, null);
+    /**
+     * @param state
+     * @return whether state was new
+     */
+    public boolean addIfNew(State state) {
+        if (!contains(state)) {
+            getOrCreate(state);
+            return true;
+        } else
+            return false;
     }
 
 
@@ -136,7 +143,7 @@ public class StateSets<T> {
 
 
         setViterbiScore(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
-        this.forwardScores.add(delta.predicted, delta.fw);
+        this.forwardScores.increment(delta.predicted, delta.fw);
         this.innerScores.put(delta.predicted, delta.Y_to_vProbability);
     }
 

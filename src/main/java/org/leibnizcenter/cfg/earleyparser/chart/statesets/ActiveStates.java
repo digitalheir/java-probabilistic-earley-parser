@@ -35,10 +35,10 @@ public class ActiveStates<T> {
             return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(cat);
     }
 
-    public Set<State> getStatesActiveOnNonTerminal(NonTerminal y, int position, int beforeOrOnPosition) {
+    public Set<State> getStatesActiveOnNonTerminal(NonTerminal nonTerminal, int position, int beforeOrOnPosition) {
         // stateToAdvance.position <= beforeOrOnPosition;
         if (position <= beforeOrOnPosition) {
-            TIntObjectHashMap<Set<State>> setTIntObjectHashMap = statesActiveOnNonTerminal.get(y);
+            TIntObjectHashMap<Set<State>> setTIntObjectHashMap = statesActiveOnNonTerminal.get(nonTerminal);
             if (setTIntObjectHashMap != null && setTIntObjectHashMap.containsKey(position))
                 return setTIntObjectHashMap.get(position);
         }

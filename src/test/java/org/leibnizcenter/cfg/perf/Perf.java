@@ -21,7 +21,7 @@ import java.util.List;
 public class Perf {
     public static void main(String[] ignored) {
         List<long[]> l = run();
-        l.forEach(line -> System.out.println(line[0] + "\t" + line[1]));
+        //l.forEach(line -> System.out.println(line[0] + "\t" + line[1]));
     }
 
     public static List<long[]> run() {
@@ -50,15 +50,16 @@ public class Perf {
 
         List<long[]> l = new ArrayList<>();
 
-        for (int i = 0; i <= 1; i++) {
+        for (int i = 0; i <= 1; i++)
             tokens.add(a);
-        }
-        final ParseOptions parseOptions = new ParseOptions.Builder()
-                .parallelizeScan()
-                .parallelizeComplete()
-                .parallelizePredict()
+
+        final ParseOptions<String> parseOptions = new ParseOptions.Builder<String>()
+//                .parallelizeScan()
+//                .parallelizeComplete()
+//                .parallelizePredict()
                 .build();
-        Parser p = new Parser(grammar);
+
+        Parser<String> p = new Parser<>(grammar);
         for (int i = 0; i <= 200; i++) {
             long timeStart = System.currentTimeMillis();
             p.getViterbiParseWithScore(S, tokens, parseOptions);

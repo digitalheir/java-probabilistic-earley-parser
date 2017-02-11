@@ -8,7 +8,6 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.Complete;
 import org.leibnizcenter.cfg.earleyparser.DeferredStateScoreComputations;
-import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
@@ -21,12 +20,10 @@ import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
-import org.leibnizcenter.cfg.util.MapEntry;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,7 +58,7 @@ public class Chart<T> {
     ) {
         this.stateSets = new StateSets<>(grammar);
         this.grammar = grammar;
-        this.parseOptions = parseOptions;
+        this.parseOptions = parseOptions == null ? new ParseOptions.Builder<T>().build() : parseOptions;
     }
 
     /**
@@ -182,26 +179,6 @@ public class Chart<T> {
         );
     }
 
-    private Predict.Delta predictNextStateAndScores(int index, MapEntry<State, Rule> statePredecessor_Y_to_v) {
-        final State statePredecessor = statePredecessor_Y_to_v.getKey();
-        final Rule Y_to_v = statePredecessor_Y_to_v.getValue();
-
-        final Category Z = statePredecessor.getActiveCategory();
-        //noinspection SuspiciousNameCombination
-        final Category Y = Y_to_v.left;
-
-        final double prevForward = stateSets.forwardScores.get(statePredecessor);
-
-        // γ' = P(Y → value)
-        final double Y_to_vProbability = Y_to_v.getScore();
-
-        // α' = α * R(Z =*L> Y) * P(Y → value)
-        final double fw = grammar.semiring.times(prevForward, grammar.semiring.times(grammar.getLeftStarScore(Z, Y), Y_to_vProbability));
-
-        State state = State.create(index, index, 0, Y_to_v);
-        boolean isNew = !stateSets.contains(state);
-        return new Predict.Delta(isNew, state, Y_to_vProbability, fw, statePredecessor);
-    }
 
     public void predict(int i, TokenWithCategories<T> token) {
         Chart<T> chart = this;
@@ -220,23 +197,74 @@ public class Chart<T> {
      *
      * @param index The token index to make predictions at.
      */
-    void predict(int index) {
+    void predict(final int index) {
         // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
         final Set<State> activeOnNonTerminals = stateSets.activeStates.getActiveOnNonTerminals(index);
-        if (activeOnNonTerminals != null) {
+        if (activeOnNonTerminals != null && activeOnNonTerminals.size() > 0) {
+            assert !activeOnNonTerminals.stream()
+                    .filter(p -> p.position != index)
+                    .findAny()
+                    .isPresent(); // all on position == index
             // Copy set to avoid concurrent modification
-            HashSet<State> activeOnNonTerminalsCp = new HashSet<>(activeOnNonTerminals);
-            (parseOptions.parallelizePredict ? activeOnNonTerminalsCp.parallelStream() : activeOnNonTerminalsCp.stream())
-                    // For all productions Y → value such that R(Z =*L> Y) is nonzero
-                    .flatMap(grammar::streamNonZeroLeftStarRulesWithPrecedingState)
-                    // we predict state <code>i: Y<sub>i</sub> → ·value</code>
-                    .map(statePredecessor_Y_to_v -> predictNextStateAndScores(index, statePredecessor_Y_to_v))
-
-                    // Now that we've calculated the scores, add to chart...
-                    .sequential()
-
-                    .forEach(stateSets::setScores);
+            new HashSet<>(activeOnNonTerminals).forEach(this::predictStatesForState);
         }
+
+        // Streamy:
+//            (false ? activeOnNonTerminalsCp.parallelStream() : activeOnNonTerminalsCp.stream())
+//                    // For all productions Y → v such that R(Z =*L> Y) is nonzero
+//                    .flatMap(grammar::streamNonZeroLeftStarRulesWithPrecedingState)
+//                    // we predict state <code>i: Y<sub>i</sub> → ·v</code>
+//                    .map(statePredecessor_Y_to_v -> {
+//                        final State statePredecessor = statePredecessor_Y_to_v.getKey();
+//                        final Rule Y_to_v = statePredecessor_Y_to_v.getv();
+//
+//                        final Category Z = statePredecessor.getActiveCategory();
+//                        //noinspection SuspiciousNameCombination
+//                        final Category Y = Y_to_v.left;
+//
+//                        final double prevForward = stateSets.forwardScores.get(statePredecessor);
+//
+//                        // γ' = P(Y → v)
+//                        final double Y_to_vProbability = Y_to_v.getScore();
+//
+//                        // α' = α * R(Z =*L> Y) * P(Y → v)
+//                        final double fw = grammar.semiring.times(prevForward, grammar.semiring.times(grammar.getLeftStarScore(Z, Y), Y_to_vProbability));
+//
+//                        State state = State.create(index, index, 0, Y_to_v);
+//                        boolean isNew = !stateSets.contains(state);
+//                        return new Predict.Delta(isNew, state, Y_to_vProbability, fw, statePredecessor);
+//                    })
+//
+//            // Now that we've calculated the scores, add to chart...
+//                    .sequential()
+//
+//                    .forEach(stateSets::setScores);
+
+
+    }
+
+    private void predictStatesForState(State statePredecessor) {
+        final Category Z = statePredecessor.getActiveCategory();
+        // For all productions Y → v such that R(Z =*L> Y) is nonzero
+        grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> {
+            // we predict state <code>i: Y<sub>i</sub> → ·v</code>
+            final double prevForward = stateSets.forwardScores.get(statePredecessor);
+
+            // γ' = P(Y → v)
+            final double Y_to_vProbability = Y_to_v.getScore();
+
+            // α' = α * R(Z =*L> Y) * P(Y → v)
+            final double newForward = grammar.semiring.times(prevForward, grammar.semiring.times(grammar.getLeftStarScore(Z, Y_to_v.left), Y_to_vProbability));
+
+            State predicted = State.create(statePredecessor.position, statePredecessor.position, 0, Y_to_v);
+
+            boolean isNewState = stateSets.addIfNew(predicted);
+            assert isNewState || (stateSets.innerScores.get(predicted) == Y_to_vProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
+
+            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, predicted, grammar.semiring));
+            stateSets.forwardScores.increment(predicted, newForward);
+            stateSets.innerScores.put(predicted, Y_to_vProbability);
+        });
     }
 
     public void scan(int i, TokenWithCategories<T> token) {
@@ -281,7 +309,7 @@ public class Chart<T> {
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         final Set<Terminal<T>> categories = tokenWithCategories.categories;
-        (parseOptions.parallelizeScan ? categories.parallelStream() : categories.stream())
+        categories.stream()
                 .flatMap((final Terminal<T> terminalType) -> {
                     final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
                     return statesActiveOnTerminals == null
@@ -296,9 +324,7 @@ public class Chart<T> {
                         /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
                         preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
                 ))
-
                 // After we have calculated everything, we mutate the chart
-                .sequential()
                 .forEach(stateSets::createStateAndSetScores);
     }
 
@@ -319,23 +345,23 @@ public class Chart<T> {
                                    final DeferredStateScoreComputations addForwardScores,
                                    final DeferredStateScoreComputations addInnerScores
     ) {
-        if (newCompletedStates == null || newCompletedStates.size() <= 0) return;
-        while (newCompletedStates != null && newCompletedStates.size() > 0) {
-
-            List<Complete.Delta> deltas = newCompletedStates.stream()
+        if (newCompletedStates == null || newCompletedStates.size() <= 0)
+            return;
+        while (newCompletedStates.size() > 0) {
+            newCompletedStates = newCompletedStates.stream()
                     // For all states
-                    //      i: Y<sub>j</sub> → value·    [a",y"]
+                    //      i: Y<sub>j</sub> → v·    [a",y"]
                     //      j: X<sub>k</suv> → l·Zm  [a',y']
                     //
                     //  such that the R*(Z =*> Y) is nonzero
-                    //  and Y → value is not a unit production
+                    //  and Y → v is not a unit production
 
                     // WARNING: shared mutated mutability
-                    .sequential()
-                    .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))))
-                    // TODO can/want parallelize this?
+                    .map(completedState -> new StateInformationTriple(null,
+                            completedState,
+                            addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))
+                    ))
                     .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
-                    .sequential()
                     .map(stateInformation -> completeNoViterbiForTriple(
                             position,
                             addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
@@ -344,15 +370,15 @@ public class Chart<T> {
                             stateInformation
                             )
                     )
-                    .collect(Collectors.toList());
+                    .peek(delta -> {
+                        addForwardScores.plus(delta.state, delta.addForward);
+                        addInnerScores.plus(delta.state, delta.addInner);
+                    })
+                    .filter(delta -> delta.newCompletedStateNoUnitProduction)
+                    .map(Complete.Delta::getState)
+                    /* Prepare next batch of new completed states; recurse until there are no more new completed states */
+                    .collect(Collectors.toSet());
 
-            /* Prepare next batch of new completed states; recurse until there are no more new completed states */
-            newCompletedStates.clear();
-            for (Complete.Delta delta : deltas) {
-                addForwardScores.plus(delta.state, delta.addForward);
-                addInnerScores.plus(delta.state, delta.addInner);
-                if (delta.newCompletedStateNoUnitProduction) newCompletedStates.add(delta.getState());
-            }
             newCompletedStates.forEach(stateSets::getOrCreate);
         }
     }
@@ -363,37 +389,32 @@ public class Chart<T> {
      * Luckily, we can avoid looping over unit productions because it only ever lowers probability
      * (assuming p = [0,1] and Occam's razor). ~This method does not guarantee a left most parse.~
      *
-     * @param completedState Completed state to calculate Viterbi score for
+     * @param completedStates Completed state to calculate Viterbi score for
      */
     @SuppressWarnings("WeakerAccess")
-    private void computeViterbiScoresForCompletedState(
-            final State completedState
+    private void computeViterbiScoresForCompletedStates(
+            Collection<State> completedStates
     ) {
-        if (stateSets.viterbiScores.get(completedState) == null)
-            throw new IssueRequest("Expected Viterbi score to be set on completed state. This is a bug.");
+        while (completedStates.size() > 0)
+            completedStates = completedStates.stream()
+                    .flatMap(completedState -> {
+                        if (stateSets.viterbiScores.get(completedState) == null)
+                            throw new IssueRequest("Expected Viterbi score to be set on completed state.");
 
-        final double completedViterbi = stateSets.viterbiScores.get(completedState).innerScore;
-        final NonTerminal Yl = completedState.rule.left;
-        //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-        int completedPos = completedState.position;
-        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(Yl, completedState.ruleStartPosition, completedPos);
-        if (statesToAdvance != null && statesToAdvance.size() > 0) {
-            Collection<Complete.ViterbiDelta> newStates = (parseOptions.parallelizeComplete ? statesToAdvance.parallelStream() : statesToAdvance.stream())
-                    .map((stateToAdvance) -> computeViterbiForState(completedState, completedViterbi, stateToAdvance))
-                    .filter(d -> d != null)
-                    .collect(Collectors.toSet());
-
-            /* WARNING: shared mutable state mutated */
-            newStates.forEach(stateSets::processDelta);
-
-            // Recurse with new states that are completed
-            newStates.stream()
-                    .filter(Complete.ViterbiDelta::isNewCompletedState)
-                    .map(d -> d.resultingState)
-                    //recurse on newCompletedStates
-                    .forEach(this::computeViterbiScoresForCompletedState);
-        }
-
+                        //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+                        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
+                        if (statesToAdvance != null && statesToAdvance.size() > 0) {
+                            return statesToAdvance.stream()
+                                    .map((stateToAdvance) -> computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).innerScore, stateToAdvance))
+                                    .filter(d -> d != null)
+                                    .sequential()
+                                    .peek(stateSets::processDelta)
+                                    //recurse on newCompletedStates
+                                    .filter(Complete.ViterbiDelta::isNewCompletedState)
+                                    .map(d -> d.resultingState);
+                        } else
+                            return Stream.empty();
+                    }).collect(Collectors.toSet());
     }
 
     private Complete.ViterbiDelta computeViterbiForState(State completedState, double completedViterbi, State stateToAdvance) {
@@ -469,7 +490,7 @@ public class Chart<T> {
 
         final Set<State> completedStates = new HashSet<>(chart.stateSets.completedStates.getCompletedStates(i + 1));
         completeNoViterbi(i + 1);
-        completedStates.forEach(this::computeViterbiScoresForCompletedState);
+        computeViterbiScoresForCompletedStates(completedStates);
 
         if (parseOptions != null) parseOptions.onComplete(i, token, chart);
     }
