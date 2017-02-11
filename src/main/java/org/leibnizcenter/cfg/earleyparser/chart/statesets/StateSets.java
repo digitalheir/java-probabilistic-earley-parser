@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.earleyparser.Complete;
@@ -38,7 +39,8 @@ public class StateSets<T> {
      * a certain non-terminal X
      */
     public final InnerScores innerScores;
-    public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>();
+    public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>(500);
+    public final TObjectDoubleHashMap<State> viterbiScoresDbl;
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
     public final Grammar<T> grammar;
@@ -52,6 +54,7 @@ public class StateSets<T> {
         DblSemiring semiring = grammar.semiring;
         this.forwardScores = new ForwardScores(semiring, grammar.atoms);
         this.innerScores = new InnerScores(semiring, grammar.atoms);
+        viterbiScoresDbl = new TObjectDoubleHashMap<>(500, 0.5F, Double.NaN);
     }
 
     /**
@@ -76,7 +79,6 @@ public class StateSets<T> {
             addState(state, scannedToken);
             return state;
         }
-
     }
 
     /**
@@ -164,6 +166,7 @@ public class StateSets<T> {
 
     public void setViterbiScore(State.ViterbiScore viterbiScore) {
         this.viterbiScores.put(viterbiScore.getResultingState(), viterbiScore);
+        this.viterbiScoresDbl.put(viterbiScore.getResultingState(), viterbiScore.getRawScore());
     }
 
     public ScannedToken<T> getScannedToken(State state) {
@@ -171,8 +174,16 @@ public class StateSets<T> {
     }
 
 
-    public State getOrCreate(State s) {
-        return getOrCreate(s, null);
+    public State getOrCreate(State state) {
+        if (contains(state)) {
+            return state;
+        } else {
+            states.add(state);
+            add(byIndex, state.position, state);
+            completedStates.add(state.position, state);
+            activeStates.add(state.position, state, grammar.unitStarScores);
+            return state;
+        }
     }
 
     public void processDelta(Complete.ViterbiDelta delta) {

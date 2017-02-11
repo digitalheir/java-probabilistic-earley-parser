@@ -195,15 +195,16 @@ public class Rule {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Rule rule = (Rule) o;
-
-        if (Double.compare(rule.rawProbability, rawProbability) != 0) return false;
-        if (hashCode != rule.hashCode) return false;
-        if (!left.equals(rule.left)) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
-        return Arrays.equals(right, rule.right);
+        else if (o == null || getClass() != o.getClass()) return false;
+        else if (o.hashCode() != hashCode) return false;
+        else {
+            Rule rule = (Rule) o;
+            if (right.length != rule.right.length) return false;
+            else if (Double.compare(rule.rawProbability, rawProbability) != 0) return false;
+            else if (!left.equals(rule.left)) return false;
+            for (int i = 0; i < right.length; i++) if (!rule.right[i].equals(right[i])) return false;
+            return true;
+        }
     }
 
     @Override

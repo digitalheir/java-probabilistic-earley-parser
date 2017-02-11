@@ -114,12 +114,14 @@ public class State {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        State state = (State) o;
-
-        return ruleStartPosition == state.ruleStartPosition && ruleDotPosition == state.ruleDotPosition && position == state.position && rule.equals(state.rule);
-
+        else if (o == null || getClass() != o.getClass()) return false;
+        else {
+            State state = (State) o;
+            return ruleStartPosition == state.ruleStartPosition
+                    && ruleDotPosition == state.ruleDotPosition
+                    && position == state.position
+                    && rule.equals(state.rule);
+        }
     }
 
     @Override
@@ -177,7 +179,7 @@ public class State {
      * Immutable class representing a Viterbi score coming from a certain state, transition to a result state computing
      * using a certain semiring
      */
-    public static final class ViterbiScore implements Comparable<ViterbiScore> {
+    public static final class ViterbiScore {
         @SuppressWarnings("WeakerAccess")
         public final State origin;
         @SuppressWarnings("WeakerAccess")
@@ -209,11 +211,6 @@ public class State {
             return origin;
         }
 
-        @Override
-        public final int compareTo(ViterbiScore other) {
-            return semiring.compare(innerScore, other.innerScore);
-        }
-
         public final State getResultingState() {
             return resultingState;
         }
@@ -221,13 +218,14 @@ public class State {
         @Override
         public final boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ViterbiScore that = (ViterbiScore) o;
-            return Double.compare(that.innerScore, innerScore) == 0
-                    && (origin != null ? origin.equals(that.origin) : that.origin == null
-                    && semiring.equals(that.semiring)
-                    && (resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null));
-
+            else if (o == null || getClass() != o.getClass()) return false;
+            else {
+                ViterbiScore that = (ViterbiScore) o;
+                return Double.compare(that.innerScore, innerScore) == 0
+                        && (origin != null ? origin.equals(that.origin) : that.origin == null
+                        && semiring.equals(that.semiring)
+                        && (resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null));
+            }
         }
 
         @Override

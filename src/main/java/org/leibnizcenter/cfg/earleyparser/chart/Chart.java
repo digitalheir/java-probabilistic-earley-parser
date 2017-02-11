@@ -89,8 +89,8 @@ public class Chart<T> {
         return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
-    private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, State.ViterbiScore newViterbiScore) {
-        return viterbiScore == null || viterbiScore.compareTo(newViterbiScore) < 0;
+    private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, double newViterbiScore) {
+        return viterbiScore == null || viterbiScore.semiring.compare(viterbiScore.innerScore, newViterbiScore) < 0;
     }
 
     private static <E> Complete.Delta completeNoViterbiForTriple(int position,
@@ -306,68 +306,54 @@ public class Chart<T> {
      * Completes states exhaustively and makes resolvable expressions for the forward and inner scores.
      * Note that these expressions can only be resolved to actual values after finishing completion, because they may depend on one another.
      *
-     * @param position         State position
-     * @param states           Completed states to use for deducing what states to proceed
-     * @param addForwardScores Container / helper for adding to forward score expressions
-     * @param addInnerScores   Container / helper for adding to inner score expressions
-     *                         //     * @param completedStatesAlreadyHandled The completed states that we don't want to reiterate.
-     *                         //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
-     *                         //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
+     * @param position           State position
+     * @param newCompletedStates Completed states to use for deducing what states to proceed
+     * @param addForwardScores   Container / helper for adding to forward score expressions
+     * @param addInnerScores     Container / helper for adding to inner score expressions
+     *                           //     * @param completedStatesAlreadyHandled The completed states that we don't want to reiterate.
+     *                           //     * @param computationsForward           Container for forward score expressions. Probably superfluous.
+     *                           //     * @param computationsInner             Container for inner score expressions. Probably superfluous.
      */
     private void completeNoViterbi(final int position,
-                                   final Collection<State> states,
+                                   Collection<State> newCompletedStates,
                                    final DeferredStateScoreComputations addForwardScores,
                                    final DeferredStateScoreComputations addInnerScores
     ) {
-        if (states == null || states.size() <= 0) return;
+        if (newCompletedStates == null || newCompletedStates.size() <= 0) return;
+        while (newCompletedStates != null && newCompletedStates.size() > 0) {
 
-        final DeferredStateScoreComputations newStates = new DeferredStateScoreComputations(stateSets.grammar.semiring);
-        List<Complete.Delta> deltas = states.stream()
-                // For all states
-                //      i: Y<sub>j</sub> → value·    [a",y"]
-                //      j: X<sub>k</suv> → l·Zm  [a',y']
-                //
-                //  such that the R*(Z =*> Y) is nonzero
-                //  and Y → value is not a unit production
+            List<Complete.Delta> deltas = newCompletedStates.stream()
+                    // For all states
+                    //      i: Y<sub>j</sub> → value·    [a",y"]
+                    //      j: X<sub>k</suv> → l·Zm  [a',y']
+                    //
+                    //  such that the R*(Z =*> Y) is nonzero
+                    //  and Y → value is not a unit production
 
-                // WARNING: shared mutated mutability
-                .sequential()
-                .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))))
-                // TODO can/want parallelize this?
-                .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
-                .sequential()
-                .map(stateInformation -> completeNoViterbiForTriple(
-                        position,
-                        addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
-                        addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.getAtom(stateInformation.stateToAdvance)),
-                        stateSets,
-                        stateInformation
-                        )
-                )
-                .collect(Collectors.toList());
+                    // WARNING: shared mutated mutability
+                    .sequential()
+                    .map(completedState -> new StateInformationTriple(null, completedState, addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))))
+                    // TODO can/want parallelize this?
+                    .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
+                    .sequential()
+                    .map(stateInformation -> completeNoViterbiForTriple(
+                            position,
+                            addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
+                            addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.getAtom(stateInformation.stateToAdvance)),
+                            stateSets,
+                            stateInformation
+                            )
+                    )
+                    .collect(Collectors.toList());
 
-                /* */
-        Collection<State> newCompletedStates = null;
-        for (Complete.Delta delta : deltas) {
-            //todo these plus operation may be parallellized a little?
-            addForwardScores.plus(delta.state, delta.addForward);
-            addInnerScores.plus(delta.state, delta.addInner);
-
-            if (delta.newCompletedStateNoUnitProduction) {
-                newStates.addForward(delta);
-                if (newCompletedStates == null) newCompletedStates = new HashSet<>(deltas.size());
-                newCompletedStates.add(delta.getState());
+            /* Prepare next batch of new completed states; recurse until there are no more new completed states */
+            newCompletedStates.clear();
+            for (Complete.Delta delta : deltas) {
+                addForwardScores.plus(delta.state, delta.addForward);
+                addInnerScores.plus(delta.state, delta.addInner);
+                if (delta.newCompletedStateNoUnitProduction) newCompletedStates.add(delta.getState());
             }
-        }
-        // recurse
-        if (newCompletedStates != null && newCompletedStates.size() > 0) {
             newCompletedStates.forEach(stateSets::getOrCreate);
-            completeNoViterbi(
-                    position,
-                    newCompletedStates,
-                    addForwardScores,
-                    addInnerScores
-            );
         }
     }
 
@@ -415,9 +401,19 @@ public class Chart<T> {
         final State resultingState = State.create(completedState.position, stateToAdvance.ruleStartPosition, stateToAdvance.advanceDot(), stateToAdvance.rule);
         if (stateToAdvance.position > resultingState.position || stateToAdvance.position != completedState.ruleStartPosition)
             throw new IssueRequest("Index failed. This is a bug.");
-        final State.ViterbiScore newViterbiScore = getNewViterbiScore(completedState, completedViterbi, stateToAdvance, resultingState);
+        final double oldViterbiScore = stateSets.viterbiScoresDbl.get(stateToAdvance);
+        assert Double.isFinite(oldViterbiScore);
+        double newViterbiScore = grammar.semiring.times(
+                completedViterbi,
+                oldViterbiScore // must be set
+        );
         boolean newViterbiIsBetter = newViterbiIsBetter(stateSets.viterbiScores.get(resultingState), newViterbiScore);
-
+        final State.ViterbiScore newViterbiScore_ = newViterbiIsBetter ? new State.ViterbiScore(
+                newViterbiScore,
+                completedState,
+                resultingState,
+                grammar.semiring
+        ) : null;
 
         final boolean isNewCompletedState = newViterbiIsBetter && resultingState.isCompleted();
         final boolean isNewState = !stateSets.contains(resultingState);
@@ -425,29 +421,11 @@ public class Chart<T> {
                 ? new Complete.ViterbiDelta(
                 resultingState,
                 isNewCompletedState,
-                newViterbiIsBetter ? newViterbiScore : null,
+                newViterbiScore_,
                 isNewState)
                 : null;
     }
 
-    private State.ViterbiScore getNewViterbiScore(
-            State completedState,
-            double completedViterbi,
-            State stateToAdvance,
-            State resultingState
-    ) {
-        final double oldViterbiScore = getViterbiScore(stateToAdvance).innerScore;
-
-        return new State.ViterbiScore(
-                grammar.semiring.times(
-                        completedViterbi,
-                        oldViterbiScore // must be set
-                ),
-                completedState,
-                resultingState,
-                grammar.semiring
-        );
-    }
 
     /**
      * Makes completions in the specified chart at the given index.

@@ -37,9 +37,4 @@ public class DeferredStateScoreComputations {
         current.setExpression(semiring.plus(addValue, current.getExpression()));
         this.states.put(s, current);
     }
-
-    public Complete.Delta addForward(Complete.Delta delta) {
-        plus(delta.state, delta.addForward);
-        return delta;
-    }
 }
