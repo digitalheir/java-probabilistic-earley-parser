@@ -8,7 +8,7 @@ This is a library for parsing a sequence of tokens (like words) into tree struct
 
 For example:
 
-* As a computational linguist, you want [derive all ways to interpret an English sentence along with probabilities](https://web.stanford.edu/~jurafsky/icassp95-tc.pdf)
+* As a computational linguist, you want to [derive the most probable interpretation of an English sentence](https://web.stanford.edu/~jurafsky/icassp95-tc.pdf)
 
 |tokens|parse tree|
 |---|---|
@@ -19,6 +19,8 @@ For example:
 |tokens|parse tree|
 |---|---|
 |`GGGC``UAUU``AGCU``CAGU`<br>`UGGU``UAGA``GCGC``ACCC`<br>`CUGA``UAAG``GGUG``AGGU`<br>`CGCU``GAUU``CGAA``UUCA`<br>`GCAU``AGCC``CA` |![rna secondary structure](https://cloud.githubusercontent.com/assets/178797/21773797/af94f972-d690-11e6-97b4-0aad06071634.jpg)|
+
+* As a cognitive scientist, you want to [compute the cognitive load of interpreting sentences](https://www.hlp.rochester.edu/resources/workshop_materials/EVELIN12/Hale01_NAACL_probabilistic%20early%20parser_N01-1021.pdf) (as a function of the number of prefix trees that pop up as you read a sentence)
 
 * As a computational linguist, [you want to know the most likely table of contents structure for a list of paragraphs](https://digitalheir.github.io/java-rechtspraak-library/document-structure/)
 
