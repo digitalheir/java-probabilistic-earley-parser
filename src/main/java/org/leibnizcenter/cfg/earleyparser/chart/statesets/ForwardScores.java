@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.grammar.AtomMap;
+import org.leibnizcenter.cfg.grammar.AtomFactory;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.HashMap;
@@ -17,7 +17,7 @@ public class ForwardScores {
     private final DblSemiring semiring;
     private final TObjectDoubleMap<State> forwardScores;
     private final Map<State, Atom> forwardScoresAtom = new HashMap<>(500);
-    private final AtomMap atoms;
+    private final AtomFactory atoms;
     private final Atom zeroA;
 
     ForwardScores(Grammar grammar) {

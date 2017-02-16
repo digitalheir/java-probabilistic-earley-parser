@@ -13,4 +13,5 @@ public abstract class Resolvable {
     }
 
     public abstract double resolve();
+
 }

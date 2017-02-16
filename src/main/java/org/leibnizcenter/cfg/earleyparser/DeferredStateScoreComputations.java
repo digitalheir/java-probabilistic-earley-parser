@@ -3,6 +3,8 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.grammar.AtomFactory;
+import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,14 +14,16 @@ import java.util.Map;
 public class DeferredStateScoreComputations {
     public final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
+    private AtomFactory atoms;
 
-    public DeferredStateScoreComputations(ExpressionSemiring semiring) {
+    public DeferredStateScoreComputations(Grammar grammar) {
         this.states = new HashMap<>();
-        this.semiring = semiring;
+        this.semiring = grammar.semiring;
+        this.atoms = grammar.atoms;
     }
 
     public ExpressionWrapper getOrCreate(State state,
-                                         Resolvable default_) {
+                                         double default_) {
         if (this.states.containsKey(state)) {
             return this.states.get(state);
         } else {
@@ -32,9 +36,14 @@ public class DeferredStateScoreComputations {
     public void plus(State s, Resolvable addValue) {
         ExpressionWrapper current = this.getOrCreate(
                 s,
-                this.semiring.ZERO_EXPRESSION
+                this.semiring.zero()
         );
-        current.setExpression(semiring.plus(addValue, current.getExpression()));
+
+        current.setExpression(
+                current.hasExpression()
+                        ? semiring.plus(addValue, current.getExpression())
+                        : semiring.plus(addValue, current.getLiteral())
+        );
         this.states.put(s, current);
     }
 }

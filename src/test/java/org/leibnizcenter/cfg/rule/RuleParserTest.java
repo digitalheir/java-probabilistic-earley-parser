@@ -3,6 +3,7 @@ package org.leibnizcenter.cfg.rule;
 import org.junit.Test;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.ErrorSection;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.RegexTerminal;
@@ -11,8 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by maarten on 6-2-17.
@@ -77,4 +77,21 @@ public class RuleParserTest {
         assertEquals(new CaseInsensitiveStringTerminal("Thr/e\\e//"), rhs[2]);
     }
 
+    @Test
+    public void parseErrorRule() throws Exception {
+        Rule rule = new RuleParser(s -> {
+            return (ErrorSection.NAME.equals(s) ? new ErrorSection() : new CaseInsensitiveStringTerminal(s));
+        }, LogSemiring.get()).fromString("S -> A <error> B");
+
+        assertTrue(rule instanceof SynchronizingRule);
+    }
+
+    @Test
+    public void parseNonErrorRule() throws Exception {
+        Rule rule = new RuleParser(s -> {
+            return (ErrorSection.NAME.equals(s) ? new ErrorSection() : new CaseInsensitiveStringTerminal(s));
+        }, LogSemiring.get()).fromString("S -> A B");
+
+        assertFalse(rule instanceof SynchronizingRule);
+    }
 }

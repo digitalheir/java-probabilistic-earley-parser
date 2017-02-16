@@ -17,17 +17,15 @@ import java.util.Map;
  */
 public class LeftCorners {
     final Map<Category, TObjectDoubleMap<Category>> map = new HashMap<>();
-    final MyMultimap<Category, NonTerminal> nonZeroNonTerminalScores = new MyMultimap<>();
-    private final MyMultimap<Category, Category> nonZeroScores = new MyMultimap<>();
+    final MyMultimap<NonTerminal, NonTerminal> nonZeroScores = new MyMultimap<>();
     private final DblSemiring semiring;
-    private final AtomMap atoms;
 
     /**
      * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
      * to {@link Category} with some utility functions to deal with probabilities.
      */
-    LeftCorners(DblSemiring semiring,AtomMap atoms) {
-        this.atoms=atoms;this.semiring = semiring;
+    LeftCorners(DblSemiring semiring) {
+        this.semiring = semiring;
     }
 
 
@@ -38,7 +36,7 @@ public class LeftCorners {
      * @param y           Right hand side
      * @param probability number to add
      */
-    void plus(Category x, Category y, double probability) {
+    void plus(NonTerminal x, NonTerminal y, double probability) {
         TObjectDoubleMap<Category> yToProb = getYToProb(x);
         final double newProbability = semiring.plus(yToProb.get(y)/*defaults to zero*/, probability);
         if (Double.isNaN(newProbability))
@@ -80,30 +78,16 @@ public class LeftCorners {
         set(x, y, yToProb, val);
     }
 
-    Collection<Category> getNonZeroScores(Category Y) {
+    Collection<NonTerminal> getNonZeroScores(NonTerminal Y) {
         return nonZeroScores.get(Y);
     }
 
 
-    private void set(Category x, Category y, TObjectDoubleMap<Category> yToProb, double val) {
+    private void set(NonTerminal x, NonTerminal y, TObjectDoubleMap<Category> yToProb, double val) {
         if (val != semiring.zero()) {
             nonZeroScores.put(x, y);
-            if (y instanceof NonTerminal) nonZeroNonTerminalScores.put(x, (NonTerminal) y);
         }
 
         yToProb.put(y, val);
-    }
-
-    void forEach(Consumer c) {
-        this.map.forEach(
-                (cat, m) -> m.forEachEntry((cat2, dbl) -> {
-                    c.consume(cat, cat2, dbl);
-                    return true;
-                })
-        );
-    }
-
-    interface Consumer {
-        void consume(Category X, Category Y, double value);
     }
 }

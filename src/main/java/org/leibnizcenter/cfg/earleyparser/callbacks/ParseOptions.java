@@ -108,31 +108,37 @@ public class ParseOptions<T> {
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPostPredict(ParseCallback<T> onPostPredict) {
             this.onPostPredict = onPostPredict;
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPostScan(ParseCallback<T> onPostScan) {
             this.onPostScan = onPostScan;
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPostComplete(ParseCallback<T> onPostComplete) {
             this.onPostComplete = onPostComplete;
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPrePredict(ParseCallback<T> onPrePredict) {
             this.onPrePredict = onPrePredict;
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPreScan(ParseCallback<T> onPreScan) {
             this.onPreScan = onPreScan;
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder<T> onPreComplete(ParseCallback<T> onPreComplete) {
             this.onPreComplete = onPreComplete;
             return this;

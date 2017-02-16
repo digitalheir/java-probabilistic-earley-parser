@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.Atom;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.grammar.AtomMap;
+import org.leibnizcenter.cfg.grammar.AtomFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,9 +14,9 @@ public class InnerScores {
     public final DblSemiring semiring;
     private final TObjectDoubleMap<State> innerScores;
     private final Map<State,Atom> innerScoresAtom=new HashMap<>(500);
-    private final AtomMap atoms;
+    private final AtomFactory atoms;
 
-    InnerScores(DblSemiring semiring,AtomMap atoms) {
+    InnerScores(DblSemiring semiring, AtomFactory atoms) {
         this.semiring=semiring;
         this.atoms=atoms;
         this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());

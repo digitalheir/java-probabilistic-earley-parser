@@ -37,12 +37,19 @@ public class RuleFactory {
         return newRuleWithRawProbability(semiring.fromProbability(probability), LHS, RHS);
     }
 
+    public SynchronizingRule newErrorRule(double probability, NonTerminal LHS, Category... RHS) {
+        return newErrorRuleWithRawProbability(semiring.fromProbability(probability), LHS, RHS);
+    }
+
+    private SynchronizingRule newErrorRuleWithRawProbability(double probability, NonTerminal lhs, Category[] rhs) {
+        return new SynchronizingRule(probability, lhs, rhs);
+    }
+
     /**
      * Instantiates a new rule with given probability <strong>as a probability between 0 and 1</strong>. The
      * semiring will take care in converting the number.
      */
-    @SuppressWarnings("WeakerAccess")
-    public Rule newRuleWithRawProbability(double probability, NonTerminal LHS, Category... RHS) {
+    private Rule newRuleWithRawProbability(double probability, NonTerminal LHS, Category... RHS) {
         return new Rule(probability, LHS, RHS);
     }
 }

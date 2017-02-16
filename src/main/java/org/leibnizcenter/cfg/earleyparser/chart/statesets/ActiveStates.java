@@ -126,7 +126,7 @@ public class ActiveStates<T> {
             if (activeCategory instanceof NonTerminal) {
                 addToStatesActiveOnNonTerminal(state);
                 StateSets.add(statesActiveOnNonTerminals, position, state);
-                final Collection<NonTerminal> scores = unitStar.getNonZeroNonTerminals(activeCategory);
+                final Collection<NonTerminal> scores = unitStar.getNonZeroNonTerminals((NonTerminal) activeCategory);
                 scores.forEach(Y -> addToNonTerminalActiveAtIWithNonZeroUnitStarToY(state, position, Y));
             } else if (activeCategory instanceof Terminal)  //noinspection unchecked
                 addStateToActiveOnTerminal(position, (Terminal<T>) activeCategory, state);

@@ -3,6 +3,7 @@ package org.leibnizcenter.cfg.rule;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ProbabilitySemiring;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.ErrorSection;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.RegexTerminal;
@@ -27,43 +28,37 @@ import static java.lang.Character.isWhitespace;
  * Created by maarten on 6-2-17.
  */
 public class RuleParser {
-
-    private static final NonTerminal RHS = NonTerminal.of("S");
-    private static final NonTerminal Cate = NonTerminal.of("Category");
-    private static final NonTerminal CategoryContent = NonTerminal.of("CategoryContent");
-    private static final NonTerminal Regex = NonTerminal.of("Regex");
-    private static final NonTerminal RegexContent = NonTerminal.of("RegexContent");
-    private static final NonTerminal NonRegexDelimiter = NonTerminal.of("NonRegexDelimiter");
-    /**
-     * Any category that start alphanumerically
-     */
-    private static final Pattern SIMPLE_CATEGORY = Pattern.compile("^\\p{Alnum}.*", Pattern.CASE_INSENSITIVE);
+    private static final NonTerminal RIGHT_HAND_SIDE = NonTerminal.of("S");
+    private static final NonTerminal CATEGORY = NonTerminal.of("Category");
+    private static final NonTerminal CATEGORY_CONTENT = NonTerminal.of("CategoryContent");
+    private static final NonTerminal REGEX = NonTerminal.of("Regex");
+    private static final NonTerminal REGEX_CONTENT = NonTerminal.of("RegexContent");
+    private static final NonTerminal NON_REGEX_DELIMITER = NonTerminal.of("NonRegexDelimiter");
     private static final Pattern REGEX_MODIFIER = Pattern.compile("[xmsudi]+", Pattern.CASE_INSENSITIVE);
-    private static final Terminal<String> CategorySimple = (token) -> SIMPLE_CATEGORY.matcher(token.obj).matches();
 
-    private static final Terminal<String> RegexModifiers = (token) -> REGEX_MODIFIER.matcher(token.obj).matches();
-    private static final Terminal<String> RegexDelimiter = (token) -> token instanceof RhsToken && ((RhsToken) token).isRegexDelimiter;
-    private static final Terminal<String> WhiteSpace = (token) -> token instanceof RhsToken && ((RhsToken) token).isWhitespace;
-    private static final Terminal<String> DankContent = (token) -> token instanceof RhsToken
+    private static final Terminal<String> REGEX_MODIFIERS = (token) -> REGEX_MODIFIER.matcher(token.obj).matches();
+    private static final Terminal<String> REGEX_DELIMITER = (token) -> token instanceof RhsToken && ((RhsToken) token).isRegexDelimiter;
+    private static final Terminal<String> WHITE_SPACE = (token) -> token instanceof RhsToken && ((RhsToken) token).isWhitespace;
+    private static final Terminal<String> DANK_CONTENT = (token) -> token instanceof RhsToken
             && !((RhsToken) token).isWhitespace
             && !((RhsToken) token).isRegexDelimiter;
 
     private static final Grammar<String> grammarRHS = new Grammar.Builder<String>()
-            .addRule(Rule.create(ProbabilitySemiring.get(), RHS, Regex))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RHS, Cate))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RHS, RHS, WhiteSpace, RHS))
+            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, REGEX))
+            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, CATEGORY))
+            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, RIGHT_HAND_SIDE, WHITE_SPACE, RIGHT_HAND_SIDE))
 
-            .addRule(Rule.create(ProbabilitySemiring.get(), Cate, CategoryContent))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CategoryContent, CategoryContent, RegexDelimiter))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CategoryContent, DankContent))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CategoryContent, CategoryContent, CategoryContent))
+            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY, CATEGORY_CONTENT))
+            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, CATEGORY_CONTENT, REGEX_DELIMITER))
+            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, DANK_CONTENT))
+            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, CATEGORY_CONTENT, CATEGORY_CONTENT))
 
-            .addRule(Rule.create(ProbabilitySemiring.get(), Regex, RegexDelimiter, RegexContent, RegexDelimiter))
-            .addRule(Rule.create(ProbabilitySemiring.get(), Regex, RegexDelimiter, RegexContent, RegexDelimiter, RegexModifiers))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RegexContent, NonRegexDelimiter))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RegexContent, RegexContent, RegexContent))
-            .addRule(Rule.create(ProbabilitySemiring.get(), NonRegexDelimiter, DankContent))
-            .addRule(Rule.create(ProbabilitySemiring.get(), NonRegexDelimiter, WhiteSpace))
+            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER))
+            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER, REGEX_MODIFIERS))
+            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX_CONTENT, NON_REGEX_DELIMITER))
+            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX_CONTENT, REGEX_CONTENT, REGEX_CONTENT))
+            .addRule(Rule.create(ProbabilitySemiring.get(), NON_REGEX_DELIMITER, DANK_CONTENT))
+            .addRule(Rule.create(ProbabilitySemiring.get(), NON_REGEX_DELIMITER, WHITE_SPACE))
 
             .build();
 
@@ -75,7 +70,6 @@ public class RuleParser {
     private final DblSemiring semiring;
 
     /**
-     * @param line          Of the form "S -> NP VP"
      * @param parseCategory how to parse category string into category
      * @param semiring      semiring to use
      * @return Parsed rule
@@ -124,7 +118,7 @@ public class RuleParser {
         int i = children.size() - 1;
         for (; i >= 0; i--) {
             final ParseTree child = children.get(i);
-            if (child.category.equals(RegexDelimiter)) break;
+            if (child.category.equals(REGEX_DELIMITER)) break;
 
             final char[] chars = ((ParseTree.Token<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
             for (char c : chars) modifiers.add(Character.toString(c));
@@ -146,16 +140,16 @@ public class RuleParser {
     }
 
     private static ParseTree.FlattenOption getFlattenOption(List<ParseTree> parents, ParseTree parseTree) {
-        final ParseTree parent = (parents.size() > 0) ? parents.get(parents.size() - 1) : null;
+        final ParseTree parent = (!parents.isEmpty()) ? parents.get(parents.size() - 1) : null;
         if (parseTree instanceof ParseTree.Token && parent != null) {
-            if (parent.category.equals(Regex)) return ParseTree.FlattenOption.KEEP;
-            else if (parent.category.equals(Cate))
+            if (parent.category.equals(REGEX)) return ParseTree.FlattenOption.KEEP;
+            else if (parent.category.equals(CATEGORY))
                 return ((ParseTree.Token) parseTree).token instanceof RhsToken && ((RhsToken) ((ParseTree.Token) parseTree).token).isWhitespace
                         ? ParseTree.FlattenOption.REMOVE
                         : ParseTree.FlattenOption.KEEP;
             else
                 return ParseTree.FlattenOption.REMOVE;
-        } else if (Stream.of(Regex, Cate).filter(c -> parseTree.category.equals(c)).findAny().isPresent())
+        } else if (Stream.of(REGEX, CATEGORY).filter(c -> parseTree.category.equals(c)).findAny().isPresent())
             return ParseTree.FlattenOption.KEEP;
         else if (parseTree instanceof ParseTree.NonToken)
             return ParseTree.FlattenOption.KEEP_ONLY_CHILDREN;
@@ -165,7 +159,7 @@ public class RuleParser {
 
     Category[] parseRHS(String rhsStr) {
         ParseTree viterbi = new Parser(grammarRHS)
-                .getViterbiParse(RHS, lexRhs(rhsStr.toCharArray()));
+                .getViterbiParse(RIGHT_HAND_SIDE, lexRhs(rhsStr.toCharArray()));
         if (viterbi == null) throw new IllegalArgumentException("Could not parse grammar");
         viterbi = viterbi.flatten(RuleParser::getFlattenOption);
         List<Category> rhsList = viterbi.getChildren().stream()
@@ -178,11 +172,9 @@ public class RuleParser {
     }
 
     private Category getCategory(ParseTree parseTree) {
-        final boolean isSimpleCategory = parseTree.category.equals(Cate);
-        final boolean isRegex = parseTree.category.equals(Regex);
+        final boolean isSimpleCategory = parseTree.category.equals(CATEGORY);
+        final boolean isRegex = parseTree.category.equals(REGEX);
         if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
-
-
         return isRegex ? parseRegexTerminal(parseTree) : parseCategory.apply(parseTree.children.stream()
                 .map(t -> (ParseTree.Token<String>) t)
                 .map(t -> t.token.obj)
@@ -200,11 +192,13 @@ public class RuleParser {
 
             final String prob = m.group(3);
             final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
-            return new Rule(
-                    probability,
-                    LHS,
-                    RHS
-            );
+            boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof ErrorSection));
+
+            if (isErrorRule) {
+                return new SynchronizingRule(probability, LHS, RHS);
+            } else {
+                return new Rule(probability, LHS, RHS);
+            }
         }
     }
 

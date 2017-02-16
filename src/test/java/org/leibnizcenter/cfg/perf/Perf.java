@@ -66,7 +66,7 @@ public class Perf {
             long timeEnd = System.currentTimeMillis();
             final long time = timeEnd - timeStart;
             l.add(new long[]{i, time});
-            System.out.println(i + "\t" + time);
+            System.out.println(i + "\t" + (i == 0 ? 0 : time));
             tokens.add(a);
         }
 

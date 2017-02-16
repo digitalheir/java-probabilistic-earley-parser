@@ -101,7 +101,7 @@ public class Chart<T> {
         // Make i: X_k → lZ·m
         final Category Z = t.stateToAdvance.getActiveCategory();
         final Grammar<E> grammar = stateSets.grammar;
-        final Resolvable unitStarScore = grammar.getUnitStarScore(Z, Yl);
+        final double unitStarScore = grammar.getUnitStarScore(Z, Yl);
 
         final Resolvable fw = grammar.semiring.times(unitStarScore, prevForward, t.completedInner);
         final Resolvable inner = grammar.semiring.times(unitStarScore, prevInner, t.completedInner);
@@ -359,13 +359,13 @@ public class Chart<T> {
                     // WARNING: shared mutated mutability
                     .map(completedState -> new StateInformationTriple(null,
                             completedState,
-                            addInnerScores.getOrCreate(completedState, stateSets.innerScores.getAtom(completedState))
+                            addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState))
                     ))
                     .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
                     .map(stateInformation -> completeNoViterbiForTriple(
                             position,
-                            addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.getAtom(stateInformation.stateToAdvance)),
-                            addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.getAtom(stateInformation.stateToAdvance)),
+                            addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
+                            addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.get(stateInformation.stateToAdvance)),
                             stateSets,
                             stateInformation
                             )
@@ -455,9 +455,8 @@ public class Chart<T> {
     private void completeNoViterbi(
             final int i
     ) {
-        ExpressionSemiring semiring = grammar.semiring;
-        final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(semiring);
-        final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(semiring);
+        final DeferredStateScoreComputations addForwardScores = new DeferredStateScoreComputations(grammar);
+        final DeferredStateScoreComputations addInnerScores = new DeferredStateScoreComputations(grammar);
 
         completeNoViterbi(
                 i,
