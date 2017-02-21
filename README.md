@@ -196,7 +196,7 @@ public class Example {
 You can parse `.cfg` files as follows:
 
 ```java
-Grammar<String> g = Grammar.parse(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));
+Grammar<String> g = Grammar.fromString(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));
 ```
 
 One of the advantages of Earley parsing is the top-down control you can exert while parsing.
