@@ -129,7 +129,7 @@ public class CommandLine {
             } else {
                 Path inputFile = Paths.get(options.get(INPUT_FILE));
                 try {
-                    grammar = Grammar.fromString(inputFile, Charset.defaultCharset());
+                    grammar = Grammar.fromString(inputFile, Charset.forName("UTF8"));
                 } catch (IOException e) {
                     throw new IllegalArgumentException("Could not parse file at " + inputFile.toAbsolutePath() + "\n" + USAGE);
                 }
