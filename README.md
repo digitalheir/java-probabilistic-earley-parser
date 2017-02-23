@@ -233,12 +233,14 @@ Note that this implementation does not apply innovations such as [Joop Leo's imp
 For an efficient parser that works only on non-probabilistic context-free grammars, look into [Marpa](http://lukasatkinson.de/2015/marpa-overview/#earley-and-marpa). Marpa is a C library with a Perl interface, and a Lua interface is underway. It is currently painful to embed within a Java project, however.
 
 ### Limitations
-* I have not provisioned for ε-rules
-* Rule probability estimation may be performed using the inside-outside algorithm, but is not currently implemented
-* Higher level concepts such as wildcards, * and + are not implemented
+Pull requests for these issues are welcome:
+* I have not provisioned for ε-rules (empty right-hand sign). [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/6)
+* Rule probability estimation may be performed using the inside-outside algorithm, but is not currently implemented. [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/3)
+* Higher level concepts such as * and + are not implemented
+* Error handling / logging could be better. [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/5)
 * Viterbi parsing only returns one single parse. In the case of an ambiguous sentence, the returned parse is not guaranteed the left-most parse.
 * Behavior for strangely defined grammars is not defined, such as when the same rule is defined multiple times with
-  a different probability
+  a different probability. [Issue](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/2)
 
 ### Semirings
 The probability of a parse is defined as the product of the probabilities of all the applied rules. Usually,
@@ -254,8 +256,9 @@ represented as doubles. I can't really imagine a use case for using another semi
 This software is licensed under a permissive [MIT license](https://opensource.org/licenses/MIT).
 
 ## References
-[Stolcke, Andreas. "An efficient probabilistic context-free parsing algorithm that computes prefix probabilities." *Computational linguistics* 21.2 (1995): 165-201.
-APA](http://www.aclweb.org/anthology/J95-2002)
+1. [Stolcke, Andreas. "An efficient probabilistic context-free parsing algorithm that computes prefix probabilities. *Computational linguistics* 21.2 (1995): 165-201.](http://www.aclweb.org/anthology/J95-2002)
+2. [Leo, Joop MIM. "A general context-free parsing algorithm running in linear time on every LR (k) grammar without using lookahead." Theoretical computer science 82.1 (1991): 165-176.](http://www.sciencedirect.com/science/article/pii/030439759190180A)
+3. [Kegler, Jeffrey. "Marpa, A Practical General Parser: The Recognizer." (2012): 115.](http://dinhe.net/~aredridel/.notmine/PDFs/Parsing/KEGLER,%20Jeffrey%20-%20Marpa,%20a%20practical%20general%20parser:%20the%20recognizer.pdf)
 
 ## Contact
 Inquiries go to maarten.trompper@gmail.com
