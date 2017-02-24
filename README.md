@@ -126,7 +126,7 @@ compile 'org.leibnizcenter:probabilistic-earley-parser:0.9.12'
 
 Or just include the [the latest JAR](https://github.com/digitalheir/java-probabilistic-earley-parser/releases/latest) in your project.
 
-Most applications will want to interface with the static functions in `Parser`:
+Most applications will want to interface with `Parser`, which you instantiate with a grammar:
 
 ```java
 public class Example {
@@ -183,11 +183,12 @@ public class Example {
             .build();
 
     public static void main(String[] args) {
+        Parser<String> parser = new Parser<>(grammar); 
         System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with a stick")) 
+                parser.recognize(S, Tokens.tokenize("The man     chased the man \n\t with a stick")) // true 
         );
         System.out.println(
-                Parser.recognize(S, grammar, Tokens.tokenize("the", "stick", "chased", "the", "man")) 
+                parser.getViterbiParseWithScore(S, Tokens.tokenize("the", "stick", "chased", "the", "man")) // Most likely parse tree with probability 
         );
     }
 }
