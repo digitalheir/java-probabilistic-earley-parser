@@ -91,8 +91,12 @@ public class StateSets<T> {
 
         states.add(state);
         add(byIndex, index, state);
-        completedStates.add(index, state);
-        activeStates.add(index, state, grammar.unitStarScores);
+//        if (state.position>0 && state.rule.right.length>0 && state.rule.right[state.position-1] instanceof NonLexicalToken) {
+//            // Just scanned <NonLexicalToken>
+//            incrementCompletedErrorRulesCount(state.position);
+//        }
+        completedStates.addIfCompleted(state);
+        activeStates.addIfActive(index, state, grammar.unitStarScores);
         if (scannedToken != null) {
             ScannedToken<T> eScannedToken = new ScannedToken<>(
                     scannedToken,
@@ -187,8 +191,8 @@ public class StateSets<T> {
         } else {
             states.add(state);
             add(byIndex, state.position, state);
-            completedStates.add(state.position, state);
-            activeStates.add(state.position, state, grammar.unitStarScores);
+            completedStates.addIfCompleted(state);
+            activeStates.addIfActive(state.position, state, grammar.unitStarScores);
             return state;
         }
     }

@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
@@ -23,6 +24,7 @@ public class ActiveStates<T> {
     private final TIntObjectHashMap<MyMultimap<NonTerminal, State>> nonTerminalActiveAtIWithNonZeroUnitStarToY = new TIntObjectHashMap<>(500, 0.5F, -1);
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
+    private final MyMultimap<Integer, State> justScannedError = new MyMultimap<>(); // todo int
 
     /**
      * Runs in O(1).
@@ -46,7 +48,7 @@ public class ActiveStates<T> {
     }
 
     public Set<State> getActiveOnNonTerminals(int index) {
-        if (!statesActiveOnNonTerminals.containsKey(index)) statesActiveOnNonTerminals.put(index, new HashSet<>());
+        //if (!statesActiveOnNonTerminals.containsKey(index)) statesActiveOnNonTerminals.put(index, new HashSet<>());
         return statesActiveOnNonTerminals.get(index);
     }
 
@@ -117,11 +119,14 @@ public class ActiveStates<T> {
     /**
      * Runs in O(N) for N is the number of NonTerminals with non-zero unit-star score on active category, which is bounded by the total number of non-terminals
      */
-    void add(
+    void addIfActive(
             final int position,
             final State state,
             final UnitStarScores unitStar) {
         if (state.isActive()) {
+            if (state.ruleDotPosition > 0 && state.rule.right.length > 0 && state.rule.right[state.ruleDotPosition - 1] instanceof NonLexicalToken) {
+                justScannedError.put(position, state);
+            }
             final Category activeCategory = state.getActiveCategory();
             if (activeCategory instanceof NonTerminal) {
                 addToStatesActiveOnNonTerminal(state);
@@ -147,4 +152,7 @@ public class ActiveStates<T> {
                 );
     }
 
+    public Collection<State> getJustScannedError(int position) {
+        return justScannedError.get(position);
+    }
 }

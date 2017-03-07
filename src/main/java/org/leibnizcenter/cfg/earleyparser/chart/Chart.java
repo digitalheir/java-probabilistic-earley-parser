@@ -29,16 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-/**
- * <p>
- * A chart produced by an Earley parser.
- * <p/>
- * <p>
- * Charts contain sets of {@link State states} mapped to the string indices where
- * they originate. Since the state sets are {@link Set sets}, an state can only
- * be added at a given index once (as sets do not permit duplicate members).
- * </p>
- */
 public class Chart<T> {
     public final StateSets<T> stateSets;
     public final Grammar<T> grammar;
@@ -243,6 +233,32 @@ public class Chart<T> {
 
     }
 
+    public void predictError(Collection<State> justScannedErrors) {
+        // Copy set to avoid concurrent modification
+        justScannedErrors.forEach(justScannedErrorState -> {
+            final double prevForward = stateSets.forwardScores.get(justScannedErrorState);
+            final double prevInner = stateSets.innerScores.get(justScannedErrorState);
+
+            // γ' = P(Y → v)
+            final double ruleProbability = grammar.semiring.one();
+
+            State predicted = State.create(
+                    justScannedErrorState.position,
+                    justScannedErrorState.ruleStartPosition,
+                    justScannedErrorState.ruleDotPosition - 1,
+                    justScannedErrorState.rule
+            );
+
+            boolean isNewState = stateSets.addIfNew(predicted);
+            assert isNewState || (stateSets.innerScores.get(predicted) == ruleProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
+
+            stateSets.setViterbiScore(new State.ViterbiScore(ruleProbability, justScannedErrorState, predicted, grammar.semiring));
+            stateSets.forwardScores.increment(predicted, prevForward);
+            stateSets.innerScores.put(predicted, prevInner);
+        });
+    }
+
+
     private void predictStatesForState(State statePredecessor) {
         final Category Z = statePredecessor.getActiveCategory();
         // For all productions Y → v such that R(Z =*L> Y) is nonzero
@@ -316,13 +332,41 @@ public class Chart<T> {
                             ? Stream.empty()
                             : statesActiveOnTerminals.stream();
                 })
-                .map(preScanState -> new Scan.Delta<>(
-                        token,
-                        preScanState,
-                        calculateForwardScore(scanProb, grammar.semiring, forwardScores.get(preScanState)),
-                        calculateInnerScore(scanProb, grammar.semiring, innerScores.get(preScanState)),
+                .map(preScanState -> {
+                    final double previousInner = innerScores.get(preScanState);
+                    final double previousForward = forwardScores.get(preScanState);
+                    return new Scan.Delta<>(
+                            token,
+                            preScanState,
+                            calculateForwardScore(scanProb, grammar.semiring, previousForward),
+                            calculateInnerScore(scanProb, grammar.semiring, previousInner),
                         /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
-                        preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
+                            preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
+                    );
+                })
+                // After we have calculated everything, we mutate the chart
+                .forEach(stateSets::createStateAndSetScores);
+    }
+
+    void scanError(
+            final int tokenPosition,
+            final TokenWithCategories<T> tokenWithCategories
+    ) {
+        if (tokenWithCategories == null)
+            throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
+        /*
+         * Get all states that are have just scanned an <error> token, advan e them
+         */
+        final Collection<State> justScannedErrors = stateSets.activeStates.getJustScannedError(tokenPosition);
+        if (justScannedErrors != null) justScannedErrors
+                .stream()
+                .map((State preScanState) -> new Scan.Delta<>(
+                        tokenWithCategories.token,
+                        preScanState,
+                        stateSets.forwardScores.get(preScanState),
+                        stateSets.innerScores.get(preScanState),
+                        /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
+                        preScanState.rule, tokenPosition + 1, preScanState.ruleStartPosition, preScanState.ruleDotPosition
                 ))
                 // After we have calculated everything, we mutate the chart
                 .forEach(stateSets::createStateAndSetScores);
@@ -362,13 +406,16 @@ public class Chart<T> {
                             addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState))
                     ))
                     .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
-                    .map(stateInformation -> completeNoViterbiForTriple(
-                            position,
-                            addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
-                            addForwardScores.getOrCreate(stateInformation.stateToAdvance, stateSets.forwardScores.get(stateInformation.stateToAdvance)),
-                            stateSets,
-                            stateInformation
-                            )
+                    .map(stateInformation -> {
+                                final double prevForward = stateSets.forwardScores.get(stateInformation.stateToAdvance);
+                                return completeNoViterbiForTriple(
+                                        position,
+                                        addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
+                                        addForwardScores.getOrCreate(stateInformation.stateToAdvance, prevForward),
+                                        stateSets,
+                                        stateInformation
+                                );
+                            }
                     )
                     .peek(delta -> {
                         addForwardScores.plus(delta.state, delta.addForward);
@@ -493,4 +540,9 @@ public class Chart<T> {
 
         if (parseOptions != null) parseOptions.onComplete(i, token, chart);
     }
+
+    public int getJustScannedErrorRulesCount(int index) {
+        return stateSets.completedStates.getCompletedErrorRulesCount(index);
+    }
+
 }

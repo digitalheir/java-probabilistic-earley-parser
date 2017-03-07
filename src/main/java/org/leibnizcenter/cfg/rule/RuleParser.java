@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.rule;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ProbabilitySemiring;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.nonterminal.ErrorSection;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.RegexTerminal;
@@ -120,7 +120,7 @@ public class RuleParser {
             final ParseTree child = children.get(i);
             if (child.category.equals(REGEX_DELIMITER)) break;
 
-            final char[] chars = ((ParseTree.Token<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
+            final char[] chars = ((ParseTree.Leaf<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
             for (char c : chars) modifiers.add(Character.toString(c));
         }
         int flag = 0;
@@ -133,7 +133,7 @@ public class RuleParser {
 
         return new RegexTerminal(
                 children.subList(1, i).stream()
-                        .map(t -> ((ParseTree.Token<String>) t))
+                        .map(t -> ((ParseTree.Leaf<String>) t))
                         .map(t -> t.token.obj)
                         .collect(Collectors.joining()),
                 flag);
@@ -141,17 +141,17 @@ public class RuleParser {
 
     private static ParseTree.FlattenOption getFlattenOption(List<ParseTree> parents, ParseTree parseTree) {
         final ParseTree parent = (!parents.isEmpty()) ? parents.get(parents.size() - 1) : null;
-        if (parseTree instanceof ParseTree.Token && parent != null) {
+        if (parseTree instanceof ParseTree.Leaf && parent != null) {
             if (parent.category.equals(REGEX)) return ParseTree.FlattenOption.KEEP;
             else if (parent.category.equals(CATEGORY))
-                return ((ParseTree.Token) parseTree).token instanceof RhsToken && ((RhsToken) ((ParseTree.Token) parseTree).token).isWhitespace
+                return ((ParseTree.Leaf) parseTree).token instanceof RhsToken && ((RhsToken) ((ParseTree.Leaf) parseTree).token).isWhitespace
                         ? ParseTree.FlattenOption.REMOVE
                         : ParseTree.FlattenOption.KEEP;
             else
                 return ParseTree.FlattenOption.REMOVE;
         } else if (Stream.of(REGEX, CATEGORY).filter(c -> parseTree.category.equals(c)).findAny().isPresent())
             return ParseTree.FlattenOption.KEEP;
-        else if (parseTree instanceof ParseTree.NonToken)
+        else if (parseTree instanceof ParseTree.NonLeaf)
             return ParseTree.FlattenOption.KEEP_ONLY_CHILDREN;
         else
             return ParseTree.FlattenOption.REMOVE;
@@ -176,7 +176,7 @@ public class RuleParser {
         final boolean isRegex = parseTree.category.equals(REGEX);
         if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
         return isRegex ? parseRegexTerminal(parseTree) : parseCategory.apply(parseTree.children.stream()
-                .map(t -> (ParseTree.Token<String>) t)
+                .map(t -> (ParseTree.Leaf<String>) t)
                 .map(t -> t.token.obj)
                 .collect(Collectors.joining()));
     }
@@ -192,10 +192,10 @@ public class RuleParser {
 
             final String prob = m.group(3);
             final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
-            boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof ErrorSection));
+            boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof NonLexicalToken));
 
             if (isErrorRule) {
-                return new SynchronizingRule(probability, LHS, RHS);
+                return new LexicalErrorRule(probability, LHS, RHS);
             } else {
                 return new Rule(probability, LHS, RHS);
             }

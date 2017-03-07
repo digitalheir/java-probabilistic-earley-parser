@@ -6,17 +6,14 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.nonterminal.ErrorSection;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
-import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.rule.RuleParser;
-import org.leibnizcenter.cfg.rule.SynchronizingRule;
 import org.leibnizcenter.cfg.token.Token;
-import org.leibnizcenter.cfg.util.MapEntry;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.io.BufferedReader;
@@ -47,7 +44,7 @@ import java.util.stream.Stream;
  * Once the Grammar is instantiated, it is immutable.
  */
 public final class Grammar<T> {
-    private static final Function<String, Category> STRING_CATEGORY_FUNCTION = s -> ErrorSection.NAME.equals(s) ? new ErrorSection() : Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s);
+    private static final Function<String, Category> STRING_CATEGORY_FUNCTION = s -> NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s);
     private static final Pattern NEWLINE = Pattern.compile("\\n");
     private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     @SuppressWarnings("WeakerAccess")
@@ -58,9 +55,9 @@ public final class Grammar<T> {
     public final UnitStarScores unitStarScores;
     public final ExpressionSemiring semiring;
     public final AtomFactory atoms = new AtomFactory();
-    public final Map<Category, Set<Rule>> nonZeroLeftStartRules = new HashMap<>();
+    public final Map<Category, Set<Rule>> nonZeroLeftStartRules;
+    public final Set<Terminal<T>> terminals = new HashSet<>();
     private final MyMultimap<NonTerminal, Rule> rules;
-    private final MyMultimap<NonTerminal, Rule> synchronizingRules;
     /**
      * Two non-terminals X and Y are said to be in a left-corner relation
      * <code>X -L> Y</code> iff there exists a production for X that has a RHS starting with Y,
@@ -73,9 +70,7 @@ public final class Grammar<T> {
      */
     private final LeftCorners leftStarCorners;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
-    private final Set<Terminal<T>> terminals = new HashSet<>();
-    private final Map<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new HashMap<>();
-
+    private final WeakHashMap<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new WeakHashMap<>();
     /**
      * Creates a grammar with the given name, and given rules.
      * These restrictions ensure that
@@ -86,26 +81,27 @@ public final class Grammar<T> {
      * @param rules    Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(String name, MyMultimap<NonTerminal, Rule> rules, MyMultimap<NonTerminal, Rule> synchronizingRules, ExpressionSemiring semiring) {
+    public Grammar(String name, MyMultimap<NonTerminal, Rule> rules, ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
-        this.synchronizingRules = synchronizingRules != null ? synchronizingRules : new MyMultimap<>();
         rules.lock();
-        getAllRules().forEach(rule -> {
+
+        rules.values().forEach(rule -> {
             nonTerminals.add(rule.left);
             for (Category c : rule.right)
-                if (c instanceof Terminal)//noinspection unchecked
+                if (c instanceof Terminal) {//noinspection unchecked
                     terminals.add((Terminal) c);
-                else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
+                } else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
                 else throw new Error("This is a bug");
         });
 
         this.semiring = semiring;
         leftCorners = new LeftCorners(semiring);
         setLeftCorners();
-        leftStarCorners = getReflexiveTransitiveClosure(atoms, semiring, nonTerminals, leftCorners);
+        leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
 
+        final Map<Category, Set<Rule>> nonZeroLeftStartRules_ = new HashMap<>();
         nonTerminals.forEach(Yy -> {
             final Collection<NonTerminal> nonZeroScores = leftStarCorners.getNonZeroScores(Yy);
             if (nonZeroScores != null) {
@@ -113,9 +109,11 @@ public final class Grammar<T> {
                     final Collection<Rule> rulesForY = getRules(Y);
                     return rulesForY == null ? Stream.empty() : rulesForY.stream();
                 }).collect(Collectors.toSet());
-                nonZeroLeftStartRules.put(Yy, ruleSet);
+                nonZeroLeftStartRules_.put(Yy, ruleSet);
             }
         });
+
+        nonZeroLeftStartRules = Collections.unmodifiableMap(nonZeroLeftStartRules_);
     }
 
     /**
@@ -123,7 +121,7 @@ public final class Grammar<T> {
      * <p>
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
-    private static LeftCorners getReflexiveTransitiveClosure(AtomFactory atoms, DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
+    private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
         NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalsArr.length; row++) {
@@ -161,7 +159,8 @@ public final class Grammar<T> {
         b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
-                .map(parser::fromString).collect(Collectors.toSet())
+                .map(parser::fromString)
+                .collect(Collectors.toSet())
         );
         return b.build();
     }
@@ -188,6 +187,7 @@ public final class Grammar<T> {
     }
 
 
+    @SuppressWarnings("unused")
     public static Grammar<String> fromString(InputStream inputStream, Charset charset) throws IOException {
         return fromString(
                 inputStream,
@@ -214,9 +214,9 @@ public final class Grammar<T> {
         return b.build();
     }
 
-    public Collection<Rule> getSynchronizingRules(NonTerminal left) {
-        return synchronizingRules.get(left);
-    }
+//    public Collection<Rule> getSynchronizingRules(NonTerminal left) {
+//        return lexicalErrorRules.get(left);
+//    }
 
     private UnitStarScores getUnitStarCorners() {
         // Sum all probabilities for unit relations
@@ -229,7 +229,7 @@ public final class Grammar<T> {
         });
 
         // R_U = (I - P_U)
-        return new UnitStarScores(getReflexiveTransitiveClosure(atoms, semiring, nonTerminals, P_U), atoms, semiring);
+        return new UnitStarScores(getReflexiveTransitiveClosure(semiring, nonTerminals, P_U), atoms, semiring);
     }
 
     //    /**
@@ -312,10 +312,10 @@ public final class Grammar<T> {
     public String toString() {
         return name +
                 ": {\n" +
-                Stream.concat(
-                        rules.values().stream(),
-                        synchronizingRules.values().stream()
-                )
+//                Stream.concat(
+                rules.values().stream()
+                        //,lexicalErrorRules.values().stream()
+//                )
                         .map(s -> "  " + s.toString())
                         .collect(Collectors.joining(",\n")) +
                 "\n}";
@@ -348,36 +348,36 @@ public final class Grammar<T> {
         return nonTerminals;
     }
 
-    public Set<Terminal<T>> getTerminals() {
-        return terminals;
-    }
 
-
-    public Stream<MapEntry<State, Rule>> streamNonZeroLeftStarRulesWithPrecedingState(final State statePredecessor) {
-        final Category Z = statePredecessor.getActiveCategory();
-        return nonZeroLeftStartRules.get(Z)
-                .stream()
-                .map(Y_to_v -> new MapEntry<>(statePredecessor, Y_to_v));
-    }
+//    public Stream<MapEntry<State, Rule>> streamNonZeroLeftStarRulesWithPrecedingState(final State statePredecessor) {
+//        final Category Z = statePredecessor.getActiveCategory();
+//        return nonZeroLeftStartRules.get(Z)
+//                .stream()
+//                .map(Y_to_v -> new MapEntry<>(statePredecessor, Y_to_v));
+//    }
 
     /**
-     * Runs in O(N) for N is the number of terminals. Caches tokens on {@link Token#equals(Object)} to make subsequent
+     * Runs in O(N) for N is the number of terminals. Weakly caches tokens on {@link Token#equals(Object)} to make subsequent
      * calls potentially quicker.
      *
      * @return set of all terminals that match given token, usually a singleton set.
      */
     public Set<Terminal<T>> getCategories(Token<T> token) {
-        if (!tokenToTerminalsCache.containsKey(token))
-            tokenToTerminalsCache.put(token,
-                    terminals.stream().filter(category -> category.hasCategory(token)).collect(Collectors.toSet())
-            );
-        return tokenToTerminalsCache.get(token);
+        Set<Terminal<T>> terminals = tokenToTerminalsCache.get(token);
+        if (terminals == null) {
+            terminals = this.terminals.stream()
+                    .filter(category -> !(category instanceof NonLexicalToken))
+                    .filter(category -> category.hasCategory(token))
+                    .collect(Collectors.toSet());
+            tokenToTerminalsCache.put(token, terminals);
+        }
+        return terminals;
     }
 
 
     public static class Builder<E> {
         private final MyMultimap<NonTerminal, Rule> rules = new MyMultimap<>();
-        private final MyMultimap<NonTerminal, Rule> synchronizingRules = new MyMultimap<>();
+        private final MyMultimap<NonTerminal, Rule> lexicalErrorRules = new MyMultimap<>();
         private String name;
         private ExpressionSemiring semiring = LogSemiring.get();
         private RuleFactory rf = new RuleFactory(semiring);
@@ -410,11 +410,11 @@ public final class Grammar<T> {
          */
         public Builder<E> addRule(Rule rule) {
             if (rule == null) throw new NullPointerException("null rule");
-            if (rule instanceof SynchronizingRule) {
-                synchronizingRules.put(rule.left, rule);
-            } else {
-                rules.put(rule.left, rule);
-            }
+//            if (rule instanceof LexicalErrorRule) {
+//                lexicalErrorRules.put(rule.left, rule);
+//            } else {
+            rules.put(rule.left, rule);
+//            }
             return this;
         }
 
@@ -427,7 +427,7 @@ public final class Grammar<T> {
         }
 
         public Grammar<E> build() {
-            return new Grammar<>(name, rules, synchronizingRules, semiring);
+            return new Grammar<>(name, rules, semiring);
         }
 
         @SuppressWarnings({"unused", "WeakerAccess"})

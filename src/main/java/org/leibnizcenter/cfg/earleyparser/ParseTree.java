@@ -2,6 +2,7 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
@@ -120,7 +121,7 @@ public abstract class ParseTree {
         sb.append(prefix)
                 .append(isTail ? "└── " : "├── ")
                 .append(category.toString())
-                .append((this instanceof Token) ? (" (" + ((Token) this).token + ")") : "")
+                .append((this instanceof Leaf) ? (" (" + ((Leaf) this).token + ")") : "")
                 .append("\n");
         if (children != null) {
             for (int i = 0; i < children.size() - 1; i++) {
@@ -160,7 +161,7 @@ public abstract class ParseTree {
         parents2.add(this);
 
 
-        return this instanceof NonToken ? new NonToken(
+        return this instanceof NonLeaf ? new NonLeaf(
                 category,
                 children.stream()
                         .flatMap(child -> getFlattenedStream(subTreesToKeep, parents2, child))
@@ -186,15 +187,15 @@ public abstract class ParseTree {
         KEEP_ONLY_CHILDREN
     }
 
-    public static class Token<E> extends ParseTree {
+    public static class Leaf<E> extends ParseTree {
         public final org.leibnizcenter.cfg.token.Token<E> token;
 
-        public Token(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
+        public Leaf(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
             super(category, null);
             this.token = scannedToken;
         }
 
-        public Token(ScannedToken<E> scannedState) {
+        public Leaf(ScannedToken<E> scannedState) {
             this(scannedState.scannedToken, scannedState.scannedCategory);
         }
 
@@ -206,23 +207,31 @@ public abstract class ParseTree {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof Token && super.equals(o) && token.equals(((Token) o).token);
+            return o instanceof Leaf && super.equals(o) && token.equals(((Leaf) o).token);
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static class NonToken extends ParseTree {
-        public NonToken(Category node) {
+    public static class NonLeaf extends ParseTree {
+        public NonLeaf(Category node) {
             super(node);
         }
 
-        public NonToken(Category node, List<ParseTree> children) {
+        public NonLeaf(Category node, List<ParseTree> children) {
             super(node, children);
         }
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof NonToken && super.equals(o);
+            return o instanceof NonLeaf && super.equals(o);
+        }
+
+        @Override
+        public String toString() {
+            if (super.category instanceof NonLexicalToken)
+                return "[!" + super.toString() + "]";
+            else
+                return super.toString();
         }
     }
 }

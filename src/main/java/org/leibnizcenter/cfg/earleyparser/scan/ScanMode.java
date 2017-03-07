@@ -16,7 +16,8 @@ public enum ScanMode {
     /**
      * replace the unfound word with a wildcard that matches all categories
      */
-    WILDCARD;
+    WILDCARD,
+    SYNCHRONIZE;
 
     public static ScanMode fromString(String scanMode) {
         if (scanMode.matches("(?i)strict"))
@@ -25,6 +26,8 @@ public enum ScanMode {
             return WILDCARD;
         else if (scanMode.matches("(?i)(drop|ignore)"))
             return DROP;
+        else if (scanMode.matches("(?i)synchroni[zs](e|ation)"))
+            return SYNCHRONIZE;
         else
             throw new IllegalArgumentException("Illegal scan mode\"" + scanMode + "\". Choose from \"strict\", \"wildcard\" and \"drop\"");
     }

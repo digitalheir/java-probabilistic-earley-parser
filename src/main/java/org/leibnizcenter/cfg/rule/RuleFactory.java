@@ -37,12 +37,12 @@ public class RuleFactory {
         return newRuleWithRawProbability(semiring.fromProbability(probability), LHS, RHS);
     }
 
-    public SynchronizingRule newErrorRule(double probability, NonTerminal LHS, Category... RHS) {
-        return newErrorRuleWithRawProbability(semiring.fromProbability(probability), LHS, RHS);
+    public LexicalErrorRule newLexicalErrorRule(double probability, NonTerminal LHS, Category... RHS) {
+        return newLexicalErrorRuleWithRawProbability(semiring.fromProbability(probability), LHS, RHS);
     }
 
-    private SynchronizingRule newErrorRuleWithRawProbability(double probability, NonTerminal lhs, Category[] rhs) {
-        return new SynchronizingRule(probability, lhs, rhs);
+    private LexicalErrorRule newLexicalErrorRuleWithRawProbability(double probability, NonTerminal lhs, Category[] rhs) {
+        return new LexicalErrorRule(probability, lhs, rhs);
     }
 
     /**

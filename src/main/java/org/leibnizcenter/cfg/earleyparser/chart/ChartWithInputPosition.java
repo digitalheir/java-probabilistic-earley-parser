@@ -1,13 +1,177 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.Terminal;
+import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
+import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+import org.leibnizcenter.cfg.earleyparser.scan.ScanMode;
+import org.leibnizcenter.cfg.earleyparser.scan.TokenNotInLexiconException;
+import org.leibnizcenter.cfg.grammar.Grammar;
+import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.token.TokenWithCategories;
+import org.leibnizcenter.cfg.util.Collections2;
+
+import java.util.*;
+
+import static org.leibnizcenter.cfg.earleyparser.chart.ChartWithInputPosition.ParsingMode.NORMAL;
+import static org.leibnizcenter.cfg.earleyparser.chart.ChartWithInputPosition.ParsingMode.PANIC_MODE;
+
 /**
  */
 public class ChartWithInputPosition<T> {
     public final Chart<T> chart;
-    public final int index;
+    /**
+     * Parsing errors encountered along the way
+     */
+    public final List<Throwable> incidents = new ArrayList<>();
+    // These two could be different because we might drop tokens
+    private final Grammar<T> grammar;
+    final private ScanMode strategy;
+    /**
+     * End position for chart (may be lower than tokenIndex necause some tokens may be ignored)
+     */
+    public int finalChartIndex = 0;
+    /**
+     * End position for token stream (may be higher than chartIndex necause some tokens may be ignored)
+     */
+    public int finalTokenIndex = 0;
+    public ParsingMode parsingMode = ParsingMode.NORMAL;
 
-    public ChartWithInputPosition(Chart<T> chart, int index) {
-        this.chart = chart;
-        this.index = index;
+    public ChartWithInputPosition(
+            Grammar<T> grammar,
+            NonTerminal goal,
+            ParseOptions<T> parseOptions
+    ) {
+        this.grammar = grammar;
+        strategy = parseOptions == null || parseOptions.scanMode == null ? ScanMode.STRICT : parseOptions.scanMode;
+        chart = new Chart<>(grammar, parseOptions);
+
+        // Initial state
+        chart.addInitialState(goal);
+
+//        /**
+//         * @param tokens  Iterable of tokens
+//         * @param grammar Grammar that contains {@link Terminal Terminals} that recognize tokens
+//         * @return the same iterable, but with additional information: what categories the given token adhere to,
+//         * as defined by {@link Terminal} types in the grammar.
+//         */
+    }
+
+    private static <T> ParsingMode determineParsingStrategy(
+            ParsingMode current,
+            final ScanMode scanMode,
+            Set<Terminal<T>> categories
+    ) {
+        switch (scanMode) {
+            case SYNCHRONIZE:
+                return PANIC_MODE.equals(current) || Collections2.nullOrEmpty(categories) ? PANIC_MODE : ParsingMode.NORMAL;
+            case STRICT:
+                return ParsingMode.STRICT;
+            case DROP:
+                return ParsingMode.DROP;
+            case WILDCARD:
+                return ParsingMode.WILDCARD;
+            default:
+                return ParsingMode.NORMAL;
+        }
+    }
+
+    public void next(Token<T> t) {
+        final Set<Terminal<T>> categories = grammar.getCategories(t);
+
+//            final Set<Terminal<T>> categories = determineCategoriesForToken(grammar, callbacks, indexForTokenList, t);
+
+        if (Collections2.nullOrEmpty(categories)) {
+            final TokenNotInLexiconException notInLexiconException = new TokenNotInLexiconException(t, finalTokenIndex);
+            incidents.add(notInLexiconException);
+            // if (callbacks == null) throw notInLexiconException;
+        }
+
+        parsingMode = determineParsingStrategy(parsingMode, strategy, categories);
+        finalChartIndex = parsingMode.processToken(chart, finalChartIndex, t, categories);
+        if (PANIC_MODE.equals(parsingMode) && chart.getJustScannedErrorRulesCount(finalChartIndex) > 0) {
+            // todo return to normal after completing error rule as well
+            parsingMode = NORMAL;
+        }
+        finalTokenIndex++;
+    }
+
+    enum ParsingMode {
+        NORMAL, PANIC_MODE, WILDCARD, DROP, STRICT;
+
+        private static <T> int processTokenNormal(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            if (!Collections2.nullOrEmpty(categories)) {
+                TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
+                chart.predict(indexForChart, token);
+                chart.scan(indexForChart, token);
+                chart.complete(indexForChart, token);
+                indexForChart++;
+            }
+            return indexForChart;
+        }
+
+        public <T> int processToken(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            switch (this) {
+                case NORMAL:
+                    return processTokenNormal(chart, indexForChart, t, categories);
+                case PANIC_MODE:
+                    return processTokenPanicMode(chart, indexForChart, t, categories);
+                case WILDCARD:
+                    return processTokenWildcard(chart, indexForChart, t, categories);
+                case DROP:
+                    return processTokenDrop(chart, indexForChart, t, categories);
+                case STRICT:
+                    return processTokenStrict(chart, indexForChart, t, categories);
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        private <T> int processTokenStrict(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            if (Collections2.nullOrEmpty(categories)) {
+                throw new TokenNotInLexiconException(t, indexForChart);/*TODO fix indexForChart, should be indexForTokens*/
+            }
+
+            return processTokenNormal(chart, indexForChart, t, categories);
+        }
+
+        private <T> int processTokenDrop(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            return Collections2.nullOrEmpty(categories) ? indexForChart : processTokenNormal(chart, indexForChart, t, categories);
+        }
+
+        private <T> int processTokenWildcard(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            return Collections2.nullOrEmpty(categories)
+                    ? processTokenNormal(chart, indexForChart, t, chart.grammar.terminals)
+                    : processTokenNormal(chart, indexForChart, t, categories);
+        }
+
+        private <T> int processTokenPanicMode(Chart<T> chart, final int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+            //if (!Collections2.nullOrEmpty(categories)) {
+
+            if (!categories.stream().anyMatch((Terminal<T> cat) -> {
+                Set<State> activeStates = chart.stateSets.activeStates.getActiveOn(indexForChart, cat);
+                return activeStates != null;// && activeStates.stream().anyMatch(state -> state.rule instanceof LexicalErrorRule);
+            })) {
+                // TODO If there are no <error> rules active on this terminal, advance <error>
+                categories = Collections.singleton(NonLexicalToken.get());
+            }
+
+
+            TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
+            // todo make more robust
+
+            chart.predict(indexForChart, token);
+            final Collection<State> justScannedErrors = chart.stateSets.activeStates.getJustScannedError(indexForChart);
+            if (justScannedErrors != null && justScannedErrors.size() > 0) {
+                if (!categories.contains(NonLexicalToken.get())) categories.add(NonLexicalToken.get());
+                chart.predictError(justScannedErrors);
+            }
+            chart.scan(indexForChart, token);
+            //chart.scanError(indexForChart, token);
+            chart.complete(indexForChart, token);
+            //}
+            return indexForChart + 1;
+        }
     }
 }

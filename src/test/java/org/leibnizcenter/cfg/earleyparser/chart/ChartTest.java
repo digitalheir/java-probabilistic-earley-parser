@@ -11,16 +11,9 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.StringTerminal;
-import org.leibnizcenter.cfg.earleyparser.ParseTree;
-import org.leibnizcenter.cfg.earleyparser.Parser;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.scan.TokenNotInLexiconException;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.token.Token;
-import org.leibnizcenter.cfg.token.Tokens;
-
-import java.util.List;
 
 import static org.leibnizcenter.cfg.earleyparser.Fixture.*;
 
@@ -47,108 +40,7 @@ public class ChartTest {
     private static final Terminal<String> stick = new ExactStringTerminal("stick");
     private static final Terminal<String> with = new ExactStringTerminal("with");
 
-    private static final Grammar<String> grammar = new Grammar.Builder<String>("test")
-            .setSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want
-            .addRule(
-                    1.0,   // Probability between 0.0 and 1.0, defaults to 1.0. The builder takes care of converting it to the semiring element
-                    S,     // Left hand side of the rule
-                    NP, VP // Right hand side of the rule
-            )
-            .addRule(
-                    0.5,
-                    NP,
-                    Det, N // eg. The man
-            )
-            .addRule(
-                    0.5,
-                    NP,
-                    Det, N, Mod // eg. the man (with a stick)
-            )
-            .addRule(
-                    0.4,
-                    VP,
-                    TV, NP, Mod // eg. (chased) (the man) (with a stick)
-            )
-            .addRule(
-                    0.6,
-                    VP,
-                    TV, NP // eg. (chased) (the man with a stick)
-            )
-            .addRule(Det, the)
-            .addRule(N, man)
-            .addRule(N, stick)
-            .addRule(TV, transitiveVerb)
-            .addRule(Mod, with, NP) // eg. with a stick
-            .build();
 
-    @Test
-    public final void readmeExample() {
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("The man     chased the man \n\t with the man")), 0.125, 0.000001);
-        Assert.assertEquals(Parser.recognize(NP, grammar, Tokens.tokenize("the man with the man")), 0.25, 0.000001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the", "man", "chased", "the", "man")), 0.15, 0.000001);
-
-        final List<Token<String>> tokens = Tokens.tokenize("The man     chased the man \n\t with the stick");
-        ParseTree parseTree = Parser.getViterbiParse(S, grammar, tokens);
-        System.out.println(parseTree);
-    }
-
-    @Test
-    public final void ambiguous() {
-        final NonTerminal BV = new NonTerminal("BV");
-        final Category a = new ExactStringTerminal("a");
-        final Category the = new ExactStringTerminal("the");
-        final Category right = new ExactStringTerminal("right");
-        final Category wrong = new ExactStringTerminal("wrong");
-        final Category girl = new ExactStringTerminal("girl");
-        final Category left = new ExactStringTerminal("left");
-        final NonTerminal S = Category.nonTerminal("S");
-        final NonTerminal NP = Category.nonTerminal("NP");
-        final NonTerminal VP = Category.nonTerminal("VP");
-        final NonTerminal Det = Category.nonTerminal("Det");
-        final NonTerminal N = Category.nonTerminal("N");
-
-        double PSVP = 0.9;
-        double PSNP = 1 - PSVP;
-        Grammar<String> grammar = new Grammar.Builder<String>("test")
-                .setSemiring(LogSemiring.get())
-                .addRule(PSVP, S, NP, VP)
-                .addRule(PSNP, S, NP)
-                .addRule(NP, Det, N)
-                .addRule(N, BV, N)
-                .addRule(VP, left)
-                .addRule(BV, left)
-                .addRule(BV, wrong)
-                .addRule(BV, right)
-                .addRule(Det, a)
-                .addRule(Det, the)
-                .addRule(N, right)
-                .addRule(N, left)
-                .addRule(N, girl)
-                .build();
-
-        // Parsable
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl left")), PSVP, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the wrong right")), PSNP, 0.0001); // ambiguous
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right")), PSNP, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the girl")), PSNP, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the right right")), PSNP, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the left right")), PSNP, 0.0001);
-
-        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left girl")), 1.0, 0.0001);
-        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("left left")), 1.0, 0.0001);
-        Assert.assertEquals(Parser.recognize(N, grammar, Tokens.tokenize("wrong left")), 1.0, 0.0001);
-
-        // Unparsable
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("girl left")), 0.0, 0.0001);
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the")), 0.0, 0.0001);
-    }
-
-
-    @Test(expected = TokenNotInLexiconException.class)
-    public final void unparseable() {
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
-    }
 
     @Test
     public final void paper_example() {

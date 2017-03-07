@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.rule;
 import org.junit.Test;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
-import org.leibnizcenter.cfg.category.nonterminal.ErrorSection;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.RegexTerminal;
@@ -80,18 +80,18 @@ public class RuleParserTest {
     @Test
     public void parseErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (ErrorSection.NAME.equals(s) ? new ErrorSection() : new CaseInsensitiveStringTerminal(s));
-        }, LogSemiring.get()).fromString("S -> A <error> B");
+            return (NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
+        }, LogSemiring.get()).fromString("S -> A <NonLexical> B");
 
-        assertTrue(rule instanceof SynchronizingRule);
+        assertTrue(rule instanceof LexicalErrorRule);
     }
 
     @Test
     public void parseNonErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (ErrorSection.NAME.equals(s) ? new ErrorSection() : new CaseInsensitiveStringTerminal(s));
+            return (NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
         }, LogSemiring.get()).fromString("S -> A B");
 
-        assertFalse(rule instanceof SynchronizingRule);
+        assertFalse(rule instanceof LexicalErrorRule);
     }
 }

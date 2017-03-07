@@ -3,10 +3,12 @@ package org.leibnizcenter.cfg.rule;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 
 /**
@@ -25,7 +27,7 @@ import java.util.Arrays;
  * @see Grammar
  */
 public class Rule {
-
+    public final boolean isErrorRule;
     public final NonTerminal left;
     public final Category[] right;
     /**
@@ -60,6 +62,8 @@ public class Rule {
         for (Category r : right)
             if (r == null) throw new IllegalArgumentException(
                     "right contains null category: " + Arrays.toString(right));
+        isErrorRule = Stream.of(right).anyMatch(r -> r instanceof NonLexicalToken);
+
 
         //// check for multiple terminals
         // TODO what about "A rule that contains a terminal on the right must contain <em>only</em> that terminal."?
@@ -278,4 +282,6 @@ public class Rule {
     public boolean isUnitProduction() {
         return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
     }
+
+
 }

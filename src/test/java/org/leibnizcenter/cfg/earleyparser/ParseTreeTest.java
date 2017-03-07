@@ -119,15 +119,15 @@ public class ParseTreeTest {
     public final void testNewParseTree() {
         LinkedList<ParseTree> children1 = new LinkedList<>();
         LinkedList<ParseTree> children2 = new LinkedList<>();
-        final ParseTree tree1 = new ParseTree.NonToken(S, children1);
-        final ParseTree tree2 = new ParseTree.NonToken(S, children2);
+        final ParseTree tree1 = new ParseTree.NonLeaf(S, children1);
+        final ParseTree tree2 = new ParseTree.NonLeaf(S, children2);
 
         Assert.assertEquals(tree1, tree2);
-        children1.add(new ParseTree.NonToken(VS));
-        children1.add(new ParseTree.NonToken(VT));
+        children1.add(new ParseTree.NonLeaf(VS));
+        children1.add(new ParseTree.NonLeaf(VT));
         Assert.assertNotEquals(tree1, tree2);
-        children2.add(new ParseTree.NonToken(VS));
-        children2.add(new ParseTree.NonToken(VT));
+        children2.add(new ParseTree.NonLeaf(VS));
+        children2.add(new ParseTree.NonLeaf(VT));
         Assert.assertEquals(tree1, tree2);
 
         Assert.assertEquals(tree1.getCategory(), S);

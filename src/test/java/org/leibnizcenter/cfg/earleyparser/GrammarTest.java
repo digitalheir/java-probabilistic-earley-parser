@@ -8,11 +8,15 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
+import org.leibnizcenter.cfg.rule.LexicalErrorRule;
 import org.leibnizcenter.cfg.rule.Rule;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.junit.Assert.*;
 
 /**
  */
@@ -57,38 +61,38 @@ public class GrammarTest {
 
     @Test
     public final void testContainsRules() {
-        Assert.assertTrue(g.containsRules(rule1.left));
-        Assert.assertTrue(g.getRules(rule2.left).contains(rule2));
+        assertTrue(g.containsRules(rule1.left));
+        assertTrue(g.getRules(rule2.left).contains(rule2));
         Assert.assertFalse(g.getRules(rule3.left).contains(rule2));
 
-        Assert.assertEquals(ruleB, Rule.create(sr, 0.5, B, C));
-        Assert.assertEquals(ruleC, Rule.create(sr, 0.5, C, D));
-        Assert.assertEquals(ruleD, ruleD);
-        Assert.assertEquals(ruleE, ruleE);
-        Assert.assertEquals(rule1, rule1);
-        Assert.assertEquals(rule2, rule2);
-        Assert.assertEquals(rule3, rule3);
+        assertEquals(ruleB, Rule.create(sr, 0.5, B, C));
+        assertEquals(ruleC, Rule.create(sr, 0.5, C, D));
+        assertEquals(ruleD, ruleD);
+        assertEquals(ruleE, ruleE);
+        assertEquals(rule1, rule1);
+        assertEquals(rule2, rule2);
+        assertEquals(rule3, rule3);
 
         Assert.assertNotEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, A, e));
         Assert.assertNotEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 0.5, X, e));
-        Assert.assertEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, X, e));
+        assertEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, X, e));
     }
 
     @Test
     public final void testLeftRelation() {
-        Assert.assertEquals(g.getLeftScore(A, B), 1.0, 0.01);
-        Assert.assertEquals(g.getLeftScore(A, D), 0.0, 0.01);
-        Assert.assertEquals(g.getLeftScore(A, X), 0.0, 0.01);
-        Assert.assertEquals(g.getLeftScore(B, C), 0.5, 0.01);
+        assertEquals(g.getLeftScore(A, B), 1.0, 0.01);
+        assertEquals(g.getLeftScore(A, D), 0.0, 0.01);
+        assertEquals(g.getLeftScore(A, X), 0.0, 0.01);
+        assertEquals(g.getLeftScore(B, C), 0.5, 0.01);
     }
 
     @Test
     public final void testLeftStarRelation() {
-        Assert.assertEquals(g.getLeftStarScore(A, B), 1.0, 0.01);
-        Assert.assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
-        Assert.assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
-        Assert.assertEquals(g.getLeftStarScore(A, D), 0.25, 0.01);
-        Assert.assertEquals(sr.toProbability(g.getLeftStarScore(A, X)), 0.0, 0.01);
+        assertEquals(g.getLeftStarScore(A, B), 1.0, 0.01);
+        assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
+        assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
+        assertEquals(g.getLeftStarScore(A, D), 0.25, 0.01);
+        assertEquals(sr.toProbability(g.getLeftStarScore(A, X)), 0.0, 0.01);
     }
 
 //    @Test public final void testGetPreterminal() {
@@ -107,28 +111,24 @@ public class GrammarTest {
         Set<Rule> setOfrules = new HashSet<>();
         setOfrules.add(rule1);
         setOfrules.add(rule2);
-        Assert.assertEquals(setOfrules, new HashSet<>(g.getRules(rule1.left)));
-        Assert.assertEquals(setOfrules, new HashSet<>(g.getRules(rule2.left)));
+        assertEquals(setOfrules, new HashSet<>(g.getRules(rule1.left)));
+        assertEquals(setOfrules, new HashSet<>(g.getRules(rule2.left)));
 
         setOfrules.clear();
         setOfrules.add(rule3);
-        Assert.assertEquals(setOfrules, new HashSet<>(g.getRules(rule3.left)));
+        assertEquals(setOfrules, new HashSet<>(g.getRules(rule3.left)));
     }
 
     /**
      */
     @Test
-    public final void parse() throws IOException {
-        //todo
-        Grammar<String> grammar = Grammar.fromString("S->NP#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar \n");
-        System.out.println(grammar);
-
-
-//        System.out.println(
-//                Grammar.fromString(
-//                        GrammarTest.class.getResourceAsStream("/test.cfg"), Charset.forName("UTF-8")
-//                )
-//        );
+    public final void parseErrorRule() throws IOException {
+        Grammar<String> grammar = Grammar.fromString("S->NP#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <NonLexical> clar \n");
+        final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
+        assertNotNull(errorRules);
+        assertEquals(1, errorRules.size());
+        final Rule errorRule = errorRules.iterator().next();
+        assertTrue(errorRule instanceof LexicalErrorRule);
     }
 
 }
