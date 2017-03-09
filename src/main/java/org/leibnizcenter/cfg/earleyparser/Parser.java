@@ -156,10 +156,10 @@ public class Parser<T> {
 
             if (prefixEnd instanceof NonLexicalToken) {
                 // Scanned terminal state
-                ScannedToken scannedState = chart.stateSets.getScannedToken(state);
-                if (scannedState.scannedCategory instanceof NonLexicalToken)
-                    System.out.println(scannedState.scannedToken);
-                if ((scannedState == null))
+                ScannedToken scannedToken = chart.stateSets.getScannedToken(state);
+                if (scannedToken.scannedCategory instanceof NonLexicalToken)
+                    System.out.println(scannedToken.scannedToken);
+                if ((scannedToken == null))
                     throw new IssueRequest("Expected state to be a scanned state. This is a bug.");
                 // let \'a = \, call
                 final int position = state.position;
@@ -176,7 +176,7 @@ public class Parser<T> {
                         chart
                 );
                 //noinspection unchecked
-                T.addRightMost(new ParseTree.Leaf<>(scannedState));
+                T.addRightMost(new ParseTree.Leaf<>(scannedToken));
                 return T;
             } else if (prefixEnd instanceof Terminal) {
                 // Scanned terminal state
@@ -251,7 +251,7 @@ public class Parser<T> {
                             Iterable<Token<T>> tokens,
                             @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks) {
         final ChartWithInputPosition<T> parse = parseAndCountTokens(goal, tokens, callbacks);
-        final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.finalChartIndex, Category.START);
+        final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.chartIndex, Category.START);
         if (completedStates.size() > 0) {
             if (completedStates.size() > 1)
                 throw new IssueRequest("Multiple final states found. This is likely an error.");
@@ -300,7 +300,7 @@ public class Parser<T> {
     ) {
         ChartWithInputPosition<T> chart = parseAndCountTokens(S, tokens, callbacks);
         final StateSets<T> stateSets = chart.chart.stateSets;
-        final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.finalChartIndex, Category.START);
+        final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.chartIndex, Category.START);
 
         if (completedStates.size() > 1)
             throw new Error("Found more than one Viterbi parse. This is a bug.");

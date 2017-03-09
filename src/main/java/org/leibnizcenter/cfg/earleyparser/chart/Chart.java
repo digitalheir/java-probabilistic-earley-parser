@@ -20,6 +20,7 @@ import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
+import org.leibnizcenter.cfg.util.Collections2;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
@@ -27,6 +28,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
+import static org.leibnizcenter.cfg.util.Collections2.nullOrEmpty;
 
 
 public class Chart<T> {
@@ -49,31 +53,6 @@ public class Chart<T> {
         this.stateSets = new StateSets<>(grammar);
         this.grammar = grammar;
         this.parseOptions = parseOptions == null ? new ParseOptions.Builder<T>().build() : parseOptions;
-    }
-
-    /**
-     * Function to calculate the new inner score from given values
-     *
-     * @param scanProbability The probability of scanning this particular token
-     * @param sr              The semiring to calculate with
-     * @param previousInner   The previous inner score
-     * @return The inner score for the new state
-     */
-
-    private static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
-        return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
-    }
-
-    /**
-     * Function to compute the forward score for the new state after scanning the given token.
-     *
-     * @param scanProbability           The probability of scanning this particular token
-     * @param sr                        The semiring to calculate with
-     * @param previousStateForwardScore The previous forward score
-     * @return Computed forward score for the new state
-     */
-    private static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
-        return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
     private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, double newViterbiScore) {
@@ -103,17 +82,16 @@ public class Chart<T> {
                 t.stateToAdvance.advanceDot(),
                 t.stateToAdvance.rule
         );
-        return
-                new Complete.Delta(
-                        s,
-                        inner,
-                        fw,
-                        // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
-                        ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
-                                && !s.rule.isUnitProduction()
-                                && !stateSets.contains(s)))
+        return new Complete.Delta(
+                s,
+                inner,
+                fw,
+                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
+                ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
+                        && !s.rule.isUnitProduction()
+                        && !stateSets.contains(s)))
 
-                );
+        );
     }
 
     /**
@@ -299,53 +277,41 @@ public class Chart<T> {
     /**
      * Handles a token scanned from the input string.
      *
-     * @param tokenPosition       The start index of the scan.
+     * @param chartPosition       The start index of the scan.
      * @param tokenWithCategories The token that was scanned.
      * @param scanProbability     Function that provides the probability of scanning the given token at this position. Might be null for a probability of 1.0.
      */
     @SuppressWarnings("WeakerAccess")
     void scan(
-            final int tokenPosition,
+            final int chartPosition,
             final TokenWithCategories<T> tokenWithCategories,
             final ScanProbability<T> scanProbability
     ) {
-        if (tokenWithCategories == null)
-            throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
-
-        final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition, tokenWithCategories);
-        final Token<T> token = tokenWithCategories.token;
-        final ForwardScores forwardScores = stateSets.forwardScores;
-        final InnerScores innerScores = stateSets.innerScores;
-        final int nextPosition = tokenPosition + 1;
-
-//        StateToXMap<State> checkNoNewStatesAreDoubles = new StateToXMap<>(10 + 100);
-
+        IssueRequest.ensure(tokenWithCategories != null, "null token at chart index " + chartPosition + ".");
         /*
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
-        final Set<Terminal<T>> categories = tokenWithCategories.categories;
-        categories.stream()
-                .flatMap((final Terminal<T> terminalType) -> {
-                    final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(tokenPosition, terminalType);
-                    return statesActiveOnTerminals == null
-                            ? Stream.empty()
-                            : statesActiveOnTerminals.stream();
-                })
-                .map(preScanState -> {
-                    final double previousInner = innerScores.get(preScanState);
-                    final double previousForward = forwardScores.get(preScanState);
-                    return new Scan.Delta<>(
-                            token,
-                            preScanState,
-                            calculateForwardScore(scanProb, grammar.semiring, previousForward),
-                            calculateInnerScore(scanProb, grammar.semiring, previousInner),
-                        /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
-                            preScanState.rule, nextPosition, preScanState.ruleStartPosition, preScanState.advanceDot()
-                    );
-                })
-                // After we have calculated everything, we mutate the chart
-                .forEach(stateSets::createStateAndSetScores);
+        final ExpressionSemiring semiring = grammar.semiring;
+        for (Terminal<T> terminalType : emptyIfNull(tokenWithCategories.categories)) {
+            final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(chartPosition, terminalType);
+            for (State preScanState : emptyIfNull(statesActiveOnTerminals)) {
+                final Scan.Delta<T> delta = Scan.getScanDelta(
+                        semiring,
+                        scanProbability,
+                        tokenWithCategories,
+                        stateSets,
+                        chartPosition,
+                        preScanState
+                );
+                // After we have calculated the delta, mutate the chart
+                stateSets.createStateAndSetScores(delta);
+            }
+        }
+    }
+
+    double getScanProbability(int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability<T> scanProbability) {
+        return scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition, tokenWithCategories);
     }
 
     void scanError(
@@ -541,7 +507,7 @@ public class Chart<T> {
         if (parseOptions != null) parseOptions.onComplete(i, token, chart);
     }
 
-    public int getJustScannedErrorRulesCount(int index) {
+    public int getJustCompletedErrorRulesCount(int index) {
         return stateSets.completedStates.getCompletedErrorRulesCount(index);
     }
 

@@ -141,6 +141,10 @@ public class State {
         return result;
     }
 
+    public boolean comesBefore(int index) {
+        return position < index;
+    }
+
     public static class StateWithScore {
         private final double forwardScore;
         private final double innerScore;
