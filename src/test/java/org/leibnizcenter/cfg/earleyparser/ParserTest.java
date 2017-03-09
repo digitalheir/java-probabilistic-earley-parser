@@ -494,7 +494,10 @@ public class ParserTest {
         ParseTreeWithScore parse = new Parser(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.7 * .7 * 0.8 * 0.6 * .5 * .6, parse.getProbability(), 0.00001);
+        Assert.assertEquals(
+                .7 * .8 * .5 * .6,
+//                0.7 * .7 * 0.8 * 0.6 * .5 * .6,
+                parse.getProbability(), 0.00001);
     }
 
     @Test
