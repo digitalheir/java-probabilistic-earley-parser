@@ -17,6 +17,8 @@ import org.leibnizcenter.cfg.token.Token;
 
 import java.util.Collection;
 
+import static org.leibnizcenter.cfg.util.Collections2.isFilled;
+
 
 /**
  * Helper function for parsing
@@ -159,8 +161,6 @@ public class Parser<T> {
                 ScannedToken scannedToken = chart.stateSets.getScannedToken(state);
                 if (scannedToken.scannedCategory instanceof NonLexicalToken)
                     System.out.println(scannedToken.scannedToken);
-                if ((scannedToken == null))
-                    throw new IssueRequest("Expected state to be a scanned state. This is a bug.");
                 // let \'a = \, call
                 final int position = state.position;
 
@@ -183,8 +183,6 @@ public class Parser<T> {
                 ScannedToken scannedState = chart.stateSets.getScannedToken(state);
                 if (scannedState.scannedCategory instanceof NonLexicalToken)
                     System.out.println(scannedState.scannedToken);
-                if ((scannedState == null))
-                    throw new IssueRequest("Expected state to be a scanned state. This is a bug.");
                 // let \'a = \, call
                 final int position = state.position;
 
@@ -252,7 +250,7 @@ public class Parser<T> {
                             @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks) {
         final ChartWithInputPosition<T> parse = parseAndCountTokens(goal, tokens, callbacks);
         final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.chartIndex, Category.START);
-        if (completedStates.size() > 0) {
+        if (isFilled(completedStates)) {
             if (completedStates.size() > 1)
                 throw new IssueRequest("Multiple final states found. This is likely an error.");
             return completedStates.stream().mapToDouble(finalState ->
@@ -302,13 +300,11 @@ public class Parser<T> {
         final StateSets<T> stateSets = chart.chart.stateSets;
         final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.chartIndex, Category.START);
 
-        if (completedStates.size() > 1)
-            throw new Error("Found more than one Viterbi parse. This is a bug.");
-        else if (completedStates.size() < 1)
-            throw new RuntimeException("Could not parse sentence with goal " + S);
-        else return completedStates.stream().findAny()
+        IssueRequest.ensure(completedStates.size() <= 1,"Found more than one Viterbi parse. This is a bug.");
+
+        return completedStates.stream().findAny()
                     .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
-                    .get();
+                    .orElseThrow(() -> new RuntimeException("Could not parse sentence with goal " + S));
     }
 
     public Chart<T> parse(NonTerminal S,
