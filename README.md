@@ -26,7 +26,7 @@ For example:
 
 
 
-This library allows you to do these things [efficiently](https://github.com/digitalheir/probabilistic-earley-parser-javascript#runtime-complexity), as long as you can describe the rules as a [Context-free Grammar](https://en.wikipedia.org/wiki/Context-free_grammar) (CFG).
+This library allows you to do these things [efficiently](#runtime-complexity), as long as you can describe the rules as a [Context-free Grammar](https://en.wikipedia.org/wiki/Context-free_grammar) (CFG).
 
 The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences: we can order them by probability. Furthermore, this parser does not limit token types to strings.
 
