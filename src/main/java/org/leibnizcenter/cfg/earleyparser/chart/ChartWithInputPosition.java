@@ -1,5 +1,6 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
@@ -30,6 +31,7 @@ public class ChartWithInputPosition<T> {
   // These two could be different because we might drop tokens
   private final Grammar<T> grammar;
   final private ScanMode strategy;
+  private final ParseOptions<T> parseOptions;
   /**
    * End position for chart (may be lower than tokenIndex necause some tokens may be ignored)
    */
@@ -47,6 +49,7 @@ public class ChartWithInputPosition<T> {
   ) {
     this.grammar = grammar;
     strategy = parseOptions == null || parseOptions.scanMode == null ? ScanMode.STRICT : parseOptions.scanMode;
+    this.parseOptions = parseOptions;
     chart = new Chart<>(grammar, parseOptions);
 
     // Initial state
@@ -82,13 +85,35 @@ public class ChartWithInputPosition<T> {
               .filter(s -> s.comesBefore(chartIndex))
               .flatMap(preScanState -> IntStream.range(preScanState.position + 1, chartIndex + 1)
                   .mapToObj(position -> {
+                    ExpressionSemiring semiring = grammar.semiring;
+
                     double previousForward = chart.getForwardScore(preScanState);
                     double previousInner = chart.getInnerScore(preScanState);
+
+                    int numberOfScannedTokens = position - preScanState.position;
+                    double ruleProv = preScanState.rule.getScore();
+
+                    double newInner = previousInner;
+                    for (int i = 0; i < numberOfScannedTokens - 1; i++) {
+                      newInner = grammar.semiring.times(ruleProv, newInner);
+
+                    }
+
+                    double newForward = grammar.semiring.times(previousForward, newInner);
+
+
+                    Token<T> token = chart.stateSets.getScannedToken(position);
+                    //noinspection unchecked
+                    double scanProb = Scan.getScanProb(parseOptions.scanProbability,
+                        new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.get())),
+                        position
+                    );
+
                     return new Scan.Delta<>(
-                        chart.stateSets.getScannedToken(position),
+                        token,
                         preScanState,
-                        previousForward,
-                        previousInner,
+                        Scan.calculateForwardScore(scanProb, grammar.semiring, newForward),
+                        Scan.calculateInnerScore(scanProb, semiring, newInner),
                         preScanState.rule, position, preScanState.ruleStartPosition, preScanState.advanceDot()
                     );
                   })
