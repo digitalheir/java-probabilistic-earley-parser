@@ -24,6 +24,10 @@ public class ParseTreeWithScore {
         return score.getProbability();
     }
 
+    double getProbabilityAsSemiringElement() {
+        return score.probabilityAsSemiringElement;
+    }
+
     
     public ParseTree getParseTree() {
         return parseTree;

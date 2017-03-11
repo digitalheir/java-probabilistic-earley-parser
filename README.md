@@ -14,7 +14,7 @@ For example:
 |---|---|
 |[i, want, british, food]|![i want british food](https://cloud.githubusercontent.com/assets/178797/21772897/64838a1e-d68d-11e6-9a9d-11c7c17cb996.png)|
 
-* As a computational biologist, you want to [predict the secondary structure for an RNA sequence](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar#RNA_structure_prediction)
+* As a computational biologist, you want to [predict the secondary structure for an RNA sequence](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar#RNA_structure_prediction) (which you can encode in a tree structure)
 
 |tokens|parse tree|
 |---|---|
@@ -262,4 +262,4 @@ This software is licensed under a permissive [MIT license](https://opensource.or
 3. [Kegler, Jeffrey. "Marpa, A Practical General Parser: The Recognizer." (2012): 115.](http://dinhe.net/~aredridel/.notmine/PDFs/Parsing/KEGLER,%20Jeffrey%20-%20Marpa,%20a%20practical%20general%20parser:%20the%20recognizer.pdf)
 
 ## Contact
-Inquiries go to maarten.trompper@gmail.com
+Inquiries go to Maarten Trompper at maarten.trompper@gmail.com

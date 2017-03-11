@@ -33,7 +33,6 @@ public class ExpressionWrapper extends Resolvable {
     }
 
     public double resolve() {
-        if (expression == null && !Double.isFinite(literal)) throw new NullPointerException();
         if (lock) return cached;
         if (expression == null) return literal;
         else return expression.resolveFinal();

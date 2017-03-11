@@ -31,21 +31,23 @@ public class Rule {
     public final NonTerminal left;
     public final Category[] right;
     /**
-     * Double that reflects the probability of this rule according to some semiring
+     * reflects the probability of this rule according to some semiring
      * (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
      */
-    private final double rawProbability;
+    public final double probabilityAsSemiringElement;
+    public final double probability;
+
     private final int hashCode;
 
     /**
      * Creates a new rule with the specified left side category and series of
      * category on the right side.
      *
-     * @param left           The left side (trigger) for this production rule.
-     * @param right          The right side (productions) licensed for this rule's
-     *                       left side.
-     * @param rawProbability Double that reflects the probability of this rule according to some semiring
-     *                       (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
+     * @param left                         The left side (trigger) for this production rule.
+     * @param right                        The right side (productions) licensed for this rule's
+     *                                     left side.
+     * @param probabilityAsSemiringElement Double that reflects the probability of this rule according to some semiring
+     *                                     (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
      * @throws IllegalArgumentException If
      *                                  <ol>
      *                                  <li>the specified left or right category are <code>null</code>,</li>
@@ -53,8 +55,9 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    Rule(double rawProbability, NonTerminal left, Category... right) {
-        this.rawProbability = rawProbability == -0.0 ? 0.0 : rawProbability;
+    Rule(double probability, double probabilityAsSemiringElement, NonTerminal left, Category... right) {
+        this.probabilityAsSemiringElement = probabilityAsSemiringElement == -0.0 ? 0.0 : probabilityAsSemiringElement;
+        this.probability = (probability == -0.0) ? 0.0 : probability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
 
@@ -78,36 +81,6 @@ public class Rule {
         this.hashCode = computeHashCode();
     }
 
-
-    /**
-     * Instantiates a new rule with a rawProbability score of 1.0 (assuming we use the Probability semiring, which
-     * has 1.0 for "one")
-     *
-     * @param left  LHS
-     * @param right RHS
-     */
-    @Deprecated
-    protected Rule(NonTerminal left, Category... right) {
-        this(1.0, left, right);
-    }
-
-    /**
-     * Instantiates a new rule with a rawProbability score of one (whatever that means for the given semiring)
-     *
-     * @param semiring Semiring to query for the rawProbability of "one"
-     * @param left     LHS
-     * @param right    RHS
-     */
-    @Deprecated
-    protected Rule(DblSemiring semiring, NonTerminal left, Category... right) {
-        this(semiring.one(), left, right);
-    }
-
-    @Deprecated
-    public static Rule create(double probability, NonTerminal LHS, Category... RHS) {
-        return new Rule(probability, LHS, RHS);
-    }
-
     /**
      * Defaults to rule probability 1.0
      *
@@ -117,11 +90,11 @@ public class Rule {
      * @return Rule with p=1.0
      */
     public static Rule create(DblSemiring semiring, NonTerminal LHS, Category... RHS) {
-        return new Rule(semiring.one(), LHS, RHS);
+        return new Rule(1.0, semiring.one(), LHS, RHS);
     }
 
     public static Rule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
-        return new Rule(semiring.fromProbability(probability), LHS, RHS);
+        return new Rule(probability, semiring.fromProbability(probability), LHS, RHS);
     }
 
 //    /**
@@ -204,7 +177,7 @@ public class Rule {
         else {
             Rule rule = (Rule) o;
             if (right.length != rule.right.length) return false;
-            else if (Double.compare(rule.rawProbability, rawProbability) != 0) return false;
+            else if (Double.compare(rule.probabilityAsSemiringElement, probabilityAsSemiringElement) != 0) return false;
             else if (!left.equals(rule.left)) return false;
             for (int i = 0; i < right.length; i++) if (!rule.right[i].equals(right[i])) return false;
             return true;
@@ -217,7 +190,7 @@ public class Rule {
     }
 
     private int computeHashCode() {
-        long temp = Double.doubleToLongBits(rawProbability);
+        long temp = Double.doubleToLongBits(probabilityAsSemiringElement);
         return 31 * (31 * left.hashCode() + Arrays.hashCode(right)) + (int) (temp ^ (temp >>> 32));
     }
 
@@ -264,14 +237,6 @@ public class Rule {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * @return Double that reflects the probability of this rule according to some semiring
-     * (for probability semiring, between 0.0 and 1.0; for Log semiring between 0 and infinity)
-     */
-    public double getScore() {
-        return rawProbability;
     }
 
     /**

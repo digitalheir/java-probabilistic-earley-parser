@@ -1,13 +1,8 @@
 package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
-import org.leibnizcenter.cfg.earleyparser.chart.Chart;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.ForwardScores;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.InnerScores;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
@@ -18,30 +13,9 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
  * Created by maarten on 31/10/16.
  */
 public final class Scan {
-    public static <T> Delta<T> getScanDelta(
-            ExpressionSemiring semiring,
-            ScanProbability<T> scanProbability,
-            TokenWithCategories<T> token,
-            StateSets<T> stateSets,
-            int position,
-            State preScanState
-    ) {
-        final double scanProb = scanProbability == null ? Double.NaN : scanProbability.getProbability(position, token);
 
-        final double previousForward = stateSets.forwardScores.get(preScanState);
-        final double previousInner = stateSets.innerScores.get(preScanState);
-
-        final double postScanForward = calculateForwardScore(scanProb, semiring, previousForward);
-        final double postScanInner = calculateInnerScore(scanProb, semiring, previousInner);
-
-        return new Delta<>(
-                token.token,
-                preScanState,
-                postScanForward,
-                postScanInner,
-                /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
-                preScanState.rule, position + 1, preScanState.ruleStartPosition, preScanState.advanceDot()
-        );
+    public static <T> double getScanProb(ScanProbability<T> scanProbability, TokenWithCategories<T> token, int position) {
+        return scanProbability == null ? Double.NaN : scanProbability.getProbability(position, token);
     }
 
     /**
@@ -52,7 +26,7 @@ public final class Scan {
      * @param previousStateForwardScore The previous forward score
      * @return Computed forward score for the new state
      */
-    static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
+    public static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
         return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
@@ -65,7 +39,7 @@ public final class Scan {
      * @return The inner score for the new state
      */
 
-    static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
+    public static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
         return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
     }
 

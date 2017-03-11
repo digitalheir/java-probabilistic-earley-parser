@@ -1,6 +1,8 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 
+import java.util.stream.IntStream;
+
 /**
  * Semiring defined on double primitives.
  * <p>
@@ -108,4 +110,17 @@ public interface DblSemiring {
      * @return As in {@link Double#compare(double, double)}
      */
     int compare(double x, double y);
+
+
+    default double pow(double ruleProv, int i) {
+        if (i == 0) {
+            return one();
+        } else if (i < 0) {
+            throw new IllegalArgumentException();
+        } else {
+            return IntStream.range(0, i - 1)
+                    .mapToDouble(_i -> ruleProv)
+                    .reduce(ruleProv, this::times);
+        }
+    }
 }

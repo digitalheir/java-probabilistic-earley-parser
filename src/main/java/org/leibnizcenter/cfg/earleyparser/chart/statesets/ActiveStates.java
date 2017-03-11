@@ -8,6 +8,7 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.UnitStarScores;
+import org.leibnizcenter.cfg.util.Collections2;
 import org.leibnizcenter.cfg.util.MyMultimap;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
 
@@ -25,7 +26,7 @@ public class ActiveStates<T> {
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
     private final MyMultimap<Integer, State> justScannedError = new MyMultimap<>(); // todo int
-    private Collection<State> activeOnNonLexicalToken = new HashSet<State>();
+    private Collection<State> activeOnNonLexicalToken = new HashSet<>();
 
     /**
      * Runs in O(1).
@@ -60,13 +61,14 @@ public class ActiveStates<T> {
      * @param terminal Terminal on which states should be active
      * @return States active on given position and terminal
      */
-    public Set<State> getActiveOn(int position, Terminal<T> terminal) {
-        if (!statesActiveOnTerminals.containsKey(position))
-            return null;
-        else {
-            Map<Terminal<T>, Set<State>> map = statesActiveOnTerminals.get(position);
-            return map.containsKey(terminal) ? map.get(terminal) : null;
+    @SuppressWarnings("SuspiciousMethodCalls")
+    public Collection<State> getActiveOn(int position, Terminal<?> terminal) {
+        if (statesActiveOnTerminals.containsKey(position)) {
+            Set<State> states = statesActiveOnTerminals.get(position).get(terminal);
+            if (Collections2.isFilled(states))
+                return Collections.unmodifiableCollection(states);
         }
+        return Collections.emptySet();
     }
 
     /**

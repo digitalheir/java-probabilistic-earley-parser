@@ -3,15 +3,15 @@ package org.leibnizcenter.cfg.category.nonterminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.token.Token;
 
-public final class NonLexicalToken implements Terminal {
-    public static final String WILDCARD_SYMBOL = "<NonLexical>";
-    private static final NonLexicalToken SINGLETON = new NonLexicalToken();
+public final class NonLexicalToken implements Terminal, KleeneClosure {
+    public static final String ERROR_SYMBOL = "<error>";
+    public static final NonLexicalToken INSTANCE = new NonLexicalToken();
 
     private NonLexicalToken() {
     }
 
-    public static NonLexicalToken get() {
-        return SINGLETON;
+    public static Terminal get() {
+        return INSTANCE;
     }
 
     @Override
@@ -21,7 +21,7 @@ public final class NonLexicalToken implements Terminal {
 
     @Override
     public int hashCode() {
-        return WILDCARD_SYMBOL.hashCode();
+        return ERROR_SYMBOL.hashCode();
     }
 
     @Override
@@ -31,6 +31,6 @@ public final class NonLexicalToken implements Terminal {
 
     @Override
     public String toString() {
-        return WILDCARD_SYMBOL;
+        return ERROR_SYMBOL;
     }
 }

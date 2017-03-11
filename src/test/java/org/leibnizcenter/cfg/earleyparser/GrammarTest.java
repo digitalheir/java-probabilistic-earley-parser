@@ -123,7 +123,7 @@ public class GrammarTest {
      */
     @Test
     public final void parseErrorRule() throws IOException {
-        Grammar<String> grammar = Grammar.fromString("S->NP#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <NonLexical> clar \n");
+        Grammar<String> grammar = Grammar.fromString("S->NP(0.9)#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar (0.9)\n");
         final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
         assertNotNull(errorRules);
         assertEquals(1, errorRules.size());

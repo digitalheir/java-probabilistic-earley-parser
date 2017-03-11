@@ -145,25 +145,17 @@ public class State {
         return position < index;
     }
 
-    public static class StateWithScore {
+    private static class StateWithScore {
         private final double forwardScore;
         private final double innerScore;
         private final State state;
         private final State origin;
 
-        public StateWithScore(State state, double forwardScore, double innerScore, State origin) {
+        private StateWithScore(State state, double forwardScore, double innerScore, State origin) {
             this.forwardScore = forwardScore;
             this.state = state;
             this.innerScore = innerScore;
             this.origin = origin;
-        }
-
-        public double getInnerScore() {
-            return innerScore;
-        }
-
-        public double getForwardScore() {
-            return forwardScore;
         }
 
         public State getState() {
@@ -176,7 +168,7 @@ public class State {
 
             return "StateWithScore{" +
                     "forwardScore=" + df.format(forwardScore) +
-                    ", innerScore=" + df.format(innerScore) +
+                    ", probabilityAsSemiringElement=" + df.format(innerScore) +
                     ", state=" + state +
                     ", origin=" + origin +
                     '}';
@@ -191,7 +183,7 @@ public class State {
         @SuppressWarnings("WeakerAccess")
         public final State origin;
         @SuppressWarnings("WeakerAccess")
-        public final double innerScore;
+        public final double probabilityAsSemiringElement;
         @SuppressWarnings("WeakerAccess")
         public final DblSemiring semiring;
         @SuppressWarnings("WeakerAccess")
@@ -199,28 +191,16 @@ public class State {
 
         private final int hashCode;
 
-        public ViterbiScore(double innerScore, State origin, State resultingState, DblSemiring semiring) {
-            this.innerScore = innerScore;
+        public ViterbiScore(double probabilityAsSemiringElement, State origin, State resultingState, DblSemiring semiring) {
+            this.probabilityAsSemiringElement = probabilityAsSemiringElement;
             this.origin = origin;
             this.resultingState = resultingState;
             this.semiring = semiring;
             this.hashCode = computeHashCode();
         }
 
-        public final double getRawScore() {
-            return innerScore;
-        }
-
         public final double getProbability() {
-            return semiring.toProbability(innerScore);
-        }
-
-        public final State getOrigin() {
-            return origin;
-        }
-
-        public final State getResultingState() {
-            return resultingState;
+            return semiring.toProbability(probabilityAsSemiringElement);
         }
 
         @Override
@@ -229,7 +209,7 @@ public class State {
             else if (o == null || getClass() != o.getClass()) return false;
             else {
                 ViterbiScore that = (ViterbiScore) o;
-                return Double.compare(that.innerScore, innerScore) == 0
+                return Double.compare(that.probabilityAsSemiringElement, probabilityAsSemiringElement) == 0
                         && (origin != null ? origin.equals(that.origin) : that.origin == null
                         && semiring.equals(that.semiring)
                         && (resultingState != null ? resultingState.equals(that.resultingState) : that.resultingState == null));
@@ -245,7 +225,7 @@ public class State {
             int result;
             long temp;
             result = origin != null ? origin.hashCode() : 0;
-            temp = Double.doubleToLongBits(innerScore);
+            temp = Double.doubleToLongBits(probabilityAsSemiringElement);
             result = 31 * result + (int) (temp ^ (temp >>> 32));
             result = 31 * result + semiring.hashCode();
             result = 31 * result + (resultingState != null ? resultingState.hashCode() : 0);
@@ -254,10 +234,10 @@ public class State {
 
         @Override
         public final String toString() {
-            return "ViterbiScore{" +
-                    "origin=" + origin +
-                    ", score=" + getProbability() +
-                    ", resultingState=" + resultingState +
+            return "ViterbiScore{\norigin = " +
+                    origin +
+                    "\nprobability = " + getProbability() +
+                    "\nresultingState = " + resultingState +
                     '}';
         }
     }

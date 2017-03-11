@@ -8,11 +8,8 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.ExactStringTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
-import org.leibnizcenter.cfg.token.Token;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  */
@@ -32,6 +29,7 @@ public class ParseTreeTest {
             her = new ExactStringTerminal("her"),
             he = new ExactStringTerminal("he");
 
+    @SuppressWarnings("unused")
     private static Grammar<String> mygrammar = new Grammar.Builder<String>("test")
             .addRule(S, NP, VP)
             .addRule(NP, he)
@@ -48,14 +46,14 @@ public class ParseTreeTest {
 
     @Test
     public final void testParseTrees() {
-        List<Token<String>> tokens = new ArrayList<>();
-        tokens.add(new Token<>("he"));
-        tokens.add(new Token<>("saw"));
-        tokens.add(new Token<>("her"));
-        tokens.add(new Token<>("duck"));
-
-        // TODO implement
-        //parseTrees = Parser.getParses(S, mygrammar, tokens);
+//        List<Token<String>> tokens = new ArrayList<>();
+//        tokens.add(new Token<>("he"));
+//        tokens.add(new Token<>("saw"));
+//        tokens.add(new Token<>("her"));
+//        tokens.add(new Token<>("duck"));
+//
+//         TODO implement treewalker
+//        parseTrees = new Parser<>(mygrammar).getParses(S, tokens);
 //        // structural ambiguity reflected?
 //        Assert.assertEquals("problem with parse trees: " + parseTrees,
 //                2, parseTrees.size());

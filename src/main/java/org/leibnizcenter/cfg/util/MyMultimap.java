@@ -11,8 +11,8 @@ public class MyMultimap<T, T1> {
     private Set<T1> values = new HashSet<>();
     private boolean isLocked = false;
 
-    public Collection<T1> get(T y) {
-        if (map.containsKey(y)) return map.get(y);
+    public Collection<T1> get(T el) {
+        if (map.containsKey(el)) return map.get(el);
         else return null;
     }
 

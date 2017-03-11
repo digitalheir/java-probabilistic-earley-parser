@@ -159,8 +159,8 @@ public class Parser<T> {
             if (prefixEnd instanceof NonLexicalToken) {
                 // Scanned terminal state
                 ScannedToken scannedToken = chart.stateSets.getScannedToken(state);
-                if (scannedToken.scannedCategory instanceof NonLexicalToken)
-                    System.out.println(scannedToken.scannedToken);
+//                if (scannedToken.scannedCategory instanceof NonLexicalToken)
+//                    System.out.println(scannedToken.scannedToken);
                 // let \'a = \, call
                 final int position = state.position;
 
@@ -181,8 +181,8 @@ public class Parser<T> {
             } else if (prefixEnd instanceof Terminal) {
                 // Scanned terminal state
                 ScannedToken scannedState = chart.stateSets.getScannedToken(state);
-                if (scannedState.scannedCategory instanceof NonLexicalToken)
-                    System.out.println(scannedState.scannedToken);
+//                if (scannedState.scannedCategory instanceof NonLexicalToken)
+//                    System.out.println(scannedState.scannedToken);
                 // let \'a = \, call
                 final int position = state.position;
 
@@ -206,7 +206,7 @@ public class Parser<T> {
                 State.ViterbiScore viterbi = chart.getViterbiScore(state); // must exist
 
                 // Completed state that led to the current state
-                State origin = viterbi.getOrigin();
+                State origin = viterbi.origin;
 
                 // Recurse for predecessor state (before the completion happened)
                 State predecessor = State.create(

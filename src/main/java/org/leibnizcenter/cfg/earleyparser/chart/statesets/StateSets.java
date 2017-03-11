@@ -1,5 +1,6 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
+import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
@@ -47,6 +48,7 @@ public class StateSets<T> {
     private final Set<State> states = new HashSet<>(500);
     private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
     private final Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
+    private final TIntObjectMap<Token<T>> scannedTokensAtPosition = new TIntObjectHashMap<>(50, 0.5F, -1);
 
 
     public StateSets(Grammar<T> grammar) {
@@ -104,6 +106,9 @@ public class StateSets<T> {
                     state.ruleDotPosition
             );
             scannedTokens.put(state, eScannedToken);
+            assert !scannedTokensAtPosition.containsKey(index)
+                    || scannedTokensAtPosition.get(index).equals(eScannedToken.scannedToken);
+            scannedTokensAtPosition.putIfAbsent(index, eScannedToken.scannedToken);
         }
     }
 
@@ -176,12 +181,16 @@ public class StateSets<T> {
     }
 
     public void setViterbiScore(State.ViterbiScore viterbiScore) {
-        this.viterbiScores.put(viterbiScore.getResultingState(), viterbiScore);
-        this.viterbiScoresDbl.put(viterbiScore.getResultingState(), viterbiScore.getRawScore());
+        this.viterbiScores.put(viterbiScore.resultingState, viterbiScore);
+        this.viterbiScoresDbl.put(viterbiScore.resultingState, viterbiScore.probabilityAsSemiringElement);
     }
 
     public ScannedToken<T> getScannedToken(State state) {
         return scannedTokens.get(state);
+    }
+
+    public Token<T> getScannedToken(int pos) {
+        return scannedTokensAtPosition.get(pos);
     }
 
 

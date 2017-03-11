@@ -1,9 +1,9 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
-import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.category.Category;
+import org.leibnizcenter.cfg.category.nonterminal.KleeneClosure;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.Complete;
@@ -12,15 +12,11 @@ import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.ForwardScores;
-import org.leibnizcenter.cfg.earleyparser.chart.statesets.InnerScores;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
-import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
-import org.leibnizcenter.cfg.util.Collections2;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
@@ -29,8 +25,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.leibnizcenter.cfg.errors.IssueRequest.ensure;
 import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
-import static org.leibnizcenter.cfg.util.Collections2.nullOrEmpty;
 
 
 public class Chart<T> {
@@ -56,7 +52,7 @@ public class Chart<T> {
     }
 
     private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, double newViterbiScore) {
-        return viterbiScore == null || viterbiScore.semiring.compare(viterbiScore.innerScore, newViterbiScore) < 0;
+        return viterbiScore == null || viterbiScore.semiring.compare(viterbiScore.probabilityAsSemiringElement, newViterbiScore) < 0;
     }
 
     private static <E> Complete.Delta completeNoViterbiForTriple(int position,
@@ -169,10 +165,8 @@ public class Chart<T> {
         // O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·Zμ</code>...
         final Set<State> activeOnNonTerminals = stateSets.activeStates.getActiveOnNonTerminals(index);
         if (activeOnNonTerminals != null && activeOnNonTerminals.size() > 0) {
-            assert !activeOnNonTerminals.stream()
-                    .filter(p -> p.position != index)
-                    .findAny()
-                    .isPresent(); // all on position == index
+            assert activeOnNonTerminals.stream()
+                    .noneMatch(p -> p.position != index); // all on position == index
             // Copy set to avoid concurrent modification
             new HashSet<>(activeOnNonTerminals).forEach(this::predictStatesForState);
         }
@@ -245,7 +239,7 @@ public class Chart<T> {
             final double prevForward = stateSets.forwardScores.get(statePredecessor);
 
             // γ' = P(Y → v)
-            final double Y_to_vProbability = Y_to_v.getScore();
+            final double Y_to_vProbability = Y_to_v.probabilityAsSemiringElement;
 
             // α' = α * R(Z =*L> Y) * P(Y → v)
             final double newForward = grammar.semiring.times(prevForward, grammar.semiring.times(grammar.getLeftStarScore(Z, Y_to_v.left), Y_to_vProbability));
@@ -287,22 +281,37 @@ public class Chart<T> {
             final TokenWithCategories<T> tokenWithCategories,
             final ScanProbability<T> scanProbability
     ) {
-        IssueRequest.ensure(tokenWithCategories != null, "null token at chart index " + chartPosition + ".");
+        ensure(tokenWithCategories != null, "null token at chart index " + chartPosition + '.');
         /*
          * Get all states that are active on a terminal
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         final ExpressionSemiring semiring = grammar.semiring;
-        for (Terminal<T> terminalType : emptyIfNull(tokenWithCategories.categories)) {
-            final Set<State> statesActiveOnTerminals = stateSets.activeStates.getActiveOn(chartPosition, terminalType);
-            for (State preScanState : emptyIfNull(statesActiveOnTerminals)) {
-                final Scan.Delta<T> delta = Scan.getScanDelta(
-                        semiring,
-                        scanProbability,
-                        tokenWithCategories,
-                        stateSets,
-                        chartPosition,
-                        preScanState
+        for (Terminal<T> activeTerminalType : emptyIfNull(tokenWithCategories.categories)) {
+            for (State preScanState : stateSets.activeStates.getActiveOn(chartPosition, activeTerminalType)) {
+                final double scanProb = Scan.getScanProb(scanProbability, tokenWithCategories, chartPosition);
+
+                final double previousForward = stateSets.forwardScores.get(preScanState);
+                final double previousInner = stateSets.innerScores.get(preScanState);
+                final boolean isKleeneContinuation = activeTerminalType instanceof KleeneClosure
+                        && preScanState.position > (preScanState.ruleDotPosition + preScanState.ruleStartPosition);
+                final double newInner = isKleeneContinuation
+                        ? semiring.times(previousInner, preScanState.rule.probabilityAsSemiringElement)
+                        : previousInner;
+                // todo should we update forwardscore as well for continuations? yes:
+                final double newForward = isKleeneContinuation
+                        ? semiring.times(previousForward, preScanState.rule.probabilityAsSemiringElement)
+                        : previousForward;
+                final double postScanForward = Scan.calculateForwardScore(scanProb, semiring, newForward);
+                final double postScanInner = Scan.calculateInnerScore(scanProb, semiring, newInner);
+
+                final Scan.Delta<T> delta = new Scan.Delta<>(
+                        tokenWithCategories.token,
+                        preScanState,
+                        postScanForward,
+                        postScanInner,
+                        /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
+                        preScanState.rule, chartPosition + 1, preScanState.ruleStartPosition, preScanState.advanceDot()
                 );
                 // After we have calculated the delta, mutate the chart
                 stateSets.createStateAndSetScores(delta);
@@ -418,7 +427,7 @@ public class Chart<T> {
                         final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
                         if (statesToAdvance != null && statesToAdvance.size() > 0) {
                             return statesToAdvance.stream()
-                                    .map((stateToAdvance) -> computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).innerScore, stateToAdvance))
+                                    .map((stateToAdvance) -> computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).probabilityAsSemiringElement, stateToAdvance))
                                     .filter(d -> d != null)
                                     .sequential()
                                     .peek(stateSets::processDelta)

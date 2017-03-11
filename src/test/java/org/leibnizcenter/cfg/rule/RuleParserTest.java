@@ -80,8 +80,10 @@ public class RuleParserTest {
     @Test
     public void parseErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
-        }, LogSemiring.get()).fromString("S -> A <NonLexical> B");
+            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
+        }, LogSemiring.get()).fromString("S -> A " +
+                NonLexicalToken.ERROR_SYMBOL +
+                " B");
 
         assertTrue(rule instanceof LexicalErrorRule);
     }
@@ -89,7 +91,7 @@ public class RuleParserTest {
     @Test
     public void parseNonErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
+            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
         }, LogSemiring.get()).fromString("S -> A B");
 
         assertFalse(rule instanceof LexicalErrorRule);

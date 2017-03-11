@@ -2,9 +2,6 @@ package org.leibnizcenter.cfg.earleyparser.callbacks;
 
 import org.junit.Test;
 
-/**
- * Created by maarten on 27-1-17.
- */
 public class ParseOptionsTest {
     @Test
     public void onPredict() throws Exception {

@@ -2,6 +2,9 @@ package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 import org.junit.Test;
 
+import java.util.stream.IntStream;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -31,8 +34,18 @@ public class ProbabilitySemiringTest {
     @Test
     public void one() throws Exception {
         assertTrue(1.0 == s.one());
-
     }
+
+    @Test
+    public void pow5() throws Exception {
+        IntStream.rangeClosed(0, 10)
+                .forEach(i -> assertEquals(
+                        Math.pow(0.5, i),
+                        s.pow(0.5, i),
+                        0.000000000000001
+                ));
+    }
+
 
     @Test
     public void fromProbability() throws Exception {
@@ -42,7 +55,6 @@ public class ProbabilitySemiringTest {
     @Test
     public void toProbability() throws Exception {
         assertTrue(0.6 == s.toProbability(0.6));
-
     }
 
 

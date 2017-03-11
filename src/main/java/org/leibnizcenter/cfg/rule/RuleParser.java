@@ -1,7 +1,6 @@
 package org.leibnizcenter.cfg.rule;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ProbabilitySemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -44,21 +43,21 @@ public class RuleParser {
             && !((RhsToken) token).isRegexDelimiter;
 
     private static final Grammar<String> grammarRHS = new Grammar.Builder<String>()
-            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, REGEX))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, CATEGORY))
-            .addRule(Rule.create(ProbabilitySemiring.get(), RIGHT_HAND_SIDE, RIGHT_HAND_SIDE, WHITE_SPACE, RIGHT_HAND_SIDE))
+            .addRule(0.9, RIGHT_HAND_SIDE, REGEX)
+            .addRule(0.9, RIGHT_HAND_SIDE, CATEGORY)
+            .addRule(0.9, RIGHT_HAND_SIDE, RIGHT_HAND_SIDE, WHITE_SPACE, RIGHT_HAND_SIDE)
 
-            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY, CATEGORY_CONTENT))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, CATEGORY_CONTENT, REGEX_DELIMITER))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, DANK_CONTENT))
-            .addRule(Rule.create(ProbabilitySemiring.get(), CATEGORY_CONTENT, CATEGORY_CONTENT, CATEGORY_CONTENT))
+            .addRule(0.9, CATEGORY, CATEGORY_CONTENT)
+            .addRule(0.9, CATEGORY_CONTENT, CATEGORY_CONTENT, REGEX_DELIMITER)
+            .addRule(0.9, CATEGORY_CONTENT, DANK_CONTENT)
+            .addRule(0.9, CATEGORY_CONTENT, CATEGORY_CONTENT, CATEGORY_CONTENT)
 
-            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER))
-            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER, REGEX_MODIFIERS))
-            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX_CONTENT, NON_REGEX_DELIMITER))
-            .addRule(Rule.create(ProbabilitySemiring.get(), REGEX_CONTENT, REGEX_CONTENT, REGEX_CONTENT))
-            .addRule(Rule.create(ProbabilitySemiring.get(), NON_REGEX_DELIMITER, DANK_CONTENT))
-            .addRule(Rule.create(ProbabilitySemiring.get(), NON_REGEX_DELIMITER, WHITE_SPACE))
+            .addRule(0.9, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER)
+            .addRule(0.9, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER, REGEX_MODIFIERS)
+            .addRule(0.9, REGEX_CONTENT, NON_REGEX_DELIMITER)
+            .addRule(0.9, REGEX_CONTENT, REGEX_CONTENT, REGEX_CONTENT)
+            .addRule(0.9, NON_REGEX_DELIMITER, DANK_CONTENT)
+            .addRule(0.9, NON_REGEX_DELIMITER, WHITE_SPACE)
 
             .build();
 
@@ -191,13 +190,14 @@ public class RuleParser {
             Category[] RHS = parseRHS(m.group(2).trim());
 
             final String prob = m.group(3);
-            final double probability = semiring.fromProbability(prob == null ? 1.0 : Double.parseDouble(prob));
+            final double probability = prob == null ? 1.0 : Double.parseDouble(prob);
+            final double semiringElement = semiring.fromProbability(probability);
             boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof NonLexicalToken));
 
             if (isErrorRule) {
-                return new LexicalErrorRule(probability, LHS, RHS);
+                return new LexicalErrorRule(probability, semiringElement, LHS, RHS);
             } else {
-                return new Rule(probability, LHS, RHS);
+                return new Rule(probability, semiringElement, LHS, RHS);
             }
         }
     }

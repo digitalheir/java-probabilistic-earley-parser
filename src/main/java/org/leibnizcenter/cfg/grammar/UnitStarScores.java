@@ -17,7 +17,7 @@ public class UnitStarScores {
 
     public UnitStarScores(LeftCorners leftCorners, AtomFactory atoms, ExpressionSemiring semiring) {
         this.nonZeroNonTerminalScores = leftCorners.nonZeroScores;
-        leftCorners.map.forEach(
+        leftCorners.mapToSemiringElements.forEach(
                 (cat, m) -> {
                     boolean has = map.containsKey(cat);
                     TObjectDoubleMap<Category> map2 = has ? map.get(cat) : new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());

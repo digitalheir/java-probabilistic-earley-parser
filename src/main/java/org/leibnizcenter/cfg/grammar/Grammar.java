@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * Once the Grammar is instantiated, it is immutable.
  */
 public final class Grammar<T> {
-    private static final Function<String, Category> STRING_CATEGORY_FUNCTION = s -> NonLexicalToken.WILDCARD_SYMBOL.equals(s) ? NonLexicalToken.get() : Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s);
+    private static final Function<String, Category> STRING_CATEGORY_FUNCTION = s -> NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.get() : Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s);
     private static final Pattern NEWLINE = Pattern.compile("\\n");
     private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     @SuppressWarnings("WeakerAccess")
@@ -70,7 +70,7 @@ public final class Grammar<T> {
      */
     private final LeftCorners leftStarCorners;
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
-    private final WeakHashMap<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new WeakHashMap<>();
+    private final Map<Token<T>, Set<Terminal<T>>> tokenToTerminalsCache = new WeakHashMap<>();
     /**
      * Creates a grammar with the given name, and given rules.
      * These restrictions ensure that
@@ -96,8 +96,7 @@ public final class Grammar<T> {
         });
 
         this.semiring = semiring;
-        leftCorners = new LeftCorners(semiring);
-        setLeftCorners();
+        leftCorners = new LeftCorners(semiring, nonTerminals, rules);
         leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         unitStarScores = getUnitStarCorners();
 
@@ -128,9 +127,8 @@ public final class Grammar<T> {
             NonTerminal X = nonterminalsArr[row];
             for (int col = 0; col < nonterminalsArr.length; col++) {
                 NonTerminal Y = nonterminalsArr[col];
-                final double prob = semiring.toProbability(P.get(X, Y));
                 // I - P_L
-                R_L_inverse.set(row, col, (row == col ? 1 : 0) - prob);
+                R_L_inverse.set(row, col, (row == col ? 1 : 0) - P.getProbability(X, Y));
             }
         }
         final Matrix R_L = R_L_inverse.inverse();
@@ -141,7 +139,7 @@ public final class Grammar<T> {
          */
         IntStream.range(0, R_L.getRowDimension()).forEach(row ->
                 IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        R__L.set(nonterminalsArr[row], nonterminalsArr[col], semiring.fromProbability(R_L.get(row, col)))
+                        R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], (R_L.get(row, col)))
                 )
         );
         return R__L;
@@ -225,7 +223,7 @@ public final class Grammar<T> {
             final Collection<Rule> rulesForNonTerminal = getRules(nonTerminal);
             if (rulesForNonTerminal != null) rulesForNonTerminal.stream()
                     .filter(Rule::isUnitProduction)
-                    .forEach(Yrule -> P_U.plus(nonTerminal, (NonTerminal) Yrule.right[0], Yrule.getScore()));
+                    .forEach(Yrule -> P_U.plusSemiringElement(nonTerminal, (NonTerminal) Yrule.right[0], Yrule.probabilityAsSemiringElement));
         });
 
         // R_U = (I - P_U)
@@ -250,18 +248,6 @@ public final class Grammar<T> {
 //        return null;
 //    }
 
-    /**
-     * Compute left corner relations
-     */
-    private void setLeftCorners() {
-        // Sum all probabilities for left corners
-        nonTerminals.forEach(leftHandSide -> {
-            final Collection<Rule> rulesOnNonTerminal = getRules(leftHandSide);
-            if (rulesOnNonTerminal != null) rulesOnNonTerminal.stream()
-                    .filter(yRule -> yRule.right.length > 0 && yRule.right[0] instanceof NonTerminal)
-                    .forEach(YRule -> leftCorners.plus(leftHandSide, (NonTerminal) YRule.right[0], YRule.getScore()));
-        });
-    }
 
     /**
      * Tests whether this grammar contains rules for the specified left side
@@ -299,7 +285,7 @@ public final class Grammar<T> {
     }
 
     public double getLeftStarScore(Category LHS, Category RHS) {
-        return leftStarCorners.get(LHS, RHS);
+        return leftStarCorners.getSemiringElement(LHS, RHS);
     }
 
     /**
@@ -326,7 +312,7 @@ public final class Grammar<T> {
     }
 
     public double getLeftScore(NonTerminal LHS, NonTerminal RHS) {
-        return leftCorners.get(LHS, RHS);
+        return leftCorners.getSemiringElement(LHS, RHS);
     }
 
     @SuppressWarnings("unused")
