@@ -113,14 +113,13 @@ public interface DblSemiring {
 
 
     default double pow(double ruleProv, int i) {
-        if (i == 0) {
+        if (i == 0)
             return one();
-        } else if (i < 0) {
-            throw new IllegalArgumentException();
-        } else {
+        else if (i > 0)
             return IntStream.range(0, i - 1)
                     .mapToDouble(_i -> ruleProv)
                     .reduce(ruleProv, this::times);
-        }
+        else
+            throw new IllegalArgumentException();
     }
 }

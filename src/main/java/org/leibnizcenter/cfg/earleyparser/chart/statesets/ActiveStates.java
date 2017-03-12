@@ -7,7 +7,7 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
-import org.leibnizcenter.cfg.grammar.UnitStarScores;
+import org.leibnizcenter.cfg.grammar.ScoresAsSemiringElements;
 import org.leibnizcenter.cfg.util.Collections2;
 import org.leibnizcenter.cfg.util.MyMultimap;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
@@ -125,7 +125,7 @@ public class ActiveStates<T> {
     void addIfActive(
             final int position,
             final State state,
-            final UnitStarScores unitStar) {
+            final ScoresAsSemiringElements unitStar) {
         if (state.isActive()) {
             if (state.ruleDotPosition > 0 && state.rule.right.length > 0 && state.rule.right[state.ruleDotPosition - 1] instanceof NonLexicalToken) {
                 justScannedError.put(position, state);

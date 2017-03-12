@@ -71,13 +71,13 @@ public class RuleParser {
     /**
      * @param parseCategory how to parse category string into category
      * @param semiring      semiring to use
-     * @return Parsed rule
      */
     public RuleParser(Function<String, Category> parseCategory, DblSemiring semiring) {
         this.parseCategory = parseCategory;
         this.semiring = semiring;
     }
 
+    @SuppressWarnings("ObjectAllocationInLoop")
     static List<RhsToken> lexRhs(char[] chars) {
         List<RhsToken> l = new ArrayList<>();
 
@@ -119,6 +119,7 @@ public class RuleParser {
             final ParseTree child = children.get(i);
             if (child.category.equals(REGEX_DELIMITER)) break;
 
+            //noinspection unchecked
             final char[] chars = ((ParseTree.Leaf<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
             for (char c : chars) modifiers.add(Character.toString(c));
         }
@@ -130,6 +131,7 @@ public class RuleParser {
         if (modifiers.contains("d")) flag = flag | Pattern.UNIX_LINES;
         if (modifiers.contains("i")) flag = flag | Pattern.CASE_INSENSITIVE;
 
+        //noinspection unchecked
         return new RegexTerminal(
                 children.subList(1, i).stream()
                         .map(t -> ((ParseTree.Leaf<String>) t))
@@ -148,7 +150,7 @@ public class RuleParser {
                         : ParseTree.FlattenOption.KEEP;
             else
                 return ParseTree.FlattenOption.REMOVE;
-        } else if (Stream.of(REGEX, CATEGORY).filter(c -> parseTree.category.equals(c)).findAny().isPresent())
+        } else if (Stream.of(REGEX, CATEGORY).anyMatch(parseTree.category::equals))
             return ParseTree.FlattenOption.KEEP;
         else if (parseTree instanceof ParseTree.NonLeaf)
             return ParseTree.FlattenOption.KEEP_ONLY_CHILDREN;
@@ -174,6 +176,7 @@ public class RuleParser {
         final boolean isSimpleCategory = parseTree.category.equals(CATEGORY);
         final boolean isRegex = parseTree.category.equals(REGEX);
         if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
+        //noinspection unchecked
         return isRegex ? parseRegexTerminal(parseTree) : parseCategory.apply(parseTree.children.stream()
                 .map(t -> (ParseTree.Leaf<String>) t)
                 .map(t -> t.token.obj)

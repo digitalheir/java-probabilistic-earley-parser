@@ -297,7 +297,7 @@ public class ParserTest {
                 .addRule(0.8, S, A)
                 .addRule(0.7, S, S, A)
                 .addRule(0.6, A, a, a, period)
-                .addRule(0.5, A, b, b, NonLexicalToken.get(), period)
+                .addRule(0.5, A, b, b, NonLexicalToken.INSTANCE, period)
                 .build();
         List<Token<String>> tokens = Tokens.tokenize("a a . b b z a . a a .");
 
@@ -361,7 +361,7 @@ public class ParserTest {
                 .addRule(0.9, S, S, A)
                 .addRule(0.1, A, a, a, period)
                 .addRule(1, A, c, c, period)
-                .addRule(0.9, A, NonLexicalToken.get(), period)
+                .addRule(0.9, A, NonLexicalToken.INSTANCE, period)
                 .build();
 
         final List<Token<String>> s0 = Tokens.tokenize("c c . ");
@@ -388,7 +388,7 @@ public class ParserTest {
                 .addRule(0.8, S, A)
                 .addRule(0.7, S, S, A)
                 .addRule(0.6, A, a, a, period)
-                .addRule(0.5, A, NonLexicalToken.get(), period)
+                .addRule(0.5, A, NonLexicalToken.INSTANCE, period)
                 .build();
         List<Token<String>> tokens = Tokens.tokenize("a a . a b c d e f g h i j k l m n o p q r s t u v w x y z a . a a .");
 
@@ -405,7 +405,7 @@ public class ParserTest {
     public void scanModeSynchronizeSimple() throws Exception {
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(1.0, S, A)
-                .addRule(0.2, A, NonLexicalToken.get(), period)
+                .addRule(0.2, A, NonLexicalToken.INSTANCE, period)
                 .build();
         List<Token<String>> tokens = Tokens.tokenize("z a .");
 
@@ -420,7 +420,7 @@ public class ParserTest {
     public void scanModeSynchronizeSimple2() throws Exception {
         Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(0.2, S, A, A)
-                .addRule(0.2, A, NonLexicalToken.get(), period)
+                .addRule(0.2, A, NonLexicalToken.INSTANCE, period)
                 .build();
         List<Token<String>> tokens = Tokens.tokenize("z a . a .");
 

@@ -147,13 +147,13 @@ public class ChartWithInputPosition<T> {
             //noinspection unchecked
             final double scanProbAtPosition = Scan.getScanProb(
                     scanProbability,
-                    new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.get())),
+                    new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.INSTANCE)),
                     endPositionInclusive
             );
             //noinspection unchecked
             scanProbPow = IntStream.range(startPositionInclusive, endPositionInclusive)
                     .mapToDouble(p -> Scan.getScanProb(scanProbability,
-                            new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.get())),
+                            new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.INSTANCE)),
                             p
                     ))
                     .reduce(scanProbAtPosition, sr::times);
@@ -202,7 +202,7 @@ public class ChartWithInputPosition<T> {
             })) {
                 // TODO If there are no <error> rules active on this terminal, advance <error>
                 //noinspection unchecked
-                categories = Collections.singleton(NonLexicalToken.get());
+                categories = Collections.singleton(NonLexicalToken.INSTANCE);
             }
 
 
@@ -212,9 +212,9 @@ public class ChartWithInputPosition<T> {
             chart.predict(indexForChart, token);
             final Collection<State> justScannedErrors = chart.stateSets.activeStates.getJustScannedError(indexForChart);
             if (justScannedErrors != null && justScannedErrors.size() > 0) {
-                if (!categories.contains(NonLexicalToken.get())) {
+                if (!categories.contains(NonLexicalToken.INSTANCE)) {
                     //noinspection unchecked
-                    categories.add(NonLexicalToken.get());
+                    categories.add(NonLexicalToken.INSTANCE);
                 }
                 chart.predictError(justScannedErrors);
             }

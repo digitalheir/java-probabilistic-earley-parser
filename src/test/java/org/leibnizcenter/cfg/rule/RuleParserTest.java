@@ -5,6 +5,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.category.terminal.stringterminal.RegexTerminal;
 
@@ -80,7 +81,7 @@ public class RuleParserTest {
     @Test
     public void parseErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
+            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? (Terminal) NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s));
         }, LogSemiring.get()).fromString("S -> A " +
                 NonLexicalToken.ERROR_SYMBOL +
                 " B");
@@ -91,7 +92,7 @@ public class RuleParserTest {
     @Test
     public void parseNonErrorRule() throws Exception {
         Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.get() : new CaseInsensitiveStringTerminal(s));
+            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? (Terminal) NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s));
         }, LogSemiring.get()).fromString("S -> A B");
 
         assertFalse(rule instanceof LexicalErrorRule);

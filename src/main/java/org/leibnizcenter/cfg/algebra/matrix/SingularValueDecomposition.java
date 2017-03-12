@@ -321,6 +321,29 @@ class SingularValueDecomposition {
         }
     }
 
+    private static void initializeWithZero(int m, double[] work, int k) {
+        for (int i = k + 1; i < m; i++) {
+            work[i] = 0.0;
+        }
+    }
+
+    private static void placetransofrmationblahblah(double[][] a, int m, double[][] u, int k) {
+        for (int i = k; i < m; i++) {
+            u[i][k] = a[i][k];
+        }
+    }
+
+    private static void applyTransformation(double[][] a, int m, int k, int j) {
+        double t = 0;
+        for (int i = k; i < m; i++) {
+            t += a[i][k] * a[i][j];
+        }
+        t = -t / a[k][k];
+        for (int i = k; i < m; i++) {
+            a[i][j] += t * a[i][k];
+        }
+    }
+
     private void generateU(int m, int nu, double[][] u, int nct) {
         for (int j = nct; j < nu; j++) {
             for (int i = 0; i < m; i++) {
@@ -421,7 +444,7 @@ class SingularValueDecomposition {
 
             // Apply the transformation.
 
-            loopthruk(m, work, k);
+            initializeWithZero(m, work, k);
             somemorelooping(a, m, e, work, k);
             loopyloop(a, m, e, work, k);
         }
@@ -431,12 +454,6 @@ class SingularValueDecomposition {
 
         for (int i = k + 1; i < n; i++) {
             v[i][k] = e[i];
-        }
-    }
-
-    private void loopthruk(int m, double[] work, int k) {
-        for (int i = k + 1; i < m; i++) {
-            work[i] = 0.0;
         }
     }
 
@@ -454,23 +471,6 @@ class SingularValueDecomposition {
             for (int i = k + 1; i < m; i++) {
                 a[i][j] += t * work[i];
             }
-        }
-    }
-
-    private void placetransofrmationblahblah(double[][] a, int m, double[][] u, int k) {
-        for (int i = k; i < m; i++) {
-            u[i][k] = a[i][k];
-        }
-    }
-
-    private void applyTransformation(double[][] a, int m, int k, int j) {
-        double t = 0;
-        for (int i = k; i < m; i++) {
-            t += a[i][k] * a[i][j];
-        }
-        t = -t / a[k][k];
-        for (int i = k; i < m; i++) {
-            a[i][j] += t * a[i][k];
         }
     }
 

@@ -104,7 +104,7 @@ public class GrammarTest {
 //}
 
     /**
-     * Test method for {@link Grammar#getRules(Category)}.
+     * Test method for {@link Grammar#getRules(NonTerminal)}.
      */
     @Test
     public final void testGetRules() {

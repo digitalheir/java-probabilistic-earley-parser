@@ -1,8 +1,10 @@
 package org.leibnizcenter.cfg.earleyparser.scan;
 
 /**
+ * When scanning goes wrong
  * Created by maarten on 8-2-17.
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class ScanException extends RuntimeException {
     public ScanException() {
     }

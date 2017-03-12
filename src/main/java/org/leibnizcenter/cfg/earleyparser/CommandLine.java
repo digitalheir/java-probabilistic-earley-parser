@@ -23,12 +23,12 @@ import java.util.stream.Stream;
  */
 public class CommandLine {
 
-    private static final String USAGE = "First specify the location to a grammar file with -i and the goal category with -goal, and then pass input words" + "\n" +
-            "\nFor example: java parser.jar -i grammar.cfg -goal S i eat" + "\n" +
-            "\nA grammar file looks something like this:" + "\n" +
-            "S -> NP VP" + "\n" +
-            "NP -> i" + "\n" +
-            "VP -> eat" + "\n";
+    private static final String USAGE = "First specify the location to a grammar file with -i and the goal category with -goal, and then pass input words" + '\n' +
+            "\nFor example: java parser.jar -i grammar.cfg -goal S i eat" + '\n' +
+            "\nA grammar file looks something like this:" + '\n' +
+            "S -> NP VP" + '\n' +
+            "NP -> i" + '\n' +
+            "VP -> eat" + '\n';
     private static final String OPTION_GOAL = "goal";
     private static final String OPTION_SCAN_MODE = "scanmode";
     private static final String INPUT_FILE = "i";
@@ -131,7 +131,7 @@ public class CommandLine {
                 try {
                     grammar = Grammar.fromString(inputFile, Charset.forName("UTF8"));
                 } catch (IOException e) {
-                    throw new IllegalArgumentException("Could not parse file at " + inputFile.toAbsolutePath() + "\n" + USAGE);
+                    throw new IllegalArgumentException("Could not parse file at " + inputFile.toAbsolutePath() + '\n' + USAGE);
                 }
             }
         }

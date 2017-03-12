@@ -5,15 +5,22 @@ import org.leibnizcenter.cfg.token.Token;
 import java.util.regex.Pattern;
 
 /**
+ * <p>
+ * A terminal that matches a {@link Pattern Regex pattern}
+ * </p>
+ * <p>
  * Created by maarten on 7-2-17.
+ * </p>
  */
 public class RegexTerminal implements StringTerminal {
     public final Pattern pattern;
 
+    @SuppressWarnings("unused")
     public RegexTerminal(Pattern pattern) {
         this.pattern = pattern;
     }
 
+    @SuppressWarnings("unused")
     public RegexTerminal(String pattern) {
         this.pattern = Pattern.compile(pattern);
     }
@@ -34,9 +41,7 @@ public class RegexTerminal implements StringTerminal {
 
         RegexTerminal that = (RegexTerminal) o;
 
-        if (!pattern.equals(that.pattern)) return false;
-
-        return true;
+        return pattern.equals(that.pattern);
     }
 
     @Override

@@ -65,6 +65,7 @@ public class Perf {
             p.getViterbiParseWithScore(S, tokens, parseOptions);
             long timeEnd = System.currentTimeMillis();
             final long time = timeEnd - timeStart;
+            //noinspection ObjectAllocationInLoop
             l.add(new long[]{i, time});
             System.out.println(i + "\t" + (i == 0 ? 0 : time));
             tokens.add(a);

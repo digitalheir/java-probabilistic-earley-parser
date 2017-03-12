@@ -245,7 +245,7 @@ public class Rule {
      * @return Whether this state is a unit production
      */
     public boolean isUnitProduction() {
-        return getRight().length == 1 && getRight()[0] instanceof NonTerminal;
+        return right.length == 1 && right[0] instanceof NonTerminal;
     }
 
 

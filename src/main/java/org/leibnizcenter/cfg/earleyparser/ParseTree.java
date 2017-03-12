@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -112,7 +111,7 @@ public abstract class ParseTree {
     }
 
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(500);
         toString(sb, "", true);
         return sb.toString();
     }
@@ -121,8 +120,8 @@ public abstract class ParseTree {
         sb.append(prefix)
                 .append(isTail ? "└── " : "├── ")
                 .append(category.toString())
-                .append((this instanceof Leaf) ? (" (" + ((Leaf) this).token + ")") : "")
-                .append("\n");
+                .append((this instanceof Leaf) ? (" (" + ((Leaf) this).token + ')') : "")
+                .append('\n');
         if (children != null) {
             for (int i = 0; i < children.size() - 1; i++) {
                 children.get(i).toString(sb, prefix + (isTail ? "    " : "│   "), false);
@@ -150,7 +149,7 @@ public abstract class ParseTree {
      * Removes all superfluous categories from this tree. What is superfluous is determined by given function.
      *
      * @param subTreesToKeep A function that returns the {@link FlattenOption} that specifies how to deal with the given tree node.
-     * @return
+     * @return Newly instantiated tree
      */
     public ParseTree flatten(BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
         return flatten(new ArrayList<>(), subTreesToKeep);
@@ -170,7 +169,7 @@ public abstract class ParseTree {
     }
 
     /**
-     * Specifies how to {@link #flatten(Function) flatten} a {@link ParseTree}.
+     * Specifies how to {@link #flatten(List, BiFunction) flatten} a {@link ParseTree}.
      */
     public enum FlattenOption {
         /**
@@ -190,11 +189,13 @@ public abstract class ParseTree {
     public static class Leaf<E> extends ParseTree {
         public final org.leibnizcenter.cfg.token.Token<E> token;
 
+        @SuppressWarnings("WeakerAccess")
         public Leaf(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
             super(category, null);
             this.token = scannedToken;
         }
 
+        @SuppressWarnings("WeakerAccess")
         public Leaf(ScannedToken<E> scannedState) {
             this(scannedState.scannedToken, scannedState.scannedCategory);
         }
@@ -229,9 +230,14 @@ public abstract class ParseTree {
         @Override
         public String toString() {
             if (super.category instanceof NonLexicalToken)
-                return "[!" + super.toString() + "]";
+                return "[!" + super.toString() + ']';
             else
                 return super.toString();
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
     }
 }

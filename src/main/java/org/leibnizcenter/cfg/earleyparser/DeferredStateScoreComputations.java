@@ -3,7 +3,6 @@ package org.leibnizcenter.cfg.earleyparser;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.grammar.AtomFactory;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
 import java.util.HashMap;
@@ -14,12 +13,10 @@ import java.util.Map;
 public class DeferredStateScoreComputations {
     public final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
-    private AtomFactory atoms;
 
     public DeferredStateScoreComputations(Grammar grammar) {
         this.states = new HashMap<>();
         this.semiring = grammar.semiring;
-        this.atoms = grammar.atoms;
     }
 
     public ExpressionWrapper getOrCreate(State state,

@@ -39,8 +39,8 @@ public class LexicalErrorRule extends Rule {
     /**
      * @param semiring    semiring to use, usually you'll want {@link org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring LogSemiring}
      * @param probability probability (between 0.0 and 1.0)
-     * @param LHS
-     * @param RHS
+     * @param LHS left hand side
+     * @param RHS right hand side
      */
     public static LexicalErrorRule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
         return new LexicalErrorRule(probability, semiring.fromProbability(probability), LHS, RHS);
@@ -51,4 +51,8 @@ public class LexicalErrorRule extends Rule {
         return o instanceof LexicalErrorRule && super.equals(o);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

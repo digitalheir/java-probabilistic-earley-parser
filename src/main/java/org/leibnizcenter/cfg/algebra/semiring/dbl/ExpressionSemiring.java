@@ -1,5 +1,7 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
+import org.leibnizcenter.cfg.earleyparser.Atom;
+
 import java.text.DecimalFormat;
 
 /**
@@ -9,58 +11,62 @@ import java.text.DecimalFormat;
  */
 public abstract class ExpressionSemiring implements DblSemiring {
     private static final DecimalFormat df = new DecimalFormat("0.00");
+    private final double ONE;
+    private final double ZERO;
 
-
-//    public Resolvable times(Resolvable r1, Resolvable r2, Resolvable r3) {
-//        if (isMultiplicativeIdentity(r1)) return times(r2, r3);
-//        else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
-//        else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
-//         return new Times(r1, r2, r3);
-//    }
-
-    public Resolvable times(double r1, Resolvable r2, Resolvable r3) {
-//        if (isMultiplicativeIdentity(r1)) return times(r2, r3);
-//        else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
-//        else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
-        if (r1 == one()) return new Times(r2, r3);
-        return new DblTimes(r1, r2, r3);
+    ExpressionSemiring() {
+        ONE = one();
+        ZERO = zero();
     }
 
-    //    private Resolvable times(Resolvable r1, Resolvable r2) {
-//        if (isMultiplicativeIdentity(r1)) return r2;
-//        else if (isMultiplicativeIdentity(r2)) return r1;
-//         return new Times(r1, r2);
-//    }
-//
-//    public Resolvable times(double r1, Resolvable r2) {
-////        if (isMultiplicativeIdentity(r1)) return r2;
-////        else if (isMultiplicativeIdentity(r2)) return new Atom(r1);
-//        if (r1 == one()) return r2;
-//        return new DblTimes(r1, r2);
-//    }
-//
-//    private boolean isMultiplicativeIdentity(Resolvable r) {
-//        return r instanceof Atom && isMultiplicativeIdentity(((Atom) r).value);
-//    }
-//
-//    private boolean isMultiplicativeIdentity(double d) {
-//        return d == this.one();
-//    }
-//
-//    private boolean isAdditiveIdentity(Resolvable x) {
-//        return x instanceof Atom && ((Atom) x).value == this.zero();
-//    }
+    /*     NOTE:
+     *   Checking for multiplicative and additive identities doesn't seem to add any performance in practice!
+     */
+    public Resolvable times(double r1, Resolvable r2, Resolvable r3) {
+        if (r1 == ONE) return times(r2, r3);
+        else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
+        else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
+        else
+            return new DblTimes(r1, r2, r3);
+    }
+
+    private Resolvable times(Resolvable r1, Resolvable r2) {
+        if (isMultiplicativeIdentity(r1)) return r2;
+        else if (isMultiplicativeIdentity(r2)) return r1;
+        return new Times(r1, r2);
+    }
+
+    public Resolvable times(double r1, Resolvable r2) {
+        if (r1 == ONE) return r2;
+        else if (isMultiplicativeIdentity(r2)) return new Atom(r1);
+        else
+            return new DblTimes(r1, r2);
+    }
 
     public Resolvable plus(Resolvable r1, Resolvable r2) {
-//        if (isAdditiveIdentity(r1)) return r2;
-//        else if (isAdditiveIdentity(r2)) return r1;
-        return new Plus(r1, r2);
+        if (isAdditiveIdentity(r1)) return r2;
+        else if (isAdditiveIdentity(r2)) return r1;
+        else
+            return new Plus(r1, r2);
     }
 
     public Resolvable plus(Resolvable r1, double r2) {
-        if (r2 == zero()) return r1;
-        return new DblPlus(r1, r2);
+        if (r2 == ZERO)
+            return r1;
+        else if (isAdditiveIdentity(r1))
+            return new Atom(r2);
+        else
+            return new DblPlus(r1, r2);
     }
+
+    private boolean isMultiplicativeIdentity(Resolvable r) {
+        return r instanceof Atom && ((Atom) r).value == ONE;
+    }
+
+    private boolean isAdditiveIdentity(Resolvable x) {
+        return x instanceof Atom && ((Atom) x).value == this.zero();
+    }
+
 
     private final class Plus extends Resolvable {
         private final Resolvable right;
@@ -82,7 +88,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
         @Override
         public String toString() {
-            return "(" + left.toString() + " + " + right.toString() + ")" + (lock ? "=" + df.format(toProbability(cached)) : "");
+            return '(' + left.toString() + " + " + right.toString() + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -92,10 +98,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             Plus plus = (Plus) o;
 
-            if (!right.equals(plus.right)) return false;
-            if (!left.equals(plus.left)) return false;
-
-            return true;
+            return right.equals(plus.right) && left.equals(plus.left);
         }
 
         @Override
@@ -126,7 +129,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
         @Override
         public String toString() {
-            return "(" + left + " + " + right + ")" + (lock ? "=" + df.format(toProbability(cached)) : "");
+            return "(" + left + " + " + right + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -136,10 +139,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             DblPlus dblPlus = (DblPlus) o;
 
-            if (Double.compare(dblPlus.right, right) != 0) return false;
-            if (!left.equals(dblPlus.left)) return false;
-
-            return true;
+            return Double.compare(dblPlus.right, right) == 0 && left.equals(dblPlus.left);
         }
 
         @Override
@@ -157,29 +157,20 @@ public abstract class ExpressionSemiring implements DblSemiring {
     private final class Times extends Resolvable {
         private final Resolvable right;
         private final Resolvable left;
-        private final Resolvable right2;
 
-        private Times(Resolvable left, Resolvable right, Resolvable right2) {
+        Times(Resolvable left, Resolvable right) {
             this.left = left;
             this.right = right;
-            this.right2 = right2;
-        }
-
-        public Times(Resolvable left, Resolvable right) {
-            this.left = left;
-            this.right = right;
-            right2 = null;
         }
 
         @Override
         public double resolve() {
-            final double firstPart = times(left.resolveFinal(), right.resolveFinal());
-            return (right2 == null) ? firstPart : times(firstPart, right2.resolveFinal());
+            return times(left.resolveFinal(), right.resolveFinal());
         }
 
         @Override
         public String toString() {
-            return "(" + left.toString() + " * " + right.toString() + (right2 == null ? "" : (" * " + right2.toString())) + ")" + (lock ? "=" + df.format(toProbability(cached)) : "");
+            return '(' + left.toString() + " * " + right.toString() + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -189,7 +180,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             Times times = (Times) o;
 
-            return right.equals(times.right) && left.equals(times.left) && (right2 != null ? right2.equals(times.right2) : times.right2 == null);
+            return right.equals(times.right) && left.equals(times.left);
 
         }
 
@@ -197,17 +188,16 @@ public abstract class ExpressionSemiring implements DblSemiring {
         public int hashCode() {
             int result = right.hashCode();
             result = 31 * result + left.hashCode();
-            result = 31 * result + (right2 != null ? right2.hashCode() : 0);
             return result;
         }
     }
 
-    private class DblTimes extends Resolvable {
+    private final class DblTimes extends Resolvable {
         private final double left;
         private final Resolvable right;
         private final Resolvable right2;
 
-        public DblTimes(double left, Resolvable right) {
+        DblTimes(double left, Resolvable right) {
             this.left = left;
             this.right = right;
             this.right2 = null;
@@ -227,7 +217,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
         @Override
         public String toString() {
-            return "(" + left + " * " + right.toString() + (right2 == null ? "" : (" * " + right2.toString())) + ")" + (lock ? "=" + df.format(toProbability(cached)) : "");
+            return "(" + left + " * " + right.toString() + (right2 == null ? "" : (" * " + right2.toString())) + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -237,11 +227,9 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             DblTimes dblTimes = (DblTimes) o;
 
-            if (Double.compare(dblTimes.left, left) != 0) return false;
-            if (!right.equals(dblTimes.right)) return false;
-            if (right2 != null ? !right2.equals(dblTimes.right2) : dblTimes.right2 != null) return false;
-
-            return true;
+            return Double.compare(dblTimes.left, left) == 0
+                    && right.equals(dblTimes.right)
+                    && (right2 != null ? right2.equals(dblTimes.right2) : dblTimes.right2 == null);
         }
 
         @Override

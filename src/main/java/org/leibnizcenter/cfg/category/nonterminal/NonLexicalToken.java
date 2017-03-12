@@ -10,10 +10,6 @@ public final class NonLexicalToken implements Terminal, KleeneClosure {
     private NonLexicalToken() {
     }
 
-    public static Terminal get() {
-        return INSTANCE;
-    }
-
     @Override
     public boolean equals(Object o) {
         return o == this;

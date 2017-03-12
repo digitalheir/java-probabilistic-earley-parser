@@ -38,6 +38,10 @@ public interface Category {
             return obj instanceof NonTerminal && this == obj;
         }
 
+        @Override
+        public int hashCode() {
+            return super.hashCode() + 1;
+        }
     };
 
     /**

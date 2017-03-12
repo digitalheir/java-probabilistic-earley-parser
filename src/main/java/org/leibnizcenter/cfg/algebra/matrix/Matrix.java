@@ -57,7 +57,7 @@ public class Matrix {
      *
      * @serial internal array storage.
      */
-    private double[][] A;
+    private double[][] array;
 
     /**
      * Construct an m-by-n matrix of zeros.
@@ -69,33 +69,7 @@ public class Matrix {
     public Matrix(int m, int n) {
         this.m = m;
         this.n = n;
-        A = new double[m][n];
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Matrix matrix = (Matrix) o;
-
-        return m == matrix.m && n == matrix.n && Arrays.deepEquals(A, matrix.A);
-
-    }
-
-    @Override
-    public String toString() {
-        return "Matrix{" +
-                "A=" + Arrays.toString(A) +
-                '}';
-    }
-
-    @Override
-    public int hashCode() {
-        int result = m;
-        result = 31 * result + n;
-        result = 31 * result + Arrays.deepHashCode(A);
-        return result;
+        array = new double[m][n];
     }
 
     /**
@@ -110,10 +84,10 @@ public class Matrix {
     public Matrix(int m, int n, double s) {
         this.m = m;
         this.n = n;
-        A = new double[m][n];
+        array = new double[m][n];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                A[i][j] = s;
+                array[i][j] = s;
             }
         }
     }
@@ -121,33 +95,33 @@ public class Matrix {
     /**
      * Construct a matrix from a 2-D array.
      *
-     * @param A Two-dimensional array of doubles.
+     * @param array Two-dimensional array of doubles.
      * @throws IllegalArgumentException All rows must have the same length
      */
 
     @SuppressWarnings("unused")
-    public Matrix(double[][] A) {
-        m = A.length;
-        n = A[0].length;
+    public Matrix(double[][] array) {
+        m = array.length;
+        n = array[0].length;
         for (int i = 0; i < m; i++) {
-            if (A[i].length != n) {
+            if (array[i].length != n) {
                 throw new IllegalArgumentException("All rows must have the same length.");
             }
         }
-        this.A = A;
+        this.array = array;
     }
 
     /**
      * Construct a matrix quickly without checking arguments.
      *
-     * @param A Two-dimensional array of doubles.
-     * @param m Number of rows.
-     * @param n Number of colums.
+     * @param array Two-dimensional array of doubles.
+     * @param m     Number of rows.
+     * @param n     Number of colums.
      */
 
     @SuppressWarnings("WeakerAccess")
-    public Matrix(double[][] A, int m, int n) {
-        this.A = A;
+    public Matrix(double[][] array, int m, int n) {
+        this.array = array;
         this.m = m;
         this.n = n;
     }
@@ -167,10 +141,10 @@ public class Matrix {
         if (m * n != vals.length) {
             throw new IllegalArgumentException("Array length must be a multiple of m.");
         }
-        A = new double[m][n];
+        array = new double[m][n];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                A[i][j] = vals[i + j * m];
+                array[i][j] = vals[i + j * m];
             }
         }
     }
@@ -186,13 +160,39 @@ public class Matrix {
     @SuppressWarnings("WeakerAccess")
     public static Matrix identity(int m, int n) {
         Matrix A = new Matrix(m, n);
-        double[][] X = A.getArray();
+        double[][] X = A.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 X[i][j] = (i == j ? 1.0 : 0.0);
             }
         }
         return A;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Matrix matrix = (Matrix) o;
+
+        return m == matrix.m && n == matrix.n && Arrays.deepEquals(array, matrix.array);
+
+    }
+
+    @Override
+    public String toString() {
+        return "Matrix{" +
+                "A=" + Arrays.toString(array) +
+                '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int result = m;
+        result = 31 * result + n;
+        result = 31 * result + Arrays.deepHashCode(array);
+        return result;
     }
 
     /**
@@ -202,7 +202,7 @@ public class Matrix {
      */
 
     double[][] getArray() {
-        return A;
+        return array;
     }
 
     /**
@@ -214,7 +214,7 @@ public class Matrix {
     double[][] getArrayCopy() {
         double[][] C = new double[m][n];
         for (int i = 0; i < m; i++) {
-            System.arraycopy(A[i], 0, C[i], 0, n);
+            System.arraycopy(array[i], 0, C[i], 0, n);
         }
         return C;
     }
@@ -248,7 +248,7 @@ public class Matrix {
      */
 
     public double get(int i, int j) {
-        return A[i][j];
+        return array[i][j];
     }
 
     /**
@@ -260,10 +260,10 @@ public class Matrix {
      */
     Matrix getMatrix(int i1, int j1) {
         Matrix X = new Matrix(i1 + 1, j1 + 1);
-        double[][] B = X.getArray();
+        double[][] B = X.array;
         try {
             for (int i = 0; i <= i1; i++) {
-                System.arraycopy(A[i], 0, B[i], 0, j1 + 1);
+                System.arraycopy(array[i], 0, B[i], 0, j1 + 1);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
@@ -281,10 +281,10 @@ public class Matrix {
 
     Matrix getMatrix(int[] r, int j1) {
         Matrix X = new Matrix(r.length, j1 + 1);
-        double[][] B = X.getArray();
+        double[][] B = X.array;
         try {
             for (int i = 0; i < r.length; i++) {
-                System.arraycopy(A[r[i]], 0, B[i], 0, j1 + 1);
+                System.arraycopy(array[r[i]], 0, B[i], 0, j1 + 1);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
@@ -301,7 +301,7 @@ public class Matrix {
      */
 
     public void set(int i, int j, double s) {
-        A[i][j] = s;
+        array[i][j] = s;
     }
 
     /**
@@ -317,14 +317,14 @@ public class Matrix {
             throw new IllegalArgumentException("Matrix inner dimensions must agree.");
         }
         Matrix X = new Matrix(m, B.n);
-        double[][] C = X.getArray();
+        double[][] C = X.array;
         double[] Bcolj = new double[n];
         for (int j = 0; j < B.n; j++) {
             for (int k = 0; k < n; k++) {
-                Bcolj[k] = B.A[k][j];
+                Bcolj[k] = B.array[k][j];
             }
             for (int i = 0; i < m; i++) {
-                double[] Arowi = A[i];
+                double[] Arowi = array[i];
                 double s = 0;
                 for (int k = 0; k < n; k++) {
                     s += Arowi[k] * Bcolj[k];
@@ -377,10 +377,10 @@ public class Matrix {
     public Matrix minus(Matrix B) {
         checkMatrixDimensions(B);
         Matrix X = new Matrix(m, n);
-        double[][] C = X.getArray();
+        double[][] C = X.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                C[i][j] = A[i][j] - B.A[i][j];
+                C[i][j] = array[i][j] - B.array[i][j];
             }
         }
         return X;
@@ -397,8 +397,8 @@ public class Matrix {
     }
 
     public void forEach(CellHandler cellHandler) {
-        for (int i = 0; i < A.length; i++) {
-            double[] row = A[i];
+        for (int i = 0; i < array.length; i++) {
+            double[] row = array[i];
             for (int j = 0; j < row.length; j++)
                 cellHandler.consume(i, j, row[j]);
         }
