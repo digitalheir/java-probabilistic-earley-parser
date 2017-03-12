@@ -18,7 +18,7 @@ public class NonTerminalTest {
 
     @Test
     public void testHashCode() throws Exception {
-        assertTrue(START.hashCode() == NonTerminal.of(START.name).hashCode());
+        assertFalse(START.hashCode() == NonTerminal.of(START.name).hashCode());
         assertFalse(START.hashCode() == NonTerminal.of("123").hashCode());
     }
 }
