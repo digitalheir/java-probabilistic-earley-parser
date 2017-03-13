@@ -206,27 +206,21 @@ public class Chart<T> {
     }
 
     public void predictError(Collection<State> justScannedErrors) {
-        // Copy set to avoid concurrent modification
         justScannedErrors.forEach(justScannedErrorState -> {
             final double prevForward = stateSets.forwardScores.get(justScannedErrorState);
             final double prevInner = stateSets.innerScores.get(justScannedErrorState);
 
-            // γ' = P(Y → v)
-            final double ruleProbability = grammar.semiring.one();
 
-            State predicted = State.create(
+            final State predictedState = State.create(
                     justScannedErrorState.position,
                     justScannedErrorState.ruleStartPosition,
                     justScannedErrorState.ruleDotPosition - 1,
                     justScannedErrorState.rule
             );
 
-            boolean isNewState = stateSets.addIfNew(predicted);
-            assert isNewState || (stateSets.innerScores.get(predicted) == ruleProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
-
-            stateSets.setViterbiScore(new State.ViterbiScore(ruleProbability, justScannedErrorState, predicted, grammar.semiring));
-            stateSets.forwardScores.increment(predicted, prevForward);
-            stateSets.innerScores.put(predicted, prevInner);
+            stateSets.setViterbiScore(new State.ViterbiScore(prevInner, justScannedErrorState, predictedState, grammar.semiring));
+            stateSets.forwardScores.increment(predictedState, prevForward);
+            stateSets.innerScores.put(predictedState, prevInner);
         });
     }
 
