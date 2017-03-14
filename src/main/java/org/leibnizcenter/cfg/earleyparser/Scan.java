@@ -43,11 +43,11 @@ public final class Scan {
         return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
     }
 
+    @Deprecated
     public static class Delta<T> {
         public final State preScanState;
         public final double postScanForward;
         public final double postScanInner;
-
         public final State nextState;
         public final Token<T> token;
 
@@ -55,7 +55,6 @@ public final class Scan {
                 Token<T> token, State preScanState,
                 double postScanForward,
                 double postScanInner,
-
                 Rule nextRule,
                 int nextPosition,
                 int nextRuleStart,
@@ -65,7 +64,7 @@ public final class Scan {
             this.postScanForward = postScanForward;
             this.postScanInner = postScanInner;
             this.token = token;
-            this.nextState = State.create(nextPosition, nextRuleStart, nextDot, nextRule); // todo instantiation is not necessary
+            this.nextState = State.create(nextPosition, nextRuleStart, nextDot, nextRule);
         }
     }
 }

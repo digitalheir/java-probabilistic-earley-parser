@@ -51,13 +51,13 @@ public class PanicMode {
                                                     token
                                             );
 
-                                            chart.stateSets.createStateAndSetScores(new Scan.Delta<>(
+                                            chart.stateSets.createStateAndSetScores(
                                                     token,
                                                     rootStateActiveOnError,
                                                     Scan.calculateForwardScore(scanProbPow, sr, newForward),
                                                     Scan.calculateInnerScore(scanProbPow, sr, newInner),
-                                                    preScanState.rule, position, preScanState.ruleStartPosition, preScanState.advanceDot()
-                                            ));
+                                                    State.create(position, preScanState.ruleStartPosition, preScanState.advanceDot(), preScanState.rule)
+                                            );
                                         }
                                     });
                         }

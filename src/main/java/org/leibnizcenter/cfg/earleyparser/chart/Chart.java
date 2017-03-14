@@ -218,7 +218,8 @@ public class Chart<T> {
                     justScannedErrorState.rule
             );
 
-            boolean isNewState = stateSets.addIfNew(predicted);
+            //boolean isNewState =
+            stateSets.addIfNew(predictedState);
             //todo
 //            assert isNewState || (stateSets.innerScores.get(predicted) == ruleProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
 
@@ -259,7 +260,8 @@ public class Chart<T> {
     }
 
     public void addPredictedStateToChart(State statePredecessor, double inner, double forward, State predicted) {
-        boolean isNewState = stateSets.addIfNew(predicted);
+//        boolean isNewState =
+        stateSets.addIfNew(predicted);
 
         //todo
         //assert isNewState || (stateSets.innerScores.get(predicted) == inner || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
@@ -315,16 +317,15 @@ public class Chart<T> {
                 final double postScanForward = Scan.calculateForwardScore(scanProb, semiring, newForward);
                 final double postScanInner = Scan.calculateInnerScore(scanProb, semiring, newInner);
 
-                final Scan.Delta<T> delta = new Scan.Delta<>(
+                // After we have calculated the delta, mutate the chart
+                stateSets.createStateAndSetScores(
                         tokenWithCategories.token,
                         preScanState,
                         postScanForward,
                         postScanInner,
                         /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
-                        preScanState.rule, chartPosition + 1, preScanState.ruleStartPosition, preScanState.advanceDot()
+                        State.create(chartPosition + 1, preScanState.ruleStartPosition, preScanState.advanceDot(), preScanState.rule)
                 );
-                // After we have calculated the delta, mutate the chart
-                stateSets.createStateAndSetScores(delta);
             }
         }
     }
@@ -343,18 +344,16 @@ public class Chart<T> {
          * Get all states that are have just scanned an <error> token, advance them
          */
         final Collection<State> justScannedErrors = stateSets.activeStates.getJustScannedError(tokenPosition);
-        if (justScannedErrors != null) justScannedErrors
-                .stream()
-                .map((State preScanState) -> new Scan.Delta<>(
+        if (justScannedErrors != null) justScannedErrors.forEach((State preScanState) ->
+                stateSets.createStateAndSetScores(
+                        // After we have calculated everything, we mutate the chart
                         tokenWithCategories.token,
                         preScanState,
                         stateSets.forwardScores.get(preScanState),
                         stateSets.innerScores.get(preScanState),
-                        /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
-                        preScanState.rule, tokenPosition + 1, preScanState.ruleStartPosition, preScanState.ruleDotPosition
-                ))
-                // After we have calculated everything, we mutate the chart
-                .forEach(stateSets::createStateAndSetScores);
+                    /* Create the state <code>i+1: X<sub>k</sub> → λt·μ</code>. Note that this state is unique for each preScanState */
+                        State.create(tokenPosition + 1, preScanState.ruleStartPosition, preScanState.ruleDotPosition, preScanState.rule)
+                ));
     }
 
     /**

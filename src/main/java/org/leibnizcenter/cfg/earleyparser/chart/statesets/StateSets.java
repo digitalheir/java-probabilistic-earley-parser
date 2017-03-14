@@ -136,11 +136,16 @@ public class StateSets<T> {
         return states.contains(s);
     }
 
-    public void createStateAndSetScores(Scan.Delta<T> score) {
-        Objects.requireNonNull(score.token);
+    public void createStateAndSetScores(
+            Token<T> token, State preScanState,
+            double postScanForward,
+            double postScanInner,
+            State nextState
+    ) {
+        Objects.requireNonNull(token);
         final DblSemiring sr = this.grammar.semiring;
         final State postScanState = this.getOrCreate(
-                score.nextState, score.token
+                nextState, token
         );
 
 //                    if (checkNoNewStatesAreDoubles.contains(rule, position, ruleStart, dot))
@@ -148,11 +153,15 @@ public class StateSets<T> {
 //                    else checkNoNewStatesAreDoubles.put(postScanState, postScanState);
 
         // Set forward score
-        forwardScores.put(postScanState, score.postScanForward);
+        forwardScores.put(postScanState, postScanForward);
         // Set inner score
-        innerScores.put(postScanState, score.postScanInner);
+        innerScores.put(postScanState, postScanInner);
         // Set Viterbi score
-        setViterbiScore(new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr));
+        setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
+    }
+
+    public void createStateAndSetScores(Scan.Delta<T> score) {
+        createStateAndSetScores(score.token, score.preScanState, score.postScanForward, score.postScanInner, score.nextState);
     }
 
     public void setViterbiScore(State.ViterbiScore viterbiScore) {
