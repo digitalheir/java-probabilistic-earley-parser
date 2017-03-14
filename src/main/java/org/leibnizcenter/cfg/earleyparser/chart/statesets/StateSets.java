@@ -4,13 +4,10 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.earleyparser.Complete;
-import org.leibnizcenter.cfg.earleyparser.Predict;
 import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
 
@@ -139,24 +136,8 @@ public class StateSets<T> {
         return states.contains(s);
     }
 
-    public void setScores(Predict.Delta delta) {
-        final ExpressionSemiring semiring = this.grammar.semiring;
-
-        if (delta.isNew) {
-            this.addIfNew(delta.predicted);
-        } else {
-            final double innerScore = this.innerScores.get(delta.predicted);
-            if (!(delta.Y_to_vProbability == innerScore || semiring.zero() == innerScore))
-                throw new IssueRequest(delta.Y_to_vProbability + " != " + innerScore);
-        }
-
-
-        setViterbiScore(new State.ViterbiScore(delta.Y_to_vProbability, delta.statePredecessor, delta.predicted, semiring));
-        this.forwardScores.increment(delta.predicted, delta.fw);
-        this.innerScores.put(delta.predicted, delta.Y_to_vProbability);
-    }
-
     public void createStateAndSetScores(Scan.Delta<T> score) {
+        Objects.requireNonNull(score.token);
         final DblSemiring sr = this.grammar.semiring;
         final State postScanState = this.getOrCreate(
                 score.nextState, score.token
@@ -167,15 +148,9 @@ public class StateSets<T> {
 //                    else checkNoNewStatesAreDoubles.put(postScanState, postScanState);
 
         // Set forward score
-        forwardScores.put(
-                postScanState,
-                score.postScanForward
-        );
+        forwardScores.put(postScanState, score.postScanForward);
         // Set inner score
-        innerScores.put(
-                postScanState,
-                score.postScanInner
-        );
+        innerScores.put(postScanState, score.postScanInner);
         // Set Viterbi score
         setViterbiScore(new State.ViterbiScore(score.postScanInner, score.preScanState, postScanState, sr));
     }

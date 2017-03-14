@@ -68,7 +68,6 @@ public final class Grammar<T> {
     /**
      * Reflexive, transitive closure of leftCorners, with the probabilities summed
      */
-    private final LeftCorners leftStarCorners;
     private final ScoresAsSemiringElements leftStarCornersAsSemiringElements;
 
     private final Set<NonTerminal> nonTerminals = new HashSet<>();
@@ -100,8 +99,11 @@ public final class Grammar<T> {
 
         this.semiring = semiring;
         leftCorners = new LeftCorners(semiring, nonTerminals, rules);
+
+        final LeftCorners leftStarCorners;
         leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);
+
         unitStarScores = getUnitStarCorners();
 
         final Map<Category, Set<Rule>> nonZeroLeftStartRules_ = new HashMap<>();
@@ -141,11 +143,12 @@ public final class Grammar<T> {
         /*
          * Copy all matrix values into our {@link LeftCorners} object
          */
-        IntStream.range(0, R_L.getRowDimension()).forEach(row ->
-                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring)
-                )
-        );
+        IntStream.range(0, R_L.getRowDimension())
+                .forEach(row ->
+                        IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
+                                R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring)
+                        )
+                );
         return R__L;
     }
 
@@ -324,16 +327,6 @@ public final class Grammar<T> {
         return leftCorners.getProbability(LHS, RHS);
     }
 
-    @SuppressWarnings("unused")
-    public LeftCorners getLeftCorners() {
-        return leftCorners;
-    }
-
-    @SuppressWarnings("unused")
-    public LeftCorners getLeftStarCorners() {
-        return leftStarCorners;
-    }
-
     public double getUnitStarScore(Category LHS, NonTerminal RHS) {
         return unitStarScores.get(LHS, RHS);
     }
@@ -382,7 +375,7 @@ public final class Grammar<T> {
             this.name = null;
         }
 
-        public Builder<E> setSemiring(ExpressionSemiring semiring) {
+        public Builder<E> withSemiring(ExpressionSemiring semiring) {
             this.semiring = semiring;
             this.rf = new RuleFactory(semiring);
             return this;

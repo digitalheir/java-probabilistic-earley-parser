@@ -122,4 +122,5 @@ public interface DblSemiring {
         else
             throw new IllegalArgumentException();
     }
+
 }

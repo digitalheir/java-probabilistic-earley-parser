@@ -30,6 +30,13 @@ public abstract class ExpressionSemiring implements DblSemiring {
             return new DblTimes(r1, r2, r3);
     }
 
+    public double times(double r1, double r2, double r3) {
+        if (r1 == ONE) return times(r2, r3);
+        else if (r2 == ONE) return times(r1, r3);
+        else if (r3 == ONE) return times(r1, r2);
+        else return times(times(r1, r2), r3);
+    }
+
     private Resolvable times(Resolvable r1, Resolvable r2) {
         if (isMultiplicativeIdentity(r1)) return r2;
         else if (isMultiplicativeIdentity(r2)) return r1;

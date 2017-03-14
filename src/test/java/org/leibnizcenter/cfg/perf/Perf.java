@@ -34,7 +34,7 @@ public class Perf {
 
         final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
-                .setSemiring(sr)
+                .withSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.1, S, S, S)
                 .addRule(1.0, A, B)

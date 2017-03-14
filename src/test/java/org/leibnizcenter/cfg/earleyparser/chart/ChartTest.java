@@ -84,7 +84,7 @@ public class ChartTest {
         final Rule rule3 = Rule.create(semiring, 1.0, X, Y, Z);
 
         Grammar<String> grammar = new Grammar.Builder<String>("test")
-                .setSemiring(semiring)
+                .withSemiring(semiring)
                 .addRule(ruleB)
                 .addRule(ruleC)
                 .addRule(ruleD)

@@ -9,9 +9,9 @@ import java.util.Locale;
  * <p>
  * Created by maarten on 11-6-16.
  */
+@SuppressWarnings("WeakerAccess")
 public class CaseInsensitiveStringTerminal implements StringTerminal {
     public final String string;
-    @SuppressWarnings("WeakerAccess")
     public final Locale locale;
 
     public CaseInsensitiveStringTerminal(String s) {
@@ -36,10 +36,7 @@ public class CaseInsensitiveStringTerminal implements StringTerminal {
 
         CaseInsensitiveStringTerminal that = (CaseInsensitiveStringTerminal) o;
 
-        if (!string.equals(that.string)) return false;
-        if (!locale.equals(that.locale)) return false;
-
-        return true;
+        return string.equals(that.string) && locale.equals(that.locale);
     }
 
     @Override

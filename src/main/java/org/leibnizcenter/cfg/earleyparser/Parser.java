@@ -175,6 +175,9 @@ public class Parser<T> {
                         state1,
                         chart
                 );
+                if (scannedToken == null) {
+                    throw new NullPointerException();
+                }
                 //noinspection unchecked
                 T.addRightMost(new ParseTree.Leaf<>(scannedToken));
                 return T;
@@ -300,11 +303,11 @@ public class Parser<T> {
         final StateSets<T> stateSets = chart.chart.stateSets;
         final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.chartIndex, Category.START);
 
-        IssueRequest.ensure(completedStates.size() <= 1,"Found more than one Viterbi parse. This is a bug.");
+        IssueRequest.ensure(completedStates.size() <= 1, "Found more than one Viterbi parse. This is a bug.");
 
         return completedStates.stream().findAny()
-                    .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
-                    .orElseThrow(() -> new RuntimeException("Could not parse sentence with goal " + S));
+                .map(state -> new ParseTreeWithScore(getViterbiParse(state, chart.chart), chart.chart.getViterbiScore(state), grammar.semiring))
+                .orElseThrow(() -> new RuntimeException("Could not parse sentence with goal " + S));
     }
 
     public Chart<T> parse(NonTerminal S,

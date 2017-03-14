@@ -32,7 +32,7 @@ import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
 public class Chart<T> {
     public final StateSets<T> stateSets;
     public final Grammar<T> grammar;
-    private final ParseOptions<T> parseOptions;
+    public final ParseOptions<T> parseOptions;
 
     /**
      * Creates a new chart, initializing its internal data structure.
@@ -218,6 +218,10 @@ public class Chart<T> {
                     justScannedErrorState.rule
             );
 
+            boolean isNewState = stateSets.addIfNew(predicted);
+            //todo
+//            assert isNewState || (stateSets.innerScores.get(predicted) == ruleProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
+
             stateSets.setViterbiScore(new State.ViterbiScore(prevInner, justScannedErrorState, predictedState, grammar.semiring));
             stateSets.forwardScores.increment(predictedState, prevForward);
             stateSets.innerScores.put(predictedState, prevInner);
@@ -228,36 +232,48 @@ public class Chart<T> {
     private void predictStatesForState(State statePredecessor) {
         final Category Z = statePredecessor.getActiveCategory();
         // For all productions Y → v such that R(Z =*L> Y) is nonzero
-        grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> {
-            // we predict state <code>i: Y<sub>i</sub> → ·v</code>
-            final double prevForward = stateSets.forwardScores.get(statePredecessor);
+        grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> predictStatesForRule(
+                statePredecessor,
+                Z,
+                Y_to_v
+        ));
+    }
 
-            // γ' = P(Y → v)
-            final double Y_to_vProbability = Y_to_v.probabilityAsSemiringElement;
+    private void predictStatesForRule(State statePredecessor, Category activeOnPredecessor, Rule Y_to_v) {
+        // we predict state <code>i: Y<sub>i</sub> → ·v</code>
+        final double prevForward = stateSets.forwardScores.get(statePredecessor);
 
-            // α' = α * R(Z =*L> Y) * P(Y → v)
-            final double newForward = grammar.semiring.times(prevForward, grammar.semiring.times(grammar.getLeftStarScore(Z, Y_to_v.left), Y_to_vProbability));
+        // γ' = P(Y → v)
+        final double Y_to_vProbability = Y_to_v.probabilityAsSemiringElement;
 
-            State predicted = State.create(statePredecessor.position, statePredecessor.position, 0, Y_to_v);
+        // α' = α * R(Z =*L> Y) * P(Y → v)
+        final double newForward = grammar.semiring.times(
+                prevForward,
+                grammar.getLeftStarScore(activeOnPredecessor, Y_to_v.left),
+                Y_to_vProbability
+        );
 
-            boolean isNewState = stateSets.addIfNew(predicted);
-            assert isNewState || (stateSets.innerScores.get(predicted) == Y_to_vProbability || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
+        State predicted = State.create(statePredecessor.position, statePredecessor.position, 0, Y_to_v);
 
-            stateSets.setViterbiScore(new State.ViterbiScore(Y_to_vProbability, statePredecessor, predicted, grammar.semiring));
-            stateSets.forwardScores.increment(predicted, newForward);
-            stateSets.innerScores.put(predicted, Y_to_vProbability);
-        });
+        addPredictedStateToChart(statePredecessor, Y_to_vProbability, newForward, predicted);
+    }
+
+    public void addPredictedStateToChart(State statePredecessor, double inner, double forward, State predicted) {
+        boolean isNewState = stateSets.addIfNew(predicted);
+
+        //todo
+        //assert isNewState || (stateSets.innerScores.get(predicted) == inner || stateSets.innerScores.get(predicted) == grammar.semiring.zero());
+
+        stateSets.setViterbiScore(new State.ViterbiScore(inner, statePredecessor, predicted, grammar.semiring));
+        stateSets.forwardScores.increment(predicted, forward);
+        stateSets.innerScores.put(predicted, inner);
     }
 
     public void scan(int i, TokenWithCategories<T> token) {
         final ScanProbability<T> scanProbability = parseOptions != null ? parseOptions.scanProbability : null;
         if (parseOptions != null) parseOptions.beforeScan(i, token, this);
 
-        scan(
-                i,
-                token,
-                scanProbability
-        );
+        scan(i, token, scanProbability);
 
         if (parseOptions != null) parseOptions.onScan(i, token, this);
     }
@@ -324,7 +340,7 @@ public class Chart<T> {
         if (tokenWithCategories == null)
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
         /*
-         * Get all states that are have just scanned an <error> token, advan e them
+         * Get all states that are have just scanned an <error> token, advance them
          */
         final Collection<State> justScannedErrors = stateSets.activeStates.getJustScannedError(tokenPosition);
         if (justScannedErrors != null) justScannedErrors

@@ -162,7 +162,7 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
     public void simpleRecursiveGrammar() throws Exception {
         final LogSemiring sr = LogSemiring.get();
         Grammar<String> grammar = new Grammar.Builder<String>()
-                .setSemiring(sr)
+                .withSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, S, S)
                 .build();

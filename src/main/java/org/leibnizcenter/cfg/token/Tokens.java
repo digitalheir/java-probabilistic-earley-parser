@@ -23,7 +23,7 @@ public final class Tokens {
      * Convenience method for tokenizing a string on whitespace.
      **/
     public static List<Token<String>> tokenize(String tokens) {
-        return tokenize(tokens, WHITESPACE, Token::new);
+        return tokenize(tokens.trim(), WHITESPACE, Token::new);
     }
 
     /**

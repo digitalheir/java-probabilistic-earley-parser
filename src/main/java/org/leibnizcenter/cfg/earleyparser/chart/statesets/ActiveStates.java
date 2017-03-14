@@ -26,7 +26,7 @@ public class ActiveStates<T> {
     private final TIntObjectHashMap<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new TIntObjectHashMap<>(500);
     private final Map<NonTerminal, TIntObjectHashMap<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
     private final MyMultimap<Integer, State> justScannedError = new MyMultimap<>(); // todo int
-    private Collection<State> activeOnNonLexicalToken = new HashSet<>();
+    public Collection<State> activeOnNonLexicalToken = new HashSet<>();
 
     /**
      * Runs in O(1).
@@ -162,7 +162,4 @@ public class ActiveStates<T> {
         return justScannedError.get(position);
     }
 
-    public Collection<State> getActiveOnNonLexicalToken() {
-        return activeOnNonLexicalToken;
-    }
 }
