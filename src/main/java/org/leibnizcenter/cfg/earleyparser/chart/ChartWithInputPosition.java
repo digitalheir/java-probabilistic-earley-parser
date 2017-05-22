@@ -69,7 +69,7 @@ public class ChartWithInputPosition<T> {
 //            final Set<Terminal<T>> categories = determineCategoriesForToken(grammar, callbacks, indexForTokenList, t);
 
         if (nullOrEmpty(categories)) {
-            final TokenNotInLexiconException notInLexiconException = new TokenNotInLexiconException(t, tokenIndex);
+            final TokenNotInLexiconException notInLexiconException = new TokenNotInLexiconException(t, tokenIndex, chartIndex);
             incidents.add(notInLexiconException);
             // if (callbacks == null) throw notInLexiconException;
         }

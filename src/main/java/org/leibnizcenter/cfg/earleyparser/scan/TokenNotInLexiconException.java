@@ -7,11 +7,13 @@ import org.leibnizcenter.cfg.token.Token;
  */
 public class TokenNotInLexiconException extends ScanException {
     public final Token token;
-    public final int index;
+    public final int indexTokens;
+    public final int indexChart;
 
-    public TokenNotInLexiconException(Token t, int index) {
-        super("Token not found in lexicon: " + index + ", " + t);
+    public TokenNotInLexiconException(Token t, int index, int chartIndex) {
+        super("Token not found in lexicon: [" + index + "]: " + t);
         this.token = t;
-        this.index = index;
+        this.indexTokens = index;
+        this.indexChart = chartIndex;
     }
 }

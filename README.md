@@ -183,12 +183,12 @@ public class Example {
             .build();
 
     public static void main(String[] args) {
-        Parser<String> parser = new Parser<>(grammar); 
+        Parser<String> parser = new Parser<>(grammar);
         System.out.println(
-                parser.recognize(S, Tokens.tokenize("The man     chased the man \n\t with a stick")) // true 
+                parser.recognize(S, Tokens.tokenize("The man     chased the man \n\t with a stick")) // true
         );
         System.out.println(
-                parser.getViterbiParseWithScore(S, Tokens.tokenize("the", "stick", "chased", "the", "man")) // Most likely parse tree with probability 
+                parser.getViterbiParseWithScore(S, Tokens.tokenize("the", "stick", "chased", "the", "man")) // Most likely parse tree with probability
         );
     }
 }

@@ -30,7 +30,8 @@ public enum ParsingMode {
 
     private static <T> int processTokenStrict(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
         if (nullOrEmpty(categories)) {
-            throw new TokenNotInLexiconException(t, indexForChart);/*TODO fix indexForChart, should be indexForTokens*/
+            throw new TokenNotInLexiconException(t, indexForChart, indexForChart);
+            /*TODO fix indexForChart, should be indexForTokens*/
         }
 
         return processTokenNormal(chart, indexForChart, t, categories);
