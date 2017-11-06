@@ -28,10 +28,10 @@ For example:
 
 This library allows you to do these things [efficiently](#runtime-complexity), as long as you can describe the rules as a [Context-free Grammar](https://en.wikipedia.org/wiki/Context-free_grammar) (CFG).
 
-The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences: we can order them by probability. Furthermore, this parser does not limit token types to strings.
+The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses sentences using [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences, because we can order multiple interpretations of the same sentence by probability. Furthermore, this parser does not limit token types to strings.
 
 The parser seems to work correctly and efficiently, but is still < v1.0 because I still
-want some extra utility functions and tests.
+want to add some extra utility functions and tests.
 
 For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Probabilistic Context-Free
            Parsing Algorithm that Computes Prefix
