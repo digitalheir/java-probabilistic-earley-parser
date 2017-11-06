@@ -238,7 +238,7 @@ Pull requests for these issues are welcome:
 * I have not provisioned for ε-rules (empty right-hand sign). [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/6)
 * Rule probability estimation may be performed using the inside-outside algorithm, but is not currently implemented. [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/3)
 * Higher level concepts such as * and + are not implemented
-* Error handling / logging could be better. [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/5)
+* Error handling / logging could be better, available as an experimental feature. [Issue.](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/5)
 * Viterbi parsing only returns one single parse. In the case of an ambiguous sentence, the returned parse is not guaranteed the left-most parse.
 * Behavior for strangely defined grammars is not defined, such as when the same rule is defined multiple times with
   a different probability. [Issue](https://github.com/digitalheir/java-probabilistic-earley-parser/issues/2)
