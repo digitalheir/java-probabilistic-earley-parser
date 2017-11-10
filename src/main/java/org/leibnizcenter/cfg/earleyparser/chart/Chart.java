@@ -19,12 +19,11 @@ import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
 import org.leibnizcenter.cfg.util.StateInformationTriple;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Optional.ofNullable;
 import static org.leibnizcenter.cfg.errors.IssueRequest.ensure;
 import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
 
@@ -422,30 +421,28 @@ public class Chart<T> {
      *
      * @param completedStates Completed state to calculate Viterbi score for
      */
-    @SuppressWarnings("WeakerAccess")
-    private void computeViterbiScoresForCompletedStates(
-            Collection<State> completedStates
-    ) {
+    private void computeViterbiScoresForCompletedStates(Collection<State> completedStates) {
         while (completedStates.size() > 0)
             completedStates = completedStates.stream()
-                    .flatMap(completedState -> {
-                        if (stateSets.viterbiScores.get(completedState) == null)
-                            throw new IssueRequest("Expected Viterbi score to be set on completed state.");
-
+                    .map(completedState -> {
                         //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
                         final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
-                        if (statesToAdvance != null && statesToAdvance.size() > 0) {
-                            return statesToAdvance.stream()
-                                    .map((stateToAdvance) -> computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).probabilityAsSemiringElement, stateToAdvance))
-                                    .filter(d -> d != null)
-                                    .sequential()
-                                    .peek(stateSets::processDelta)
-                                    //recurse on newCompletedStates
-                                    .filter(Complete.ViterbiDelta::isNewCompletedState)
-                                    .map(d -> d.resultingState);
-                        } else
-                            return Stream.empty();
-                    }).collect(Collectors.toSet());
+                        if (statesToAdvance == null || statesToAdvance.size() <= 0) return null;
+                        final State.ViterbiScore viterbiScore = ofNullable(stateSets.viterbiScores.get(completedState)).orElseThrow(() -> new IssueRequest("Expected Viterbi score to be set on completed state."));
+                        return statesToAdvance.stream()
+                                .map((stateToAdvance) -> computeViterbiForState(completedState,
+                                        viterbiScore.probabilityAsSemiringElement,
+                                        stateToAdvance))
+                                .filter(Objects::nonNull)
+                                .sequential()
+                                .peek(o -> stateSets.processDelta((Complete.ViterbiDelta) o))
+                                //recurse on newCompletedStates
+                                .filter(Complete.ViterbiDelta::isNewCompletedState)
+                                .map(d -> d.resultingState);
+                    })
+                    .filter(Objects::nonNull)
+                    .flatMap(completedState -> completedState)
+                    .collect(Collectors.toSet());
     }
 
     private Complete.ViterbiDelta computeViterbiForState(State completedState, double completedViterbi, State stateToAdvance) {

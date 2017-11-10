@@ -190,7 +190,7 @@ public class StateSets<T> {
         }
     }
 
-    public void processDelta(Complete.ViterbiDelta delta) {
+    public void processDelta(final Complete.ViterbiDelta delta) {
         // Add new states to chart
         if (delta.isNewState) addIfNew(delta.resultingState);
         if (delta.newViterbiScore != null) setViterbiScore(delta.newViterbiScore);
