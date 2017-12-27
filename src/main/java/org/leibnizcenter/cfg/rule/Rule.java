@@ -7,6 +7,7 @@ import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.grammar.Grammar;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -55,14 +56,14 @@ public class Rule {
      *                                  <li>the right side contains a <code>null</code> category.</li>
      *                                  </ol>
      */
-    Rule(double probability, double probabilityAsSemiringElement, NonTerminal left, Category... right) {
+    Rule(final double probability, final double probabilityAsSemiringElement, final NonTerminal left, final Category... right) {
         this.probabilityAsSemiringElement = probabilityAsSemiringElement == -0.0 ? 0.0 : probabilityAsSemiringElement;
         this.probability = (probability == -0.0) ? 0.0 : probability;
         if (left == null) throw new IllegalArgumentException("empty left category");
         if (right == null || right.length == 0) throw new IllegalArgumentException("no right category");
 
         // check for nulls on right
-        for (Category r : right)
+        for (final Category r : right)
             if (r == null) throw new IllegalArgumentException(
                     "right contains null category: " + Arrays.toString(right));
         isErrorRule = Stream.of(right).anyMatch(r -> r instanceof NonLexicalToken);
@@ -89,11 +90,11 @@ public class Rule {
      * @param RHS      RHS
      * @return Rule with p=1.0
      */
-    public static Rule create(DblSemiring semiring, NonTerminal LHS, Category... RHS) {
+    public static Rule create(final DblSemiring semiring, final NonTerminal LHS, final Category... RHS) {
         return new Rule(1.0, semiring.one(), LHS, RHS);
     }
 
-    public static Rule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
+    public static Rule create(final DblSemiring semiring, final double probability, final NonTerminal LHS, final Category... RHS) {
         return new Rule(probability, semiring.fromProbability(probability), LHS, RHS);
     }
 
@@ -131,11 +132,11 @@ public class Rule {
      * dot position is already at the end of the right side category sequence,
      * returns <code>null</code>.
      */
-    public Category getActiveCategory(int dotPosition) {
+    public Category getActiveCategory(final int dotPosition) {
         if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
 
         if (dotPosition < right.length) {
-            Category returnValue = right[dotPosition];
+            final Category returnValue = right[dotPosition];
             if (returnValue == null) throw new NullPointerException();
             else return returnValue;
         } else return null;
@@ -150,7 +151,7 @@ public class Rule {
      * @return <code>true</code> iff the active category of this edge's dotted
      * rule is <code>null</code>.
      */
-    public boolean isPassive(int dotPosition) {
+    public boolean isPassive(final int dotPosition) {
         if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
         return dotPosition == right.length;
     }
@@ -170,12 +171,12 @@ public class Rule {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         else if (o == null || getClass() != o.getClass()) return false;
         else if (o.hashCode() != hashCode) return false;
         else {
-            Rule rule = (Rule) o;
+            final Rule rule = (Rule) o;
             if (right.length != rule.right.length) return false;
             else if (Double.compare(rule.probabilityAsSemiringElement, probabilityAsSemiringElement) != 0) return false;
             else if (!left.equals(rule.left)) return false;
@@ -190,9 +191,11 @@ public class Rule {
     }
 
     private int computeHashCode() {
-        long temp = Double.doubleToLongBits(probabilityAsSemiringElement);
+        final long temp = Double.doubleToLongBits(probabilityAsSemiringElement);
         return 31 * (31 * left.hashCode() + Arrays.hashCode(right)) + (int) (temp ^ (temp >>> 32));
     }
+
+    private final static DecimalFormat DF = new DecimalFormat("#.00");
 
     /**
      * Gets a string representation of this rule.
@@ -203,13 +206,15 @@ public class Rule {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(left.toString());
+        final StringBuilder sb = new StringBuilder(left.toString());
         sb.append(" →");
 
-        for (Category aRight : right) {
+        for (final Category aRight : right) {
             sb.append(' '); // space between category
             sb.append(aRight.toString());
         }
+
+        sb.append(' ').append('(').append(DF.format(probability)).append(')');
 
         return sb.toString();
     }
@@ -222,9 +227,9 @@ public class Rule {
      * <code>1</code>.
      * @see Rule#toString()
      */
-    public String toString(int dotPosition) {
+    public String toString(final int dotPosition) {
         if (dotPosition < 0 || dotPosition > right.length) throw new InvalidDotPosition(dotPosition, right);
-        StringBuilder sb = new StringBuilder(left.toString());
+        final StringBuilder sb = new StringBuilder(left.toString());
         sb.append(" →");
 
         for (int i = 0; i <= right.length; i++) {

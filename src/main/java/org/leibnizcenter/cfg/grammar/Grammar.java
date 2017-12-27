@@ -1,6 +1,7 @@
 
 package org.leibnizcenter.cfg.grammar;
 
+import org.leibnizcenter.cfg.algebra.matrix.LUDecomposition;
 import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
@@ -83,14 +84,14 @@ public final class Grammar<T> {
      * @param rules    Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(String name, MyMultimap<NonTerminal, Rule> rules, ExpressionSemiring semiring) {
+    public Grammar(final String name, final MyMultimap<NonTerminal, Rule> rules, final ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
         rules.lock();
 
         rules.values().forEach(rule -> {
             nonTerminals.add(rule.left);
-            for (Category c : rule.right)
+            for (final Category c : rule.right)
                 if (c instanceof Terminal) {//noinspection unchecked
                     terminals.add((Terminal) c);
                 } else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
@@ -100,8 +101,7 @@ public final class Grammar<T> {
         this.semiring = semiring;
         leftCorners = new LeftCorners(semiring, nonTerminals, rules);
 
-        final LeftCorners leftStarCorners;
-        leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
+        final LeftCorners leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
         leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);
 
         unitStarScores = getUnitStarCorners();
@@ -126,43 +126,51 @@ public final class Grammar<T> {
      * <p>
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
-    private static LeftCorners getReflexiveTransitiveClosure(DblSemiring semiring, Set<NonTerminal> nonTerminals, LeftCorners P) {
-        NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
+    private static LeftCorners getReflexiveTransitiveClosure(final DblSemiring semiring, final Set<NonTerminal> nonTerminals, final LeftCorners P) {
+        final NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
         final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
         for (int row = 0; row < nonterminalsArr.length; row++) {
-            NonTerminal X = nonterminalsArr[row];
+            final NonTerminal X = nonterminalsArr[row];
             for (int col = 0; col < nonterminalsArr.length; col++) {
-                NonTerminal Y = nonterminalsArr[col];
+                final NonTerminal Y = nonterminalsArr[col];
                 // I - P_L
                 R_L_inverse.set(row, col, (row == col ? 1 : 0) - P.getProbability(X, Y));
             }
         }
-        final Matrix R_L = R_L_inverse.inverse();
 
-        LeftCorners R__L = new LeftCorners();
+
+        final LUDecomposition luDecomposition = new LUDecomposition(R_L_inverse);
+        if (luDecomposition.isNonsingular()) {
+            final Matrix R_L = R_L_inverse.inverse(luDecomposition);
+            final LeftCorners R__L = new LeftCorners();
         /*
          * Copy all matrix values into our {@link LeftCorners} object
          */
-        IntStream.range(0, R_L.getRowDimension())
-                .forEach(row ->
-                        IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                                R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring)
-                        )
+            final int bound = R_L.getRowDimension();
+            for (int i = 0; i < bound; i++) {
+                final int row = i;
+                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
+                        R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring)
                 );
-        return R__L;
+            }
+            return R__L;
+        } else {
+            // TODO compute brute force?
+            throw new Error();
+        }
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static Grammar<String> fromString(String str) {
+    public static Grammar<String> fromString(final String str) {
         return fromString(str, STRING_CATEGORY_FUNCTION,
                 LogSemiring.get());
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static Grammar<String> fromString(String s, Function<String, Category> parseCategory, DblSemiring semiring) {
-        Builder<String> b = new Builder<>();
+    public static Grammar<String> fromString(final String s, final Function<String, Category> parseCategory, final DblSemiring semiring) {
+        final Builder<String> b = new Builder<>();
 
-        RuleParser parser = new RuleParser(parseCategory, semiring);
+        final RuleParser parser = new RuleParser(parseCategory, semiring);
         b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
@@ -172,19 +180,18 @@ public final class Grammar<T> {
         return b.build();
     }
 
-    public static Grammar<String> fromString(Path path, Charset charset) throws IOException {
+    public static Grammar<String> fromString(final Path path, final Charset charset) throws IOException {
         return fromString(
                 path,
                 charset,
                 STRING_CATEGORY_FUNCTION,
-                LogSemiring.get()
-        );
+                LogSemiring.get());
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static Grammar<String> fromString(Path path, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
-        Builder<String> b = new Builder<>();
-        RuleParser ruleParser = new RuleParser(parseCategory, semiring);
+    public static Grammar<String> fromString(final Path path, final Charset charset, final Function<String, Category> parseCategory, final DblSemiring semiring) throws IOException {
+        final Builder<String> b = new Builder<>();
+        final RuleParser ruleParser = new RuleParser(parseCategory, semiring);
         final Collection<Rule> rules = Files.lines(path, charset).parallel()
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
@@ -196,7 +203,7 @@ public final class Grammar<T> {
 
 
     @SuppressWarnings("unused")
-    public static Grammar<String> fromString(InputStream inputStream, Charset charset) throws IOException {
+    public static Grammar<String> fromString(final InputStream inputStream, final Charset charset) throws IOException {
         return fromString(
                 inputStream,
                 charset,
@@ -205,14 +212,14 @@ public final class Grammar<T> {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static Grammar<String> fromString(InputStream inputStream, Charset charset, Function<String, Category> parseCategory, DblSemiring semiring) throws IOException {
-        Builder<String> b = new Builder<>();
+    public static Grammar<String> fromString(final InputStream inputStream, final Charset charset, final Function<String, Category> parseCategory, final DblSemiring semiring) throws IOException {
+        final Builder<String> b = new Builder<>();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
-        RuleParser ruleParser = new RuleParser(parseCategory, semiring);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
+        final RuleParser ruleParser = new RuleParser(parseCategory, semiring);
 
         String line = reader.readLine();
-        Collection<Rule> rules = new HashSet<>();
+        final Collection<Rule> rules = new HashSet<>();
         while (line != null) {
             line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
             if (!line.isEmpty())
@@ -268,7 +275,7 @@ public final class Grammar<T> {
      * @return <code>true</code> iff this grammar contains rules with the
      * specified category as their {@link Rule#getLeft() left side}.
      */
-    public boolean containsRules(NonTerminal left) {
+    public boolean containsRules(final NonTerminal left) {
         return rules.containsKey(left);
     }
 
@@ -284,7 +291,7 @@ public final class Grammar<T> {
      * rule set returned by this method is <em>not</em> guaranteed to contain
      * the rules in the order in which they were {@link Builder#addRule(Rule) added}.
      */
-    public Collection<Rule> getRules(NonTerminal LHS) {
+    public Collection<Rule> getRules(final NonTerminal LHS) {
         return rules.get(LHS);
     }
 
@@ -296,7 +303,7 @@ public final class Grammar<T> {
         return rules.values();
     }
 
-    public double getLeftStarScore(Category LHS, Category RHS) {
+    public double getLeftStarScore(final Category LHS, final Category RHS) {
         return leftStarCornersAsSemiringElements.get(LHS, RHS);
     }
 
@@ -323,11 +330,11 @@ public final class Grammar<T> {
         return getAllRules().size();
     }
 
-    public double getLeftScore(NonTerminal LHS, NonTerminal RHS) {
+    public double getLeftScore(final NonTerminal LHS, final NonTerminal RHS) {
         return leftCorners.getProbability(LHS, RHS);
     }
 
-    public double getUnitStarScore(Category LHS, NonTerminal RHS) {
+    public double getUnitStarScore(final Category LHS, final NonTerminal RHS) {
         return unitStarScores.get(LHS, RHS);
     }
 
@@ -350,7 +357,7 @@ public final class Grammar<T> {
      *
      * @return set of all terminals that match given token, usually a singleton set.
      */
-    public Set<Terminal<T>> getCategories(Token<T> token) {
+    public Set<Terminal<T>> getCategories(final Token<T> token) {
         return tokenToTerminalsCache.computeIfAbsent(
                 token,
                 ignored -> this.terminals.stream()
@@ -367,7 +374,7 @@ public final class Grammar<T> {
         private ExpressionSemiring semiring = LogSemiring.get();
         private RuleFactory rf = new RuleFactory(semiring);
 
-        public Builder(String name) {
+        public Builder(final String name) {
             this.name = name;
         }
 
@@ -375,14 +382,14 @@ public final class Grammar<T> {
             this.name = null;
         }
 
-        public Builder<E> withSemiring(ExpressionSemiring semiring) {
+        public Builder<E> withSemiring(final ExpressionSemiring semiring) {
             this.semiring = semiring;
             this.rf = new RuleFactory(semiring);
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<E> setName(String name) {
+        public Builder<E> setName(final String name) {
             this.name = name;
             return this;
         }
@@ -393,7 +400,7 @@ public final class Grammar<T> {
          * @param rule The rule to add.
          * @throws NullPointerException If <code>rule</code> is <code>null</code>.
          */
-        public Builder<E> addRule(Rule rule) {
+        public Builder<E> addRule(final Rule rule) {
             if (rule == null) throw new NullPointerException("null rule");
 //            if (rule instanceof LexicalErrorRule) {
 //                lexicalErrorRules.put(rule.left, rule);
@@ -403,11 +410,11 @@ public final class Grammar<T> {
             return this;
         }
 
-        public Builder<E> addRule(double probability, NonTerminal left, Category... right) {
+        public Builder<E> addRule(final double probability, final NonTerminal left, final Category... right) {
             return addRule(rf.newRule(probability, left, right));
         }
 
-        public Builder<E> addRule(NonTerminal left, Category... right) {
+        public Builder<E> addRule(final NonTerminal left, final Category... right) {
             return addRule(rf.newRule(left, right));
         }
 
@@ -416,7 +423,7 @@ public final class Grammar<T> {
         }
 
         @SuppressWarnings({"unused", "WeakerAccess"})
-        public Builder<E> addRules(Collection<Rule> rules) {
+        public Builder<E> addRules(final Collection<Rule> rules) {
             rules.forEach(this::addRule);
             return this;
         }

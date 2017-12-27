@@ -108,7 +108,7 @@ public class GrammarTest {
      */
     @Test
     public final void testGetRules() {
-        Set<Rule> setOfrules = new HashSet<>();
+        final Set<Rule> setOfrules = new HashSet<>();
         setOfrules.add(rule1);
         setOfrules.add(rule2);
         assertEquals(setOfrules, new HashSet<>(g.getRules(rule1.left)));
@@ -119,16 +119,26 @@ public class GrammarTest {
         assertEquals(setOfrules, new HashSet<>(g.getRules(rule3.left)));
     }
 
-    /**
-     */
     @Test
     public final void parseErrorRule() throws IOException {
-        Grammar<String> grammar = Grammar.fromString("S->NP(0.9)#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar (0.9)\n");
+        final Grammar<String> grammar = Grammar.fromString("S->NP(0.9)#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar (0.9)\n");
         final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
         assertNotNull(errorRules);
         assertEquals(1, errorRules.size());
         final Rule errorRule = errorRules.iterator().next();
         assertTrue(errorRule instanceof LexicalErrorRule);
+    }
+    @Test
+    public final void parseRightRecursive() throws IOException {
+        final Grammar<String> grammar = Grammar.fromString("S->S a b(0.9" +
+//                "999999999999999999999999999999999" +
+                ")#comment\n#comment\n\n#\n   #  com\n  \n\n " +
+                "S -> a (0.9)\n" +
+                "B -> a B c (0.9)\n" +
+                "B -> a b c (0.9" +
+                ")");
+        final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
+        assertNull(errorRules);
     }
 
 }

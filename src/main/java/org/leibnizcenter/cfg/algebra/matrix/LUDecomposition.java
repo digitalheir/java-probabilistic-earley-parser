@@ -14,7 +14,7 @@ package org.leibnizcenter.cfg.algebra.matrix;
  * linear equations.  This will fail if isNonsingular() returns false.
  */
 
-class LUDecomposition {
+public class LUDecomposition implements Decomposition {
     /**
      * Array for internal storage of decomposition.
      *
@@ -41,7 +41,7 @@ class LUDecomposition {
      *
      * @param A Rectangular matrix
      */
-    LUDecomposition(Matrix A) {
+    public LUDecomposition(final Matrix A) {
         // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
         LU = A.getArrayCopy();
         m = A.getRowDimension();
@@ -52,7 +52,7 @@ class LUDecomposition {
         }
         int pivsign = 1;
         double[] LUrowi;
-        double[] LUcolj = new double[m];
+        final double[] LUcolj = new double[m];
 
         // Outer loop.
 
@@ -71,7 +71,7 @@ class LUDecomposition {
 
                 // Most of the time is spent in the following dot product.
 
-                int kmax = Math.min(i, j);
+                final int kmax = Math.min(i, j);
                 double s = 0.0;
                 for (int k = 0; k < kmax; k++) {
                     s += LUrowi[k] * LUcolj[k];
@@ -90,11 +90,11 @@ class LUDecomposition {
             }
             if (p != j) {
                 for (int k = 0; k < n; k++) {
-                    double t = LU[p][k];
+                    final double t = LU[p][k];
                     LU[p][k] = LU[j][k];
                     LU[j][k] = t;
                 }
-                int k = piv[p];
+                final int k = piv[p];
                 piv[p] = piv[j];
                 piv[j] = k;
                 pivsign = -pivsign;
@@ -115,7 +115,7 @@ class LUDecomposition {
      * @return true if U, and hence A, is nonsingular.
      */
 
-    private boolean isNonsingular() {
+    public boolean isNonsingular() {
         for (int j = 0; j < n; j++) {
             if (LU[j][j] == 0)
                 return false;
@@ -132,7 +132,7 @@ class LUDecomposition {
      * @throws RuntimeException         Matrix is singular.
      */
 
-    Matrix solve(Matrix B) {
+    public Matrix solve(final Matrix B) {
         if (B.getRowDimension() != m) {
             throw new IllegalArgumentException("Matrix row dimensions must agree.");
         }
@@ -141,9 +141,9 @@ class LUDecomposition {
         }
 
         // Copy right hand side with pivoting
-        int nx = B.getColumnDimension();
-        Matrix Xmat = B.getMatrix(piv, nx - 1);
-        double[][] X = Xmat.getArray();
+        final int nx = B.getColumnDimension();
+        final Matrix Xmat = B.getMatrix(piv, nx - 1);
+        final double[][] X = Xmat.getArray();
 
         // Solve L*Y = B(piv,:)
         for (int k = 0; k < n; k++) {

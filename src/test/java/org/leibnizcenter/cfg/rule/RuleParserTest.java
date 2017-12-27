@@ -52,7 +52,7 @@ public class RuleParserTest {
                 Rule.create(LogSemiring.get(), 0.5, new NonTerminal("S"), new CaseInsensitiveStringTerminal("Np"), new CaseInsensitiveStringTerminal("Vp")),
                 ruleParser.fromString("S -> nP vP(0.5)")
         );
-        Rule rhs = ruleParser.fromString("S\t->/ [a]+A /ii \\/O/nn//n/e Thr/e\\e//");
+        final Rule rhs = ruleParser.fromString("S\t->/ [a]+A /ii \\/O/nn//n/e Thr/e\\e//");
 
         assertEquals(
                 Rule.create(LogSemiring.get(),
@@ -60,18 +60,16 @@ public class RuleParserTest {
                         rhs.getRight()[0],
                         new CaseInsensitiveStringTerminal("/O/nn//n/e"),
                         new NonTerminal("Thr/e\\e//")
-                ),
-                rhs
-        );
+                ), rhs);
     }
 
     @Test
     public void parseRhs() throws Exception {
-        Category[] rhs = new RuleParser(CaseInsensitiveStringTerminal::new, LogSemiring.get()).parseRHS("/ [a]+A /ii \\/O/nn//n/e Thr/e\\e//");
+        final Category[] rhs = new RuleParser(CaseInsensitiveStringTerminal::new, LogSemiring.get()).parseRHS("/ [a]+A /ii \\/O/nn//n/e Thr/e\\e//");
 
         assertTrue(rhs[0] instanceof RegexTerminal);
-        RegexTerminal r1 = (RegexTerminal) rhs[0];
-        RegexTerminal r2 = new RegexTerminal(" [a]+A ", Pattern.CASE_INSENSITIVE);
+        final RegexTerminal r1 = (RegexTerminal) rhs[0];
+        final RegexTerminal r2 = new RegexTerminal(" [a]+A ", Pattern.CASE_INSENSITIVE);
         assertEquals(r2.pattern.flags(), r1.pattern.flags());
         assertEquals(r2.pattern.pattern(), r1.pattern.pattern());
         assertEquals(new CaseInsensitiveStringTerminal("/O/nn//n/e"), rhs[1]);
@@ -80,21 +78,13 @@ public class RuleParserTest {
 
     @Test
     public void parseErrorRule() throws Exception {
-        Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? (Terminal) NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s));
-        }, LogSemiring.get()).fromString("S -> A " +
-                NonLexicalToken.ERROR_SYMBOL +
-                " B");
-
+        final Rule rule = new RuleParser(s -> (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s)), LogSemiring.get()).fromString("S -> A " + NonLexicalToken.ERROR_SYMBOL + " B");
         assertTrue(rule instanceof LexicalErrorRule);
     }
 
     @Test
     public void parseNonErrorRule() throws Exception {
-        Rule rule = new RuleParser(s -> {
-            return (NonLexicalToken.ERROR_SYMBOL.equals(s) ? (Terminal) NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s));
-        }, LogSemiring.get()).fromString("S -> A B");
-
+        final Rule rule = new RuleParser(s -> (NonLexicalToken.ERROR_SYMBOL.equals(s) ? NonLexicalToken.INSTANCE : new CaseInsensitiveStringTerminal(s)), LogSemiring.get()).fromString("S -> A B");
         assertFalse(rule instanceof LexicalErrorRule);
     }
 }

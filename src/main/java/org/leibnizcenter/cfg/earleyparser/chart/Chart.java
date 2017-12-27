@@ -21,6 +21,7 @@ import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,29 +38,29 @@ public class Chart<T> {
     /**
      * Creates a new chart, initializing its internal data structure.
      */
-    public Chart(Grammar<T> grammar) {
+    public Chart(final Grammar<T> grammar) {
         this(
                 grammar,
                 null
         );
     }
 
-    public Chart(Grammar<T> grammar, ParseOptions<T> parseOptions
+    public Chart(final Grammar<T> grammar, final ParseOptions<T> parseOptions
     ) {
         this.stateSets = new StateSets<>(grammar);
         this.grammar = grammar;
         this.parseOptions = parseOptions == null ? new ParseOptions.Builder<T>().build() : parseOptions;
     }
 
-    private static boolean newViterbiIsBetter(State.ViterbiScore viterbiScore, double newViterbiScore) {
+    private static boolean newViterbiIsBetter(final State.ViterbiScore viterbiScore, final double newViterbiScore) {
         return viterbiScore == null || viterbiScore.semiring.compare(viterbiScore.probabilityAsSemiringElement, newViterbiScore) < 0;
     }
 
-    private static <E> Complete.Delta completeNoViterbiForTriple(int position,
-                                                                 Resolvable prevInner,
-                                                                 Resolvable prevForward,
-                                                                 StateSets<E> stateSets,
-                                                                 StateInformationTriple t) {
+    private static <E> Complete.Delta completeNoViterbiForTriple(final int position,
+                                                                 final Resolvable prevInner,
+                                                                 final Resolvable prevForward,
+                                                                 final StateSets<E> stateSets,
+                                                                 final StateInformationTriple t) {
         final int j = t.completedState.ruleStartPosition;
         final NonTerminal Yl = t.completedState.rule.left;
 
@@ -109,7 +110,7 @@ public class Chart<T> {
         return stateSets.toString();
     }
 
-    void addState(State state, double forward, double inner) {
+    void addState(final State state, final double forward, final double inner) {
         stateSets.getOrCreate(state);
         stateSets.innerScores.put(state, inner);
         stateSets.forwardScores.put(state, forward);
@@ -118,34 +119,34 @@ public class Chart<T> {
     }
 
     @SuppressWarnings("unused")
-    public Set<State> getStates(int index) {
+    public Set<State> getStates(final int index) {
         return stateSets.getStates(index);
     }
 
-    public double getForwardScore(State s) {
+    public double getForwardScore(final State s) {
         return stateSets.forwardScores.get(s);
     }
 
     @SuppressWarnings("unused")
-    public double getInnerScore(State s) {
+    public double getInnerScore(final State s) {
         return stateSets.innerScores.get(s);
     }
 
-    public State.ViterbiScore getViterbiScore(State s) {
+    public State.ViterbiScore getViterbiScore(final State s) {
         return stateSets.viterbiScores.get(s);
     }
 
-    public void addInitialState(Category goal) {
-        ExpressionSemiring sr = grammar.semiring;
+    @SuppressWarnings("WeakerAccess")
+    public void addInitialState(final Category goal) {
+        final ExpressionSemiring sr = grammar.semiring;
         addState(new State(Rule.create(sr, 1.0, Category.START, goal), 0),
                 sr.one(),
-                sr.one()
-        );
+                sr.one());
     }
 
 
-    public void predict(int i, TokenWithCategories<T> token) {
-        Chart<T> chart = this;
+    public void predict(final int i, final TokenWithCategories<T> token) {
+        final Chart<T> chart = this;
         if (parseOptions != null) parseOptions.beforePredict(i, token, chart);
 
         predict(i);
@@ -205,7 +206,7 @@ public class Chart<T> {
 
     }
 
-    public void predictError(Collection<State> justScannedErrors) {
+    public void predictError(final Collection<State> justScannedErrors) {
         justScannedErrors.forEach(justScannedErrorState -> {
             final double prevForward = stateSets.forwardScores.get(justScannedErrorState);
             final double prevInner = stateSets.innerScores.get(justScannedErrorState);
@@ -230,7 +231,7 @@ public class Chart<T> {
     }
 
 
-    private void predictStatesForState(State statePredecessor) {
+    private void predictStatesForState(final State statePredecessor) {
         final Category Z = statePredecessor.getActiveCategory();
         // For all productions Y → v such that R(Z =*L> Y) is nonzero
         grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> predictStatesForRule(
@@ -240,7 +241,7 @@ public class Chart<T> {
         ));
     }
 
-    private void predictStatesForRule(State statePredecessor, Category activeOnPredecessor, Rule Y_to_v) {
+    private void predictStatesForRule(final State statePredecessor, final Category activeOnPredecessor, final Rule Y_to_v) {
         // we predict state <code>i: Y<sub>i</sub> → ·v</code>
         final double prevForward = stateSets.forwardScores.get(statePredecessor);
 
@@ -254,12 +255,12 @@ public class Chart<T> {
                 Y_to_vProbability
         );
 
-        State predicted = State.create(statePredecessor.position, statePredecessor.position, 0, Y_to_v);
+        final State predicted = State.create(statePredecessor.position, statePredecessor.position, 0, Y_to_v);
 
         addPredictedStateToChart(statePredecessor, Y_to_vProbability, newForward, predicted);
     }
 
-    public void addPredictedStateToChart(State statePredecessor, double inner, double forward, State predicted) {
+    public void addPredictedStateToChart(final State statePredecessor, final double inner, final double forward, final State predicted) {
 //        boolean isNewState =
         stateSets.addIfNew(predicted);
 
@@ -271,7 +272,7 @@ public class Chart<T> {
         stateSets.innerScores.put(predicted, inner);
     }
 
-    public void scan(int i, TokenWithCategories<T> token) {
+    public void scan(final int i, final TokenWithCategories<T> token) {
         final ScanProbability<T> scanProbability = parseOptions != null ? parseOptions.scanProbability : null;
         if (parseOptions != null) parseOptions.beforeScan(i, token, this);
 
@@ -299,8 +300,8 @@ public class Chart<T> {
          *   O(|stateset(i)|) = O(|grammar|): For all states <code>i: X<sub>k</sub> → λ·tμ</code>, where t is a terminal that matches the given token...
          */
         final ExpressionSemiring semiring = grammar.semiring;
-        for (Terminal<T> activeTerminalType : emptyIfNull(tokenWithCategories.categories)) {
-            for (State preScanState : stateSets.activeStates.getActiveOn(chartPosition, activeTerminalType)) {
+        for (final Terminal<T> activeTerminalType : emptyIfNull(tokenWithCategories.categories)) {
+            for (final State preScanState : stateSets.activeStates.getActiveOn(chartPosition, activeTerminalType)) {
                 final double scanProb = Scan.getScanProb(scanProbability, tokenWithCategories, chartPosition);
 
                 final double previousForward = stateSets.forwardScores.get(preScanState);
@@ -330,14 +331,13 @@ public class Chart<T> {
         }
     }
 
-    double getScanProbability(int tokenPosition, TokenWithCategories<T> tokenWithCategories, ScanProbability<T> scanProbability) {
+    double getScanProbability(final int tokenPosition, final TokenWithCategories<T> tokenWithCategories, final ScanProbability<T> scanProbability) {
         return scanProbability == null ? Double.NaN : scanProbability.getProbability(tokenPosition, tokenWithCategories);
     }
 
     void scanError(
             final int tokenPosition,
-            final TokenWithCategories<T> tokenWithCategories
-    ) {
+            final TokenWithCategories<T> tokenWithCategories) {
         if (tokenWithCategories == null)
             throw new IssueRequest("null token at index " + tokenPosition + ". This is a bug");
         /*
@@ -423,42 +423,41 @@ public class Chart<T> {
      * @param completedStates Completed state to calculate Viterbi score for
      */
     @SuppressWarnings("WeakerAccess")
-    private void computeViterbiScoresForCompletedStates(
-            Collection<State> completedStates
-    ) {
-        while (completedStates.size() > 0)
-            completedStates = completedStates.stream()
-                    .flatMap(completedState -> {
-                        if (stateSets.viterbiScores.get(completedState) == null)
-                            throw new IssueRequest("Expected Viterbi score to be set on completed state.");
+    private void computeViterbiScoresForCompletedStates(Collection<State> completedStates) {
+        while (completedStates.size() > 0) {
+            final Set<State> nextSetOfCompletedStates = new HashSet<>();
+            for (final State completedState : completedStates) {
+                if (stateSets.viterbiScores.get(completedState) == null) throw new IssueRequest("Expected Viterbi score to be set on completed state.");
 
-                        //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
-                        final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
-                        if (statesToAdvance != null && statesToAdvance.size() > 0) {
-                            return statesToAdvance.stream()
-                                    .map((stateToAdvance) -> computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).probabilityAsSemiringElement, stateToAdvance))
-                                    .filter(d -> d != null)
-                                    .sequential()
-                                    .peek(stateSets::processDelta)
-                                    //recurse on newCompletedStates
-                                    .filter(Complete.ViterbiDelta::isNewCompletedState)
-                                    .map(d -> d.resultingState);
-                        } else
-                            return Stream.empty();
-                    }).collect(Collectors.toSet());
+                //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
+                final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
+                if (statesToAdvance != null && statesToAdvance.size() > 0) {
+                    for (final State stateToAdvance : statesToAdvance) {
+                        final Complete.ViterbiDelta d = computeViterbiForState(completedState, stateSets.viterbiScores.get(completedState).probabilityAsSemiringElement, stateToAdvance);
+                        if (d != null) {
+                            stateSets.processDelta(d);
+                            if (d.isNewCompletedState()) {
+                                nextSetOfCompletedStates.add(d.resultingState);
+                            }
+                        }
+                    }
+                }
+            }
+            completedStates = nextSetOfCompletedStates;
+        }
     }
 
-    private Complete.ViterbiDelta computeViterbiForState(State completedState, double completedViterbi, State stateToAdvance) {
+    private Complete.ViterbiDelta computeViterbiForState(final State completedState, final double completedViterbi, final State stateToAdvance) {
         final State resultingState = State.create(completedState.position, stateToAdvance.ruleStartPosition, stateToAdvance.advanceDot(), stateToAdvance.rule);
         if (stateToAdvance.position > resultingState.position || stateToAdvance.position != completedState.ruleStartPosition)
             throw new IssueRequest("Index failed. This is a bug.");
         final double oldViterbiScore = stateSets.viterbiScoresDbl.get(stateToAdvance);
         assert Double.isFinite(oldViterbiScore);
-        double newViterbiScore = grammar.semiring.times(
+        final double newViterbiScore = grammar.semiring.times(
                 completedViterbi,
                 oldViterbiScore // must be set
         );
-        boolean newViterbiIsBetter = newViterbiIsBetter(stateSets.viterbiScores.get(resultingState), newViterbiScore);
+        final boolean newViterbiIsBetter = newViterbiIsBetter(stateSets.viterbiScores.get(resultingState), newViterbiScore);
         final State.ViterbiScore newViterbiScore_ = newViterbiIsBetter ? new State.ViterbiScore(
                 newViterbiScore,
                 completedState,
@@ -512,8 +511,8 @@ public class Chart<T> {
         );
     }
 
-    public void complete(int i, TokenWithCategories<T> token) {
-        Chart<T> chart = this;
+    public void complete(final int i, final TokenWithCategories<T> token) {
+        final Chart<T> chart = this;
 
         if (parseOptions != null) parseOptions.beforeComplete(i, token, chart);
 
@@ -525,7 +524,8 @@ public class Chart<T> {
         if (parseOptions != null) parseOptions.onComplete(i, token, chart);
     }
 
-    public int getJustCompletedErrorRulesCount(int index) {
+    @SuppressWarnings("WeakerAccess")
+    public int getJustCompletedErrorRulesCount(final int index) {
         return stateSets.completedStates.getCompletedErrorRulesCount(index);
     }
 

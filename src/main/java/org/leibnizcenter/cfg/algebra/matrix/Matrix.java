@@ -57,7 +57,7 @@ public class Matrix {
      *
      * @serial internal array storage.
      */
-    private double[][] array;
+    private final double[][] array;
 
     /**
      * Construct an m-by-n matrix of zeros.
@@ -66,7 +66,7 @@ public class Matrix {
      * @param n Number of colums.
      */
 
-    public Matrix(int m, int n) {
+    public Matrix(final int m, final int n) {
         this.m = m;
         this.n = n;
         array = new double[m][n];
@@ -81,7 +81,7 @@ public class Matrix {
      */
 
     @SuppressWarnings("unused")
-    public Matrix(int m, int n, double s) {
+    public Matrix(final int m, final int n, final double s) {
         this.m = m;
         this.n = n;
         array = new double[m][n];
@@ -100,7 +100,7 @@ public class Matrix {
      */
 
     @SuppressWarnings("unused")
-    public Matrix(double[][] array) {
+    public Matrix(final double[][] array) {
         m = array.length;
         n = array[0].length;
         for (int i = 0; i < m; i++) {
@@ -120,7 +120,7 @@ public class Matrix {
      */
 
     @SuppressWarnings("WeakerAccess")
-    public Matrix(double[][] array, int m, int n) {
+    public Matrix(final double[][] array, final int m, final int n) {
         this.array = array;
         this.m = m;
         this.n = n;
@@ -135,7 +135,7 @@ public class Matrix {
      */
 
     @SuppressWarnings("unused")
-    public Matrix(double vals[], int m) {
+    public Matrix(final double[] vals, final int m) {
         this.m = m;
         n = (m != 0 ? vals.length / m : 0);
         if (m * n != vals.length) {
@@ -158,9 +158,9 @@ public class Matrix {
      */
 
     @SuppressWarnings("WeakerAccess")
-    public static Matrix identity(int m, int n) {
-        Matrix A = new Matrix(m, n);
-        double[][] X = A.array;
+    public static Matrix identity(final int m, final int n) {
+        final Matrix A = new Matrix(m, n);
+        final double[][] X = A.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 X[i][j] = (i == j ? 1.0 : 0.0);
@@ -170,11 +170,11 @@ public class Matrix {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Matrix matrix = (Matrix) o;
+        final Matrix matrix = (Matrix) o;
 
         return m == matrix.m && n == matrix.n && Arrays.deepEquals(array, matrix.array);
 
@@ -212,7 +212,7 @@ public class Matrix {
      */
 
     double[][] getArrayCopy() {
-        double[][] C = new double[m][n];
+        final double[][] C = new double[m][n];
         for (int i = 0; i < m; i++) {
             System.arraycopy(array[i], 0, C[i], 0, n);
         }
@@ -247,7 +247,7 @@ public class Matrix {
      * @return A(i, j)
      */
 
-    public double get(int i, int j) {
+    public double get(final int i, final int j) {
         return array[i][j];
     }
 
@@ -258,14 +258,14 @@ public class Matrix {
      * @param j1 Final column index
      * @throws ArrayIndexOutOfBoundsException Submatrix indices
      */
-    Matrix getMatrix(int i1, int j1) {
-        Matrix X = new Matrix(i1 + 1, j1 + 1);
-        double[][] B = X.array;
+    Matrix getMatrix(final int i1, final int j1) {
+        final Matrix X = new Matrix(i1 + 1, j1 + 1);
+        final double[][] B = X.array;
         try {
             for (int i = 0; i <= i1; i++) {
                 System.arraycopy(array[i], 0, B[i], 0, j1 + 1);
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (final ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
         }
         return X;
@@ -279,14 +279,14 @@ public class Matrix {
      * @throws ArrayIndexOutOfBoundsException Submatrix indices
      */
 
-    Matrix getMatrix(int[] r, int j1) {
-        Matrix X = new Matrix(r.length, j1 + 1);
-        double[][] B = X.array;
+    Matrix getMatrix(final int[] r, final int j1) {
+        final Matrix X = new Matrix(r.length, j1 + 1);
+        final double[][] B = X.array;
         try {
             for (int i = 0; i < r.length; i++) {
                 System.arraycopy(array[r[i]], 0, B[i], 0, j1 + 1);
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (final ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
         }
         return X;
@@ -300,7 +300,7 @@ public class Matrix {
      * @param s A(i,j).
      */
 
-    public void set(int i, int j, double s) {
+    public void set(final int i, final int j, final double s) {
         array[i][j] = s;
     }
 
@@ -312,19 +312,19 @@ public class Matrix {
      * @throws IllegalArgumentException Matrix inner dimensions must agree.
      */
 
-    public Matrix times(Matrix B) {
+    public Matrix times(final Matrix B) {
         if (B.m != n) {
             throw new IllegalArgumentException("Matrix inner dimensions must agree.");
         }
-        Matrix X = new Matrix(m, B.n);
-        double[][] C = X.array;
-        double[] Bcolj = new double[n];
+        final Matrix X = new Matrix(m, B.n);
+        final double[][] C = X.array;
+        final double[] Bcolj = new double[n];
         for (int j = 0; j < B.n; j++) {
             for (int k = 0; k < n; k++) {
                 Bcolj[k] = B.array[k][j];
             }
             for (int i = 0; i < m; i++) {
-                double[] Arowi = array[i];
+                final double[] Arowi = array[i];
                 double s = 0;
                 for (int k = 0; k < n; k++) {
                     s += Arowi[k] * Bcolj[k];
@@ -342,8 +342,9 @@ public class Matrix {
      * @return solution if A is square, least squares solution otherwise
      */
 
-    private Matrix solve(Matrix B) {
-        return (m == n ? (new LUDecomposition(this)).solve(B) :
+    private Matrix solve(final Matrix B) {
+        return (m == n ?
+                (new LUDecomposition(this)).solve(B) :
                 (new QRDecomposition(this)).solve(B));
     }
 
@@ -354,14 +355,21 @@ public class Matrix {
      */
 
     public Matrix inverse() {
-        return solve(identity(m, m));
+        final Decomposition decomposition = (m == n ?
+                (new LUDecomposition(this)) :
+                (new QRDecomposition(this)));
+        return inverse(decomposition);
+    }
+
+    public Matrix inverse(final Decomposition decomposition) {
+        return decomposition.solve(identity(m, m));
     }
 
     /**
      * Check if size(A) == size(B)
      **/
 
-    private void checkMatrixDimensions(Matrix B) {
+    private void checkMatrixDimensions(final Matrix B) {
         if (B.m != m || B.n != n) {
             throw new IllegalArgumentException("Matrix dimensions must agree.");
         }
@@ -374,10 +382,10 @@ public class Matrix {
      * @return A - B
      */
 
-    public Matrix minus(Matrix B) {
+    public Matrix minus(final Matrix B) {
         checkMatrixDimensions(B);
-        Matrix X = new Matrix(m, n);
-        double[][] C = X.array;
+        final Matrix X = new Matrix(m, n);
+        final double[][] C = X.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 C[i][j] = array[i][j] - B.array[i][j];
@@ -396,9 +404,9 @@ public class Matrix {
         return (new SingularValueDecomposition(this).norm2());
     }
 
-    public void forEach(CellHandler cellHandler) {
+    public void forEach(final CellHandler cellHandler) {
         for (int i = 0; i < array.length; i++) {
-            double[] row = array[i];
+            final double[] row = array[i];
             for (int j = 0; j < row.length; j++)
                 cellHandler.consume(i, j, row[j]);
         }

@@ -14,7 +14,7 @@ package org.leibnizcenter.cfg.algebra.matrix;
  * returns false.
  */
 
-public class QRDecomposition {
+public class QRDecomposition implements Decomposition{
 
 /* ------------------------
    Class variables
