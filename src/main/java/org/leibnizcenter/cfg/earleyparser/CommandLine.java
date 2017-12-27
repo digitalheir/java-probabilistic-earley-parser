@@ -36,9 +36,9 @@ public class CommandLine {
     /**
      * -i grammar.cfg -goal S
      */
-    public static void main(String[] args) {
-        HandleArguments arguments = new HandleArguments(args).invoke();
-        ParseTreeWithScore parse = new Parser<>(arguments.getGrammar())
+    public static void main(final String[] args) {
+        final HandleArguments arguments = new HandleArguments(args).invoke();
+        final ParseTreeWithScore parse = new Parser<>(arguments.getGrammar())
                 .getViterbiParseWithScore(
                         arguments.getGoal(),
                         Stream.of(arguments.getTokens()).map(Token::of).collect(Collectors.toList()),
@@ -57,7 +57,7 @@ public class CommandLine {
         private NonTerminal goal;
         private ScanMode scanMode;
 
-        HandleArguments(String... args) {
+        HandleArguments(final String... args) {
             this.args = args;
         }
 
@@ -73,7 +73,7 @@ public class CommandLine {
             return goal;
         }
 
-        private void setGoal(Map<String, String> options) {
+        private void setGoal(final Map<String, String> options) {
             goal = Category.nonTerminal(options.getOrDefault(OPTION_GOAL, "S"));
             if (!grammar.getNonTerminals().contains(goal)) {
                 throw new IllegalArgumentException("Grammar does not contains non-terminal \"" + goal + "\". \n" + USAGE);
@@ -96,7 +96,7 @@ public class CommandLine {
             int lastOption = 0;
             final Map<String, String> options = new HashMap<>();
             for (int i = 0; i < args.length; i++) {
-                String word = args[i].trim();
+                final String word = args[i].trim();
                 if (word.charAt(0) == '-' && i < args.length - 1) {
                     // This is an option
                     final String option = word.substring(1).toLowerCase();
@@ -118,19 +118,19 @@ public class CommandLine {
             return options;
         }
 
-        private void setParseMode(Map<String, String> options) {
-            String scanMode = options.getOrDefault(OPTION_SCAN_MODE, "strict");
+        private void setParseMode(final Map<String, String> options) {
+            final String scanMode = options.getOrDefault(OPTION_SCAN_MODE, "strict");
             this.scanMode = ScanMode.fromString(scanMode);
         }
 
-        private void setInputFile(Map<String, String> options) {
+        private void setInputFile(final Map<String, String> options) {
             if (!options.containsKey(INPUT_FILE)) {
                 throw new IllegalArgumentException("No input file specified. \n" + USAGE);
             } else {
-                Path inputFile = Paths.get(options.get(INPUT_FILE));
+                final Path inputFile = Paths.get(options.get(INPUT_FILE));
                 try {
                     grammar = Grammar.fromString(inputFile, Charset.forName("UTF8"));
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new IllegalArgumentException("Could not parse file at " + inputFile.toAbsolutePath() + '\n' + USAGE);
                 }
             }

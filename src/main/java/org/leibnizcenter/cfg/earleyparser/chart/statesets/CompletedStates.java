@@ -23,11 +23,11 @@ public class CompletedStates {
     private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
     private final TIntIntMap justCompletedErrorRulesCount = new TIntIntHashMap(50, 0.5F, 0, 0);
 
-    private MyMultimap<NonTerminal, State> getMapFromLeftHandSide(int position) {
+    private MyMultimap<NonTerminal, State> getMapFromLeftHandSide(final int position) {
         return completedStatesFor.get(position);
     }
 
-    private Set<State> getCompletedStates(int index, boolean allowUnitProductions) {
+    private Set<State> getCompletedStates(final int index, final boolean allowUnitProductions) {
         if (allowUnitProductions) {
             if (!completedStates.containsKey(index)) completedStates.put(index, new HashSet<>());
             return completedStates.get(index);
@@ -38,18 +38,18 @@ public class CompletedStates {
         }
     }
 
-    public Set<State> getCompletedStates(int index) {
+    public Set<State> getCompletedStates(final int index) {
         return getCompletedStates(index, true);
     }
 
-    public Set<State> getCompletedStatesThatAreNotUnitProductions(int index) {
+    public Set<State> getCompletedStatesThatAreNotUnitProductions(final int index) {
         return getCompletedStates(index, false);
     }
 
     /**
      * Runs in O(1)
      */
-    void addIfCompleted(State state) {
+    void addIfCompleted(final State state) {
         if (state.isCompleted()) {
             StateSets.add(completedStates, state.position, state);
             if (!state.rule.isUnitProduction())
@@ -61,8 +61,8 @@ public class CompletedStates {
         }
     }
 
-    public Collection<State> getCompletedStates(int i, NonTerminal s) {
-        MyMultimap<NonTerminal, State> m = this.getMapFromLeftHandSide(i);
+    public Collection<State> getCompletedStates(final int i, final NonTerminal s) {
+        final MyMultimap<NonTerminal, State> m = this.getMapFromLeftHandSide(i);
         if (m != null && m.containsKey(s)) return m.get(s);
         return Collections.emptySet();
     }
@@ -82,11 +82,11 @@ public class CompletedStates {
         completedStatesFor.putIfAbsent(index, m);
     }
 
-    public int getCompletedErrorRulesCount(int index) {
+    public int getCompletedErrorRulesCount(final int index) {
         return justCompletedErrorRulesCount.get(index);
     }
 
-    private int incrementCompletedErrorRulesCount(int index) {
+    private int incrementCompletedErrorRulesCount(final int index) {
         final int prev = justCompletedErrorRulesCount.get(index);
         justCompletedErrorRulesCount.put(index, prev + 1);
         return prev;

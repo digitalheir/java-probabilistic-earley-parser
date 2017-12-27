@@ -30,7 +30,7 @@ public class Parser<T> {
     private final Grammar<T> grammar;
 
 
-    public Parser(Grammar<T> grammar) {
+    public Parser(final Grammar<T> grammar) {
         this.grammar = grammar;
     }
 
@@ -43,9 +43,9 @@ public class Parser<T> {
      * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     @Deprecated
-    public static <T> double recognize(NonTerminal goal,
-                                       Grammar<T> grammar,
-                                       Iterable<Token<T>> tokens) {
+    public static <T> double recognize(final NonTerminal goal,
+                                       final Grammar<T> grammar,
+                                       final Iterable<Token<T>> tokens) {
         return new Parser<>(grammar).recognize(goal, tokens, null);
     }
 
@@ -58,35 +58,35 @@ public class Parser<T> {
      * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
     @Deprecated
-    public static <T> double recognize(NonTerminal goal,
-                                       Grammar<T> grammar,
-                                       Iterable<Token<T>> tokens,
-                                       @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks) {
+    public static <T> double recognize(final NonTerminal goal,
+                                       final Grammar<T> grammar,
+                                       final Iterable<Token<T>> tokens,
+                                       @SuppressWarnings("SameParameterValue") final ParseOptions<T> callbacks) {
         return new Parser<>(grammar).recognize(goal, tokens, callbacks);
     }
 
     @Deprecated
-    public static <T> Chart<T> parse(NonTerminal S,
-                                     Grammar<T> grammar,
-                                     Iterable<Token<T>> tokens) {
+    public static <T> Chart<T> parse(final NonTerminal S,
+                                     final Grammar<T> grammar,
+                                     final Iterable<Token<T>> tokens) {
         return new Parser<>(grammar).parse(S, tokens, (ScanProbability<T>) null);
     }
 
     @Deprecated
     public static <T> ParseTree getViterbiParse(
-            NonTerminal S,
-            Grammar<T> grammar,
-            Iterable<Token<T>> tokens
+            final NonTerminal S,
+            final Grammar<T> grammar,
+            final Iterable<Token<T>> tokens
     ) {
         return new Parser<>(grammar).getViterbiParse(S, tokens, null);
     }
 
     @Deprecated
     public static <T> ParseTree getViterbiParse(
-            NonTerminal S,
-            Grammar<T> grammar,
-            Iterable<Token<T>> tokens,
-            @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks
+            final NonTerminal S,
+            final Grammar<T> grammar,
+            final Iterable<Token<T>> tokens,
+            @SuppressWarnings("SameParameterValue") final ParseOptions<T> callbacks
     ) {
         final ParseTreeWithScore viterbiParseWithScore = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, callbacks);
         if (viterbiParseWithScore == null) return null;
@@ -95,28 +95,28 @@ public class Parser<T> {
 
     @Deprecated
     public static <T> ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Grammar<T> grammar,
-            Iterable<Token<T>> tokens
+            final NonTerminal S,
+            final Grammar<T> grammar,
+            final Iterable<Token<T>> tokens
     ) {
         return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, null);
     }
 
     @Deprecated
     public static <T> ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Grammar<T> grammar,
-            Iterable<Token<T>> tokens,
-            ParseOptions<T> callbacks
+            final NonTerminal S,
+            final Grammar<T> grammar,
+            final Iterable<Token<T>> tokens,
+            final ParseOptions<T> callbacks
     ) {
         return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, callbacks);
     }
 
     @Deprecated
-    public static <T> Chart<T> parse(NonTerminal S,
-                                     Grammar<T> grammar,
-                                     Iterable<Token<T>> tokens,
-                                     ScanProbability<T> scanProbability) {
+    public static <T> Chart<T> parse(final NonTerminal S,
+                                     final Grammar<T> grammar,
+                                     final Iterable<Token<T>> tokens,
+                                     final ScanProbability<T> scanProbability) {
         final ParseOptions<T> build = new ParseOptions.Builder<T>().withScanProbability(scanProbability).build();
         return new Parser<>(grammar).parseAndCountTokens(
                 S,
@@ -126,10 +126,10 @@ public class Parser<T> {
     }
 
     @Deprecated
-    public static <T> Chart<T> parse(NonTerminal S,
-                                     Grammar<T> grammar,
-                                     Iterable<Token<T>> tokens,
-                                     ParseOptions<T> callbacks) {
+    public static <T> Chart<T> parse(final NonTerminal S,
+                                     final Grammar<T> grammar,
+                                     final Iterable<Token<T>> tokens,
+                                     final ParseOptions<T> callbacks) {
         return new Parser<>(grammar).parseAndCountTokens(
                 S,
                 tokens,
@@ -138,40 +138,40 @@ public class Parser<T> {
     }
 
     @Deprecated
-    public static <T> ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
-                                                                    Grammar<T> grammar,
-                                                                    Iterable<Token<T>> tokens,
-                                                                    ParseOptions<T> callbacks) {
+    public static <T> ChartWithInputPosition<T> parseAndCountTokens(final NonTerminal S,
+                                                                    final Grammar<T> grammar,
+                                                                    final Iterable<Token<T>> tokens,
+                                                                    final ParseOptions<T> callbacks) {
         return new Parser<>(grammar).parseAndCountTokens(S, tokens, callbacks);
     }
 
     /**
      * Performs the backward part of the forward-backward algorithm
      */
-    public static ParseTree getViterbiParse(State state, Chart chart) {
+    public static ParseTree getViterbiParse(final State state, final Chart chart) {
         if (state.ruleDotPosition <= 0)
             // Prediction state
             return new ParseTree.NonLeaf(state.rule.left);
         else {
-            Category prefixEnd = state.rule.getRight()[state.ruleDotPosition - 1];
+            final Category prefixEnd = state.rule.getRight()[state.ruleDotPosition - 1];
 
 
             if (prefixEnd instanceof NonLexicalToken) {
                 // Scanned terminal state
-                ScannedToken scannedToken = chart.stateSets.getScannedToken(state);
+                final ScannedToken scannedToken = chart.stateSets.getScannedToken(state);
 //                if (scannedToken.scannedCategory instanceof NonLexicalToken)
 //                    System.out.println(scannedToken.scannedToken);
                 // let \'a = \, call
                 final int position = state.position;
 
                 final int previousDotPosition = state.ruleDotPosition + state.ruleStartPosition == state.position ? state.ruleDotPosition - 1 : state.ruleDotPosition;
-                State state1 = State.create(
+                final State state1 = State.create(
                         state.position - 1,
                         state.ruleStartPosition,
                         previousDotPosition,
                         state.rule
                 );
-                ParseTree T = getViterbiParse(
+                final ParseTree T = getViterbiParse(
                         state1,
                         chart
                 );
@@ -183,19 +183,19 @@ public class Parser<T> {
                 return T;
             } else if (prefixEnd instanceof Terminal) {
                 // Scanned terminal state
-                ScannedToken scannedState = chart.stateSets.getScannedToken(state);
+                final ScannedToken scannedState = chart.stateSets.getScannedToken(state);
 //                if (scannedState.scannedCategory instanceof NonLexicalToken)
 //                    System.out.println(scannedState.scannedToken);
                 // let \'a = \, call
                 final int position = state.position;
 
-                State preScanState = State.create(
+                final State preScanState = State.create(
                         state.position - 1,
                         state.ruleStartPosition,
                         state.ruleDotPosition - 1,
                         state.rule
                 );
-                ParseTree T = getViterbiParse(
+                final ParseTree T = getViterbiParse(
                         preScanState,
                         chart
                 );
@@ -206,23 +206,23 @@ public class Parser<T> {
                 if (!(prefixEnd instanceof NonTerminal)) throw new IssueRequest("Something went terribly wrong.");
 
                 // Completed non-terminal state
-                State.ViterbiScore viterbi = chart.getViterbiScore(state); // must exist
+                final State.ViterbiScore viterbi = chart.getViterbiScore(state); // must exist
 
                 // Completed state that led to the current state
-                State origin = viterbi.origin;
+                final State origin = viterbi.origin;
 
                 // Recurse for predecessor state (before the completion happened)
-                State predecessor = State.create(
+                final State predecessor = State.create(
                         origin.ruleStartPosition,
                         state.ruleStartPosition,
                         state.ruleDotPosition - 1,
                         state.rule
                 );
-                ParseTree T = getViterbiParse(
+                final ParseTree T = getViterbiParse(
                         predecessor
                         , chart);
                 // Recurse for completed state
-                ParseTree Tprime = getViterbiParse(origin, chart);
+                final ParseTree Tprime = getViterbiParse(origin, chart);
 
                 T.addRightMost(Tprime);
                 return T;
@@ -237,7 +237,7 @@ public class Parser<T> {
      * @param tokens list of tokens to parse
      * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
-    public double recognize(NonTerminal goal, Iterable<Token<T>> tokens) {
+    public double recognize(final NonTerminal goal, final Iterable<Token<T>> tokens) {
         return recognize(goal, tokens, null);
     }
 
@@ -248,9 +248,9 @@ public class Parser<T> {
      * @param tokens list of tokens to parse
      * @return Probability that given string of tokens mathces given non-terminal with given grammar
      */
-    public double recognize(NonTerminal goal,
-                            Iterable<Token<T>> tokens,
-                            @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks) {
+    public double recognize(final NonTerminal goal,
+                            final Iterable<Token<T>> tokens,
+                            @SuppressWarnings("SameParameterValue") final ParseOptions<T> callbacks) {
         final ChartWithInputPosition<T> parse = parseAndCountTokens(goal, tokens, callbacks);
         final Collection<State> completedStates = parse.chart.stateSets.completedStates.getCompletedStates(parse.chartIndex, Category.START);
         if (isFilled(completedStates)) {
@@ -265,22 +265,22 @@ public class Parser<T> {
         }
     }
 
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens) {
+    public Chart<T> parse(final NonTerminal S,
+                          final Iterable<Token<T>> tokens) {
         return parse(S, tokens, (ScanProbability<T>) null);
     }
 
     public ParseTree getViterbiParse(
-            NonTerminal S,
-            Iterable<Token<T>> tokens
+            final NonTerminal S,
+            final Iterable<Token<T>> tokens
     ) {
         return getViterbiParse(S, tokens, null);
     }
 
     public ParseTree getViterbiParse(
-            NonTerminal S,
-            Iterable<Token<T>> tokens,
-            @SuppressWarnings("SameParameterValue") ParseOptions<T> callbacks
+            final NonTerminal S,
+            final Iterable<Token<T>> tokens,
+            @SuppressWarnings("SameParameterValue") final ParseOptions<T> callbacks
     ) {
         final ParseTreeWithScore viterbiParseWithScore = getViterbiParseWithScore(S, tokens, callbacks);
         if (viterbiParseWithScore == null) return null;
@@ -288,18 +288,18 @@ public class Parser<T> {
     }
 
     public ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Iterable<Token<T>> tokens
+            final NonTerminal S,
+            final Iterable<Token<T>> tokens
     ) {
         return getViterbiParseWithScore(S, tokens, null);
     }
 
     public ParseTreeWithScore getViterbiParseWithScore(
-            NonTerminal S,
-            Iterable<Token<T>> tokens,
-            ParseOptions<T> callbacks
+            final NonTerminal S,
+            final Iterable<Token<T>> tokens,
+            final ParseOptions<T> callbacks
     ) {
-        ChartWithInputPosition<T> chart = parseAndCountTokens(S, tokens, callbacks);
+        final ChartWithInputPosition<T> chart = parseAndCountTokens(S, tokens, callbacks);
         final StateSets<T> stateSets = chart.chart.stateSets;
         final Collection<State> completedStates = stateSets.completedStates.getCompletedStates(chart.chartIndex, Category.START);
 
@@ -310,9 +310,9 @@ public class Parser<T> {
                 .orElseThrow(() -> new RuntimeException("Could not parse sentence with goal " + S));
     }
 
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens,
-                          ScanProbability<T> scanProbability) {
+    public Chart<T> parse(final NonTerminal S,
+                          final Iterable<Token<T>> tokens,
+                          final ScanProbability<T> scanProbability) {
         final ParseOptions<T> build = new ParseOptions.Builder<T>().withScanProbability(scanProbability).build();
         return parseAndCountTokens(
                 S,
@@ -321,9 +321,9 @@ public class Parser<T> {
         ).chart;
     }
 
-    public Chart<T> parse(NonTerminal S,
-                          Iterable<Token<T>> tokens,
-                          ParseOptions<T> callbacks) {
+    public Chart<T> parse(final NonTerminal S,
+                          final Iterable<Token<T>> tokens,
+                          final ParseOptions<T> callbacks) {
         return parseAndCountTokens(
                 S,
                 tokens,
@@ -331,12 +331,12 @@ public class Parser<T> {
         ).chart;
     }
 
-    public ChartWithInputPosition<T> parseAndCountTokens(NonTerminal S,
-                                                         Iterable<Token<T>> tokens,
-                                                         ParseOptions<T> parseOptions) {
-        ChartWithInputPosition<T> completeChart = new ChartWithInputPosition<>(grammar, S, parseOptions);
+    public ChartWithInputPosition<T> parseAndCountTokens(final NonTerminal S,
+                                                         final Iterable<Token<T>> tokens,
+                                                         final ParseOptions<T> parseOptions) {
+        final ChartWithInputPosition<T> completeChart = new ChartWithInputPosition<>(grammar, S, parseOptions);
 
-        for (Token<T> t : tokens) {
+        for (final Token<T> t : tokens) {
             completeChart.next(t);
         }
 

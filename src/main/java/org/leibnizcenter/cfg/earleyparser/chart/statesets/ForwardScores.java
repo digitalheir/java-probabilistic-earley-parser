@@ -20,10 +20,10 @@ public class ForwardScores {
     private final AtomFactory atoms;
     private final Atom zeroA;
 
-    ForwardScores(Grammar grammar) {
+    ForwardScores(final Grammar grammar) {
         this.semiring = grammar.semiring;
         this.atoms = grammar.atoms;
-        double zero = semiring.zero();
+        final double zero = semiring.zero();
         zeroA = atoms.getAtom(zero);
         this.forwardScores = new TObjectDoubleHashMap<>(500, 0.5F, zero);
     }
@@ -35,14 +35,14 @@ public class ForwardScores {
      * @param s state
      * @return forward score so far
      */
-    public double get(State s) {
+    public double get(final State s) {
         return forwardScores.get(s);
     }
 
     /**
      * Runs in O(1).
      */
-    public void put(State state, double score) {
+    public void put(final State state, final double score) {
         forwardScores.put(state, score);
         forwardScoresAtom.put(state, atoms.getAtom(score));
     }
@@ -50,7 +50,7 @@ public class ForwardScores {
     /**
      * Runs in O(1).
      */
-    public void increment(State state, double increment) {
+    public void increment(final State state, final double increment) {
         final double newForwardScore = semiring.plus(forwardScores.get(state)/*default zero*/, increment);
         put(state, newForwardScore);
     }
@@ -62,7 +62,7 @@ public class ForwardScores {
      * @param state State for which to get inner score
      * @return inner score so far
      */
-    public Atom getAtom(State state) {
+    public Atom getAtom(final State state) {
         return forwardScoresAtom.containsKey(state) ? forwardScoresAtom.get(state) : zeroA;
     }
 }

@@ -10,7 +10,7 @@ public class TokenNotInLexiconException extends ScanException {
     public final int indexTokens;
     public final int indexChart;
 
-    public TokenNotInLexiconException(Token t, int index, int chartIndex) {
+    public TokenNotInLexiconException(final Token t, final int index, final int chartIndex) {
         super("Token not found in lexicon: [" + index + "]: " + t);
         this.token = t;
         this.indexTokens = index;

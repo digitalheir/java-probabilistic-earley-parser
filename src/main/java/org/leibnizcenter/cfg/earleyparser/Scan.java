@@ -14,7 +14,7 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
  */
 public final class Scan {
 
-    public static <T> double getScanProb(ScanProbability<T> scanProbability, TokenWithCategories<T> token, int position) {
+    public static <T> double getScanProb(final ScanProbability<T> scanProbability, final TokenWithCategories<T> token, final int position) {
         return scanProbability == null ? Double.NaN : scanProbability.getProbability(position, token);
     }
 
@@ -26,7 +26,7 @@ public final class Scan {
      * @param previousStateForwardScore The previous forward score
      * @return Computed forward score for the new state
      */
-    public static double calculateForwardScore(double scanProbability, DblSemiring sr, double previousStateForwardScore) {
+    public static double calculateForwardScore(final double scanProbability, final DblSemiring sr, final double previousStateForwardScore) {
         return Double.isNaN(scanProbability) ? previousStateForwardScore : sr.times(previousStateForwardScore, scanProbability);
     }
 
@@ -39,7 +39,7 @@ public final class Scan {
      * @return The inner score for the new state
      */
 
-    public static double calculateInnerScore(double scanProbability, DblSemiring sr, double previousInner) {
+    public static double calculateInnerScore(final double scanProbability, final DblSemiring sr, final double previousInner) {
         return Double.isNaN(scanProbability) ? previousInner : sr.times(previousInner, scanProbability);
     }
 
@@ -52,13 +52,13 @@ public final class Scan {
         public final Token<T> token;
 
         public Delta(
-                Token<T> token, State preScanState,
-                double postScanForward,
-                double postScanInner,
-                Rule nextRule,
-                int nextPosition,
-                int nextRuleStart,
-                int nextDot
+                final Token<T> token, final State preScanState,
+                final double postScanForward,
+                final double postScanInner,
+                final Rule nextRule,
+                final int nextPosition,
+                final int nextRuleStart,
+                final int nextDot
         ) {
             this.preScanState = preScanState;
             this.postScanForward = postScanForward;

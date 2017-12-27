@@ -14,7 +14,7 @@ public class ParseTreeWithScore {
     public final State.ViterbiScore score;
     public final DblSemiring semiring;
 
-    public ParseTreeWithScore( ParseTree parseTree,  State.ViterbiScore score,  DblSemiring semiring) {
+    public ParseTreeWithScore(final ParseTree parseTree, final State.ViterbiScore score, final DblSemiring semiring) {
         this.parseTree = parseTree;
         this.score = score;
         this.semiring = semiring;
@@ -34,10 +34,10 @@ public class ParseTreeWithScore {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ParseTreeWithScore that = (ParseTreeWithScore) o;
+        final ParseTreeWithScore that = (ParseTreeWithScore) o;
         return parseTree.equals(that.parseTree) && score.equals(that.score) && semiring.equals(that.semiring);
 
     }

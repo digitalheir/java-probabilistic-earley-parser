@@ -48,9 +48,9 @@ public class StateSets<T> {
     private final TIntObjectMap<Token<T>> scannedTokensAtPosition = new TIntObjectHashMap<>(50, 0.5F, -1);
 
 
-    public StateSets(Grammar<T> grammar) {
+    public StateSets(final Grammar<T> grammar) {
         this.grammar = grammar;
-        DblSemiring semiring = grammar.semiring;
+        final DblSemiring semiring = grammar.semiring;
         this.forwardScores = new ForwardScores(grammar);
         this.innerScores = new InnerScores(semiring, grammar.atoms);
         viterbiScoresDbl = new TObjectDoubleHashMap<>(500, 0.5F, Double.NaN);
@@ -59,7 +59,7 @@ public class StateSets<T> {
     /**
      * Runs in O(1) (expected time of map put)
      */
-    static void add(TIntObjectHashMap<Set<State>> states, int position, State state) {
+    static void add(final TIntObjectHashMap<Set<State>> states, final int position, final State state) {
         if (!states.containsKey(position)) states.put(position, new HashSet<>());
         states.get(position).add(state);
     }
@@ -71,7 +71,7 @@ public class StateSets<T> {
      * @param scannedToken The token that was scanned to create this state
      * @return State specified by parameter. May or may not be in the state table. If not, it is added.
      */
-    public State getOrCreate(State state, Token<T> scannedToken) {
+    public State getOrCreate(final State state, final Token<T> scannedToken) {
         if (contains(state)) {
             return state;
         } else {
@@ -85,7 +85,7 @@ public class StateSets<T> {
      *
      * @param state State to add
      */
-    private void addState(final State state, Token<T> scannedToken) {
+    private void addState(final State state, final Token<T> scannedToken) {
         final int index = state.position;
 
         states.add(state);
@@ -97,7 +97,7 @@ public class StateSets<T> {
         completedStates.addIfCompleted(state);
         activeStates.addIfActive(index, state, grammar.unitStarScores);
         if (scannedToken != null) {
-            ScannedToken<T> eScannedToken = new ScannedToken<>(
+            final ScannedToken<T> eScannedToken = new ScannedToken<>(
                     scannedToken,
                     state.rule,
                     state.ruleDotPosition
@@ -109,15 +109,15 @@ public class StateSets<T> {
         }
     }
 
-    public Set<State> getStates(int index) {
+    public Set<State> getStates(final int index) {
         return byIndex.get(index);
     }
 
     /**
-     * @param state
+     * @param state {@see State} to add
      * @return whether state was new
      */
-    public boolean addIfNew(State state) {
+    public boolean addIfNew(final State state) {
         if (!contains(state)) {
             getOrCreate(state);
             return true;
@@ -132,15 +132,15 @@ public class StateSets<T> {
                 .mapToInt(Set::size).sum();
     }
 
-    public boolean contains(State s) {
+    public boolean contains(final State s) {
         return states.contains(s);
     }
 
     public void createStateAndSetScores(
-            Token<T> token, State preScanState,
-            double postScanForward,
-            double postScanInner,
-            State nextState
+            final Token<T> token, final State preScanState,
+            final double postScanForward,
+            final double postScanInner,
+            final State nextState
     ) {
         Objects.requireNonNull(token);
         final DblSemiring sr = this.grammar.semiring;
@@ -160,25 +160,26 @@ public class StateSets<T> {
         setViterbiScore(new State.ViterbiScore(postScanInner, preScanState, postScanState, sr));
     }
 
-    public void createStateAndSetScores(Scan.Delta<T> score) {
+    @Deprecated
+    public void createStateAndSetScores(final Scan.Delta<T> score) {
         createStateAndSetScores(score.token, score.preScanState, score.postScanForward, score.postScanInner, score.nextState);
     }
 
-    public void setViterbiScore(State.ViterbiScore viterbiScore) {
+    public void setViterbiScore(final State.ViterbiScore viterbiScore) {
         this.viterbiScores.put(viterbiScore.resultingState, viterbiScore);
         this.viterbiScoresDbl.put(viterbiScore.resultingState, viterbiScore.probabilityAsSemiringElement);
     }
 
-    public ScannedToken<T> getScannedToken(State state) {
+    public ScannedToken<T> getScannedToken(final State state) {
         return scannedTokens.get(state);
     }
 
-    public Token<T> getScannedToken(int pos) {
+    public Token<T> getScannedToken(final int pos) {
         return scannedTokensAtPosition.get(pos);
     }
 
 
-    public State getOrCreate(State state) {
+    public State getOrCreate(final State state) {
         if (contains(state)) {
             return state;
         } else {
@@ -190,7 +191,7 @@ public class StateSets<T> {
         }
     }
 
-    public void processDelta(Complete.ViterbiDelta delta) {
+    public void processDelta(final Complete.ViterbiDelta delta) {
         // Add new states to chart
         if (delta.isNewState) addIfNew(delta.resultingState);
         if (delta.newViterbiScore != null) setViterbiScore(delta.newViterbiScore);

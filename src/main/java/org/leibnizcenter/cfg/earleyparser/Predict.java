@@ -19,10 +19,10 @@ public class Predict {
         public final State predicted;
         public final boolean isNew;
 
-        public Delta(boolean isNew, State state,
-                     double y_to_vProbability,
-                     double fw,
-                     State statePredecessor) {
+        public Delta(final boolean isNew, final State state,
+                     final double y_to_vProbability,
+                     final double fw,
+                     final State statePredecessor) {
             this.isNew = isNew;
             this.predicted = state;
             this.Y_to_vProbability = y_to_vProbability;

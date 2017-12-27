@@ -62,11 +62,11 @@ public class State {
      * @param ruleStartPosition The origin position of the newly predicted State.
      * @throws NullPointerException If <code>rule</code> is <code>null</code>.
      */
-    public State(Rule rule, int ruleStartPosition) {
+    public State(final Rule rule, final int ruleStartPosition) {
         this(rule, ruleStartPosition, ruleStartPosition, 0);
     }
 
-    public State(Rule rule, int position, int ruleStartPosition, int ruleDotPosition) {
+    public State(final Rule rule, final int position, final int ruleStartPosition, final int ruleDotPosition) {
         if (rule == null) throw new NullPointerException("null rule");
         this.rule = rule;
         this.ruleStartPosition = ruleStartPosition;
@@ -75,7 +75,7 @@ public class State {
         this.hashCode = computeHashCode();
     }
 
-    public static State create(int index, int ruleStart, int dotPosition, Rule rule) {
+    public static State create(final int index, final int ruleStart, final int dotPosition, final Rule rule) {
         return new State(rule, index, ruleStart, dotPosition);
     }
 
@@ -109,18 +109,18 @@ public class State {
      *                                   is already at the end of its right side.
      */
     public int advanceDot() {
-        int position = (ruleDotPosition);
+        final int position = (ruleDotPosition);
         if (position < 0 || position > rule.right.length) throw new IndexOutOfBoundsException(
                 "illegal position: " + position);
         return position + 1;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         else if (o == null || getClass() != o.getClass()) return false;
         else {
-            State state = (State) o;
+            final State state = (State) o;
             return ruleStartPosition == state.ruleStartPosition
                     && ruleDotPosition == state.ruleDotPosition
                     && position == state.position
@@ -141,7 +141,7 @@ public class State {
         return result;
     }
 
-    public boolean comesBefore(int index) {
+    public boolean comesBefore(final int index) {
         return position < index;
     }
 
@@ -151,7 +151,7 @@ public class State {
         private final State state;
         private final State origin;
 
-        private StateWithScore(State state, double forwardScore, double innerScore, State origin) {
+        private StateWithScore(final State state, final double forwardScore, final double innerScore, final State origin) {
             this.forwardScore = forwardScore;
             this.state = state;
             this.innerScore = innerScore;
@@ -164,7 +164,7 @@ public class State {
 
         @Override
         public String toString() {
-            DecimalFormat df = new DecimalFormat("#.00");
+            final DecimalFormat df = new DecimalFormat("#.00");
 
             return "StateWithScore{" +
                     "forwardScore=" + df.format(forwardScore) +
@@ -191,7 +191,7 @@ public class State {
 
         private final int hashCode;
 
-        public ViterbiScore(double probabilityAsSemiringElement, State origin, State resultingState, DblSemiring semiring) {
+        public ViterbiScore(final double probabilityAsSemiringElement, final State origin, final State resultingState, final DblSemiring semiring) {
             this.probabilityAsSemiringElement = probabilityAsSemiringElement;
             this.origin = origin;
             this.resultingState = resultingState;
@@ -204,11 +204,11 @@ public class State {
         }
 
         @Override
-        public final boolean equals(Object o) {
+        public final boolean equals(final Object o) {
             if (this == o) return true;
             else if (o == null || getClass() != o.getClass()) return false;
             else {
-                ViterbiScore that = (ViterbiScore) o;
+                final ViterbiScore that = (ViterbiScore) o;
                 return Double.compare(that.probabilityAsSemiringElement, probabilityAsSemiringElement) == 0
                         && (origin != null ? origin.equals(that.origin) : that.origin == null
                         && semiring.equals(that.semiring)
@@ -223,7 +223,7 @@ public class State {
 
         private int computeHashCode() {
             int result;
-            long temp;
+            final long temp;
             result = origin != null ? origin.hashCode() : 0;
             temp = Double.doubleToLongBits(probabilityAsSemiringElement);
             result = 31 * result + (int) (temp ^ (temp >>> 32));

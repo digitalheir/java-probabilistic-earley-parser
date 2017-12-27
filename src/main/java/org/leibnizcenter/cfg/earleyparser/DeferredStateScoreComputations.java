@@ -14,13 +14,13 @@ public class DeferredStateScoreComputations {
     public final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
 
-    public DeferredStateScoreComputations(Grammar grammar) {
+    public DeferredStateScoreComputations(final Grammar grammar) {
         this.states = new HashMap<>();
         this.semiring = grammar.semiring;
     }
 
-    public ExpressionWrapper getOrCreate(State state,
-                                         double default_) {
+    public ExpressionWrapper getOrCreate(final State state,
+                                         final double default_) {
         if (this.states.containsKey(state)) {
             return this.states.get(state);
         } else {
@@ -30,8 +30,8 @@ public class DeferredStateScoreComputations {
         }
     }
 
-    public void plus(State s, Resolvable addValue) {
-        ExpressionWrapper current = this.getOrCreate(
+    public void plus(final State s, final Resolvable addValue) {
+        final ExpressionWrapper current = this.getOrCreate(
                 s,
                 this.semiring.zero()
         );

@@ -9,7 +9,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 public class Atom extends Resolvable {
     public final double value;
 
-    public Atom(double value) {
+    public Atom(final double value) {
         this.value = value;
     }
 
@@ -20,13 +20,13 @@ public class Atom extends Resolvable {
 
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return this == o || !(o == null || getClass() != o.getClass()) && Double.compare(((Atom) o).value, value) == 0;
     }
 
     @Override
     public int hashCode() {
-        long temp = Double.doubleToLongBits(value);
+        final long temp = Double.doubleToLongBits(value);
         return (int) (temp ^ (temp >>> 32));
     }
 

@@ -17,7 +17,7 @@ public class Complete {
         public final Resolvable addInner;
         public final boolean newCompletedStateNoUnitProduction;
 
-        public Delta(State state, Resolvable addInner, Resolvable addForward, boolean newCompletedStateNoUnitProduction) {
+        public Delta(final State state, final Resolvable addInner, final Resolvable addForward, final boolean newCompletedStateNoUnitProduction) {
             this.state = state;
             this.addInner = addInner;
             this.addForward = addForward;
@@ -35,7 +35,7 @@ public class Complete {
         public final boolean isNewState;
         private final boolean isNewCompletedState;
 
-        public ViterbiDelta(State resultingState, boolean isNewCompletedState, State.ViterbiScore newViterbiScore, boolean isNewState) {
+        public ViterbiDelta(final State resultingState, final boolean isNewCompletedState, final State.ViterbiScore newViterbiScore, final boolean isNewState) {
             this.isNewCompletedState = isNewCompletedState;
             this.resultingState = resultingState;
             this.newViterbiScore = newViterbiScore;

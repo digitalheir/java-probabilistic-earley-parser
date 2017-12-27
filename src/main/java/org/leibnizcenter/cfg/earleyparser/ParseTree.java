@@ -37,7 +37,7 @@ public abstract class ParseTree {
      * tree.
      */
     @SuppressWarnings("WeakerAccess")
-    public ParseTree(Category category) {
+    public ParseTree(final Category category) {
         this(category, new LinkedList<>());
     }
 
@@ -51,15 +51,15 @@ public abstract class ParseTree {
      *                 order.
      */
     @SuppressWarnings("WeakerAccess")
-    public ParseTree(Category category, List<ParseTree> children) {
+    public ParseTree(final Category category, final List<ParseTree> children) {
         this.category = category;
         this.children = children;
     }
 
     private static Stream<ParseTree> getFlattenedStream(
-            BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep,
-            List<ParseTree> parents,
-            ParseTree tree) {
+            final BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep,
+            final List<ParseTree> parents,
+            final ParseTree tree) {
         switch (subTreesToKeep.apply(parents, tree)) {
             case REMOVE:
                 return Stream.empty();
@@ -95,16 +95,16 @@ public abstract class ParseTree {
         return children;
     }
 
-    void addRightMost(ParseTree tree) {
+    void addRightMost(final ParseTree tree) {
         children.add(tree);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ParseTree parseTree = (ParseTree) o;
+        final ParseTree parseTree = (ParseTree) o;
 
         return category.equals(parseTree.category) && (children != null ? children.equals(parseTree.children) : parseTree.children == null);
 
@@ -116,7 +116,7 @@ public abstract class ParseTree {
         return sb.toString();
     }
 
-    private void toString(StringBuilder sb, String prefix, boolean isTail) {
+    private void toString(final StringBuilder sb, final String prefix, final boolean isTail) {
         sb.append(prefix)
                 .append(isTail ? "└── " : "├── ")
                 .append(category.toString())
@@ -151,12 +151,12 @@ public abstract class ParseTree {
      * @param subTreesToKeep A function that returns the {@link FlattenOption} that specifies how to deal with the given tree node.
      * @return Newly instantiated tree
      */
-    public ParseTree flatten(BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
+    public ParseTree flatten(final BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
         return flatten(new ArrayList<>(), subTreesToKeep);
     }
 
-    private ParseTree flatten(List<ParseTree> parents, BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
-        List<ParseTree> parents2 = new ArrayList<>(parents);
+    private ParseTree flatten(final List<ParseTree> parents, final BiFunction<List<ParseTree>, ParseTree, FlattenOption> subTreesToKeep) {
+        final List<ParseTree> parents2 = new ArrayList<>(parents);
         parents2.add(this);
 
 
@@ -190,13 +190,13 @@ public abstract class ParseTree {
         public final org.leibnizcenter.cfg.token.Token<E> token;
 
         @SuppressWarnings("WeakerAccess")
-        public Leaf(org.leibnizcenter.cfg.token.Token<E> scannedToken, Category category) {
+        public Leaf(final org.leibnizcenter.cfg.token.Token<E> scannedToken, final Category category) {
             super(category, null);
             this.token = scannedToken;
         }
 
         @SuppressWarnings("WeakerAccess")
-        public Leaf(ScannedToken<E> scannedState) {
+        public Leaf(final ScannedToken<E> scannedState) {
             this(scannedState.scannedToken, scannedState.scannedCategory);
         }
 
@@ -207,23 +207,23 @@ public abstract class ParseTree {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             return o instanceof Leaf && super.equals(o) && token.equals(((Leaf) o).token);
         }
     }
 
     @SuppressWarnings("WeakerAccess")
     public static class NonLeaf extends ParseTree {
-        public NonLeaf(Category node) {
+        public NonLeaf(final Category node) {
             super(node);
         }
 
-        public NonLeaf(Category node, List<ParseTree> children) {
+        public NonLeaf(final Category node, final List<ParseTree> children) {
             super(node, children);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             return o instanceof NonLeaf && super.equals(o);
         }
 

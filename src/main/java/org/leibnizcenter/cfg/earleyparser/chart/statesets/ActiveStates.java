@@ -32,24 +32,24 @@ public class ActiveStates<T> {
      * Runs in O(1).
      */
     @SuppressWarnings("WeakerAccess")
-    public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(int j, NonTerminal cat) {
+    public Collection<State> getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(final int j, final NonTerminal cat) {
         if (!nonTerminalActiveAtIWithNonZeroUnitStarToY.contains(j))
             return null;
         else
             return nonTerminalActiveAtIWithNonZeroUnitStarToY.get(j).get(cat);
     }
 
-    public Set<State> getStatesActiveOnNonTerminal(NonTerminal nonTerminal, int position, int beforeOrOnPosition) {
+    public Set<State> getStatesActiveOnNonTerminal(final NonTerminal nonTerminal, final int position, final int beforeOrOnPosition) {
         // stateToAdvance.position <= beforeOrOnPosition;
         if (position <= beforeOrOnPosition) {
-            TIntObjectHashMap<Set<State>> setTIntObjectHashMap = statesActiveOnNonTerminal.get(nonTerminal);
+            final TIntObjectHashMap<Set<State>> setTIntObjectHashMap = statesActiveOnNonTerminal.get(nonTerminal);
             if (setTIntObjectHashMap != null && setTIntObjectHashMap.containsKey(position))
                 return setTIntObjectHashMap.get(position);
         }
         return null;
     }
 
-    public Set<State> getActiveOnNonTerminals(int index) {
+    public Set<State> getActiveOnNonTerminals(final int index) {
         //if (!statesActiveOnNonTerminals.containsKey(index)) statesActiveOnNonTerminals.put(index, new HashSet<>());
         return statesActiveOnNonTerminals.get(index);
     }
@@ -62,9 +62,9 @@ public class ActiveStates<T> {
      * @return States active on given position and terminal
      */
     @SuppressWarnings("SuspiciousMethodCalls")
-    public Collection<State> getActiveOn(int position, Terminal<?> terminal) {
+    public Collection<State> getActiveOn(final int position, final Terminal<?> terminal) {
         if (statesActiveOnTerminals.containsKey(position)) {
-            Set<State> states = statesActiveOnTerminals.get(position).get(terminal);
+            final Set<State> states = statesActiveOnTerminals.get(position).get(terminal);
             if (Collections2.isFilled(states))
                 return Collections.unmodifiableCollection(states);
         }
@@ -78,7 +78,7 @@ public class ActiveStates<T> {
      * @param activeCategory Category on which state is active
      * @param state          State to add
      */
-    private void addStateToActiveOnTerminal(int position, Terminal<T> activeCategory, State state) {
+    private void addStateToActiveOnTerminal(final int position, final Terminal<T> activeCategory, final State state) {
         if (!activeCategory.equals(state.getActiveCategory()))
             throw new IssueRequest("Given category was not the same category on which the state was active. This is a bug.");
         if (!statesActiveOnTerminals.containsKey(position))
@@ -94,8 +94,8 @@ public class ActiveStates<T> {
      *
      * @param state State to add
      */
-    private void addToStatesActiveOnNonTerminal(State state) {
-        int position = state.position;
+    private void addToStatesActiveOnNonTerminal(final State state) {
+        final int position = state.position;
         final NonTerminal activeCategory = (NonTerminal) state.getActiveCategory();
         final TIntObjectHashMap<Set<State>> mapForCategory = statesActiveOnNonTerminal.containsKey(activeCategory) ? statesActiveOnNonTerminal.get(activeCategory) : new TIntObjectHashMap<>(50, 0.5F, -1);
         final Set<State> s = mapForCategory.containsKey(position) ? mapForCategory.get(position) : new HashSet<>();
@@ -145,7 +145,7 @@ public class ActiveStates<T> {
         }
     }
 
-    public Stream<? extends StateInformationTriple> streamAllStatesToAdvance(StateInformationTriple completedState) {
+    public Stream<? extends StateInformationTriple> streamAllStatesToAdvance(final StateInformationTriple completedState) {
         final State state = completedState.completedState;
         final Collection<State> statesActive = getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
         return statesActive == null ? Stream.empty() : statesActive
@@ -158,7 +158,7 @@ public class ActiveStates<T> {
                 );
     }
 
-    public Collection<State> getJustScannedError(int position) {
+    public Collection<State> getJustScannedError(final int position) {
         return justScannedError.get(position);
     }
 

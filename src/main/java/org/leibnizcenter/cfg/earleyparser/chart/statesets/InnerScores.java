@@ -16,13 +16,13 @@ public class InnerScores {
     private final Map<State,Atom> innerScoresAtom=new HashMap<>(500);
     private final AtomFactory atoms;
 
-    InnerScores(DblSemiring semiring, AtomFactory atoms) {
+    InnerScores(final DblSemiring semiring, final AtomFactory atoms) {
         this.semiring=semiring;
         this.atoms=atoms;
         this.innerScores = new TObjectDoubleHashMap<>(500, 0.5F, semiring.zero());
     }
 
-    public void put(State s, double probability) {
+    public void put(final State s, final double probability) {
         innerScores.put(s, probability);
         innerScoresAtom.put(s, atoms.getAtom(probability));
     }
@@ -33,7 +33,7 @@ public class InnerScores {
      * @param state State for which to get inner score
      * @return inner score so far
      */
-    public double get(State state) {
+    public double get(final State state) {
         return innerScores.get(state);
     }
 
@@ -43,7 +43,7 @@ public class InnerScores {
      * @param state State for which to get inner score
      * @return inner score so far
      */
-    public Atom getAtom(State state) {
+    public Atom getAtom(final State state) {
         return innerScoresAtom.get(state);
     }
 }

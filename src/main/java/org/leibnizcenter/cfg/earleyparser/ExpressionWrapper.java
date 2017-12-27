@@ -8,12 +8,12 @@ public class ExpressionWrapper extends Resolvable {
     private double literal = Double.NaN;
     private Resolvable expression = null;
 
-    public ExpressionWrapper(Resolvable expression) {
+    public ExpressionWrapper(final Resolvable expression) {
         if (expression == null) throw new NullPointerException();
         this.expression = expression;
     }
 
-    public ExpressionWrapper(double literal) {
+    public ExpressionWrapper(final double literal) {
         this.literal = literal;
     }
 
@@ -25,7 +25,7 @@ public class ExpressionWrapper extends Resolvable {
     }
 
     @SuppressWarnings("unused")
-    public void setExpression(Resolvable expression) {
+    public void setExpression(final Resolvable expression) {
         if (lock) throw new IllegalStateException("Value already locked");
         if (expression == null) throw new NullPointerException();
         this.literal = Double.NaN;

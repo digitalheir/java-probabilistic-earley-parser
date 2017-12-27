@@ -12,17 +12,17 @@ public class ScannedToken<E> {
     public final Category scannedCategory;
 
 
-    public ScannedToken(Token<E> scannedToken, Rule rule, int ruleDotPosition) {
+    public ScannedToken(final Token<E> scannedToken, final Rule rule, final int ruleDotPosition) {
         this.scannedToken = scannedToken;
         this.scannedCategory = rule.getRight()[ruleDotPosition - 1];
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ScannedToken<?> that = (ScannedToken<?>) o;
+        final ScannedToken<?> that = (ScannedToken<?>) o;
 
         return scannedToken != null ? scannedToken.equals(that.scannedToken) : that.scannedToken == null && (scannedCategory != null ? scannedCategory.equals(that.scannedCategory) : that.scannedCategory == null);
 
