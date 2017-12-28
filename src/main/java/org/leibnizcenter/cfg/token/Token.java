@@ -15,18 +15,18 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 public class Token<T> {
     public final T obj;
 
-    public Token(T source) {
+    public Token(final T source) {
         if (source == null)
             throw new Error("Source object can't be null for an instantiated token. Did you mean to create a null token?");
         this.obj = source;
     }
 
-    public static <T> Token<T> from(T t) {
+    public static <T> Token<T> from(final T t) {
         if (t == null) return null;
         else return new Token<>(t);
     }
 
-    public static <T> Token<T> of(T source) {
+    public static <T> Token<T> of(final T source) {
         return new Token<>(source);
     }
 
@@ -36,11 +36,11 @@ public class Token<T> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Token<?> token = (Token<?>) o;
+        final Token<?> token = (Token<?>) o;
 
         return obj.equals(token.obj);
 

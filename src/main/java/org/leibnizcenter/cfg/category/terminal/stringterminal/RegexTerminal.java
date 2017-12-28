@@ -16,30 +16,30 @@ public class RegexTerminal implements StringTerminal {
     public final Pattern pattern;
 
     @SuppressWarnings("unused")
-    public RegexTerminal(Pattern pattern) {
+    public RegexTerminal(final Pattern pattern) {
         this.pattern = pattern;
     }
 
     @SuppressWarnings("unused")
-    public RegexTerminal(String pattern) {
+    public RegexTerminal(final String pattern) {
         this.pattern = Pattern.compile(pattern);
     }
 
-    public RegexTerminal(String pattern, int flags) {
+    public RegexTerminal(final String pattern, final int flags) {
         this.pattern = Pattern.compile(pattern, flags);
     }
 
     @Override
-    public boolean hasCategory(Token<String> token) {
+    public boolean hasCategory(final Token<String> token) {
         return pattern.matcher(token.obj).matches();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        RegexTerminal that = (RegexTerminal) o;
+        final RegexTerminal that = (RegexTerminal) o;
 
         return pattern.equals(that.pattern);
     }

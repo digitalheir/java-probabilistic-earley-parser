@@ -1,8 +1,10 @@
 
 package org.leibnizcenter.cfg.grammar;
 
+import org.leibnizcenter.cfg.algebra.matrix.Decomposition;
 import org.leibnizcenter.cfg.algebra.matrix.LUDecomposition;
 import org.leibnizcenter.cfg.algebra.matrix.Matrix;
+import org.leibnizcenter.cfg.algebra.matrix.QRDecomposition;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
@@ -127,36 +129,39 @@ public final class Grammar<T> {
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      */
     private static LeftCorners getReflexiveTransitiveClosure(final DblSemiring semiring, final Set<NonTerminal> nonTerminals, final LeftCorners P) {
-        final NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
-        final Matrix R_L_inverse = new Matrix(nonTerminals.size(), nonTerminals.size());
-        for (int row = 0; row < nonterminalsArr.length; row++) {
+        final int nonTerminalsCount = nonTerminals.size();
+        final NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminalsCount]);
+
+        final Matrix R_L_inverse = new Matrix(nonTerminalsCount, nonTerminalsCount);
+        R_L_inverse.forEach((row, col, value) -> {
             final NonTerminal X = nonterminalsArr[row];
-            for (int col = 0; col < nonterminalsArr.length; col++) {
-                final NonTerminal Y = nonterminalsArr[col];
-                // I - P_L
-                R_L_inverse.set(row, col, (row == col ? 1 : 0) - P.getProbability(X, Y));
-            }
+            final NonTerminal Y = nonterminalsArr[col];
+            // I - P_L
+            R_L_inverse.set(row, col, (row == col ? 1 : 0) - P.getProbability(X, Y));
+        });
+
+
+        final Matrix R_L = inverseMatrix(R_L_inverse);
+        final LeftCorners R__L = new LeftCorners();
+            /*
+             * Copy all matrix values into our {@link LeftCorners} object
+             */
+        final int bound = R_L.getRowDimension();
+        for (int i = 0; i < bound; i++) {
+            final int row = i;
+            IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
+                    R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring));
         }
+        return R__L;
+    }
 
-
+    private static Matrix inverseMatrix(final Matrix R_L_inverse) {
         final LUDecomposition luDecomposition = new LUDecomposition(R_L_inverse);
         if (luDecomposition.isNonsingular()) {
-            final Matrix R_L = R_L_inverse.inverse(luDecomposition);
-            final LeftCorners R__L = new LeftCorners();
-        /*
-         * Copy all matrix values into our {@link LeftCorners} object
-         */
-            final int bound = R_L.getRowDimension();
-            for (int i = 0; i < bound; i++) {
-                final int row = i;
-                IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                        R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring)
-                );
-            }
-            return R__L;
+            return R_L_inverse.inverse(luDecomposition);
         } else {
-            // TODO compute brute force?
-            throw new Error();
+            return R_L_inverse.inverse(new QRDecomposition(R_L_inverse));
+            // throw new Error();
         }
     }
 

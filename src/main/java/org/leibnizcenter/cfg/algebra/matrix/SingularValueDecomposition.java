@@ -41,16 +41,16 @@ class SingularValueDecomposition {
      * @param Arg Rectangular matrix
      */
 
-    SingularValueDecomposition(Matrix Arg) {
+    SingularValueDecomposition(final Matrix Arg) {
 
         // Derived from LINPACK code.
         // Initialize.
-        double[][] A = Arg.getArrayCopy();
+        final double[][] A = Arg.getArrayCopy();
         /*
       Row and column dimensions.
 
      */
-        int m = Arg.getRowDimension();
+        final int m = Arg.getRowDimension();
         n = Arg.getColumnDimension();
 
       /* Apparently the failing cases are only a proper subset of (m<n), 
@@ -58,21 +58,21 @@ class SingularValueDecomposition {
       if (m<n) {
 	  throw new IllegalArgumentException("Jama SVD only works for m >= n"); }
       */
-        int nu = Math.min(m, n);
+        final int nu = Math.min(m, n);
         s = new double[Math.min(m + 1, n)];
         /*
       Arrays for internal storage of U and V.
      */
-        double[][] u = new double[m][nu];
-        double[][] v = new double[n][n];
-        double[] e = new double[n];
-        double[] work = new double[m];
+        final double[][] u = new double[m][nu];
+        final double[][] v = new double[n][n];
+        final double[] e = new double[n];
+        final double[] work = new double[m];
 
         // Reduce A to bidiagonal form, storing the diagonal elements
         // in s and the super-diagonal elements in e.
 
-        int nct = Math.min(m - 1, n);
-        int nrt = Math.max(0, Math.min(n - 2, m));
+        final int nct = Math.min(m - 1, n);
+        final int nrt = Math.max(0, Math.min(n - 2, m));
         reduceAToBiDiagonal(A, m, u, v, e, work, nct, nrt);
 
         // Set up the final bidiagonal matrix or order p.
@@ -106,12 +106,13 @@ class SingularValueDecomposition {
 
         // Main iteration loop for the singular values.
 
-        int pp = p - 1;
+        final int pp = p - 1;
         int iter = 0;
-        double eps = Math.pow(2.0, -52.0);
-        double tiny = Math.pow(2.0, -966.0);
+        final double eps = Math.pow(2.0, -52.0);
+        final double tiny = Math.pow(2.0, -966.0);
         while (p > 0) {
-            int k, kase;
+            int k;
+            final int kase;
 
             // Here is where a test for too many iterations would go.
 
@@ -143,7 +144,7 @@ class SingularValueDecomposition {
                     if (ks == k) {
                         break;
                     }
-                    double t = (ks != p ? Math.abs(e[ks]) : 0.) +
+                    final double t = (ks != p ? Math.abs(e[ks]) : 0.) +
                             (ks != k + 1 ? Math.abs(e[ks - 1]) : 0.);
                     if (Math.abs(s[ks]) <= tiny + eps * t) {
                         s[ks] = 0.0;
@@ -172,8 +173,8 @@ class SingularValueDecomposition {
                     e[p - 2] = 0.0;
                     for (int j = p - 2; j >= k; j--) {
                         double t = hypot(s[j], f);
-                        double cs = s[j] / t;
-                        double sn = f / t;
+                        final double cs = s[j] / t;
+                        final double sn = f / t;
                         s[j] = t;
                         if (j != k) {
                             f = -sn * e[j - 1];
@@ -195,8 +196,8 @@ class SingularValueDecomposition {
                     e[k - 1] = 0.0;
                     for (int j = k; j < p; j++) {
                         double t = hypot(s[j], f);
-                        double cs = s[j] / t;
-                        double sn = f / t;
+                        final double cs = s[j] / t;
+                        final double sn = f / t;
                         s[j] = t;
                         f = -sn * e[j];
                         e[j] = cs * e[j];
@@ -215,16 +216,16 @@ class SingularValueDecomposition {
 
                     // Calculate the shift.
 
-                    double scale = Math.max(Math.max(Math.max(Math.max(
+                    final double scale = Math.max(Math.max(Math.max(Math.max(
                             Math.abs(s[p - 1]), Math.abs(s[p - 2])), Math.abs(e[p - 2])),
                             Math.abs(s[k])), Math.abs(e[k]));
-                    double sp = s[p - 1] / scale;
-                    double spm1 = s[p - 2] / scale;
-                    double epm1 = e[p - 2] / scale;
-                    double sk = s[k] / scale;
-                    double ek = e[k] / scale;
-                    double b = ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / 2.0;
-                    double c = (sp * epm1) * (sp * epm1);
+                    final double sp = s[p - 1] / scale;
+                    final double spm1 = s[p - 2] / scale;
+                    final double epm1 = e[p - 2] / scale;
+                    final double sk = s[k] / scale;
+                    final double ek = e[k] / scale;
+                    final double b = ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / 2.0;
+                    final double c = (sp * epm1) * (sp * epm1);
                     double shift = 0.0;
                     if ((b != 0.0) | (c != 0.0)) {
                         shift = Math.sqrt(b * b + c);
@@ -321,19 +322,19 @@ class SingularValueDecomposition {
         }
     }
 
-    private static void initializeWithZero(int m, double[] work, int k) {
+    private static void initializeWithZero(final int m, final double[] work, final int k) {
         for (int i = k + 1; i < m; i++) {
             work[i] = 0.0;
         }
     }
 
-    private static void placetransofrmationblahblah(double[][] a, int m, double[][] u, int k) {
+    private static void placetransofrmationblahblah(final double[][] a, final int m, final double[][] u, final int k) {
         for (int i = k; i < m; i++) {
             u[i][k] = a[i][k];
         }
     }
 
-    private static void applyTransformation(double[][] a, int m, int k, int j) {
+    private static void applyTransformation(final double[][] a, final int m, final int k, final int j) {
         double t = 0;
         for (int i = k; i < m; i++) {
             t += a[i][k] * a[i][j];
@@ -344,7 +345,7 @@ class SingularValueDecomposition {
         }
     }
 
-    private void generateU(int m, int nu, double[][] u, int nct) {
+    private void generateU(final int m, final int nu, final double[][] u, final int nct) {
         for (int j = nct; j < nu; j++) {
             for (int i = 0; i < m; i++) {
                 u[i][j] = 0.0;
@@ -372,8 +373,8 @@ class SingularValueDecomposition {
         }
     }
 
-    private int setUpFinalBiDiagonal(double[][] a, int m, double[] e, int nct, int nrt) {
-        int p = Math.min(n, m + 1);
+    private int setUpFinalBiDiagonal(final double[][] a, final int m, final double[] e, final int nct, final int nrt) {
+        final int p = Math.min(n, m + 1);
         if (nct < n) {
             s[nct] = a[nct][nct];
         }
@@ -387,7 +388,7 @@ class SingularValueDecomposition {
         return p;
     }
 
-    private void reduceAToBiDiagonal(double[][] a, int m, double[][] u, double[][] v, double[] e, double[] work, int nct, int nrt) {
+    private void reduceAToBiDiagonal(final double[][] a, final int m, final double[][] u, final double[][] v, final double[] e, final double[] work, final int nct, final int nrt) {
         for (int k = 0; k < Math.max(nct, nrt); k++) {
             if (k < nct) {
 
@@ -422,7 +423,7 @@ class SingularValueDecomposition {
         }
     }
 
-    private void computeBlahBlah(double[][] a, int m, double[][] v, double[] e, double[] work, int k) {
+    private void computeBlahBlah(final double[][] a, final int m, final double[][] v, final double[] e, final double[] work, final int k) {
         // Compute the k-th row transformation and place the
         // k-th super-diagonal in e[k].
         // Compute 2-norm without under/overflow.
@@ -457,7 +458,7 @@ class SingularValueDecomposition {
         }
     }
 
-    private void somemorelooping(double[][] a, int m, double[] e, double[] work, int k) {
+    private void somemorelooping(final double[][] a, final int m, final double[] e, final double[] work, final int k) {
         for (int j = k + 1; j < n; j++) {
             for (int i = k + 1; i < m; i++) {
                 work[i] += e[j] * a[i][j];
@@ -465,16 +466,16 @@ class SingularValueDecomposition {
         }
     }
 
-    private void loopyloop(double[][] a, int m, double[] e, double[] work, int k) {
+    private void loopyloop(final double[][] a, final int m, final double[] e, final double[] work, final int k) {
         for (int j = k + 1; j < n; j++) {
-            double t = -e[j] / e[k + 1];
+            final double t = -e[j] / e[k + 1];
             for (int i = k + 1; i < m; i++) {
                 a[i][j] += t * work[i];
             }
         }
     }
 
-    private void computeforblahblah(double[][] a, int m, int k) {
+    private void computeforblahblah(final double[][] a, final int m, final int k) {
         s[k] = 0;
         for (int i = k; i < m; i++) {
             s[k] = hypot(s[k], a[i][k]);
@@ -499,8 +500,8 @@ class SingularValueDecomposition {
      */
 
     public Matrix getS() {
-        Matrix X = new Matrix(n, n);
-        double[][] S = X.getArray();
+        final Matrix X = new Matrix(n, n);
+        final double[][] S = X.getArray();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 S[i][j] = 0.0;

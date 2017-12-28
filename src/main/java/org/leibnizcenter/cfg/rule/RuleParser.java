@@ -72,18 +72,18 @@ public class RuleParser {
      * @param parseCategory how to parse category string into category
      * @param semiring      semiring to use
      */
-    public RuleParser(Function<String, Category> parseCategory, DblSemiring semiring) {
+    public RuleParser(final Function<String, Category> parseCategory, final DblSemiring semiring) {
         this.parseCategory = parseCategory;
         this.semiring = semiring;
     }
 
     @SuppressWarnings("ObjectAllocationInLoop")
-    static List<RhsToken> lexRhs(char[] chars) {
-        List<RhsToken> l = new ArrayList<>();
+    static List<RhsToken> lexRhs(final char[] chars) {
+        final List<RhsToken> l = new ArrayList<>();
 
         StringBuilder sb = new StringBuilder(chars.length);
         for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+            final char c = chars[i];
             final boolean isEscapedRegexDelimiter = (c == '/') && sb.length() > 0 && chars[i - 1] == '\\';
             if ((c == '/') && !(isEscapedRegexDelimiter)) {
                 if (sb.length() > 0) {
@@ -110,10 +110,10 @@ public class RuleParser {
         return l;
     }
 
-    private static RegexTerminal parseRegexTerminal(ParseTree parseTree) {
+    private static RegexTerminal parseRegexTerminal(final ParseTree parseTree) {
         final List<ParseTree> children = parseTree.children;
 
-        Set<String> modifiers = new HashSet<>();
+        final Set<String> modifiers = new HashSet<>();
         int i = children.size() - 1;
         for (; i >= 0; i--) {
             final ParseTree child = children.get(i);
@@ -121,7 +121,7 @@ public class RuleParser {
 
             //noinspection unchecked
             final char[] chars = ((ParseTree.Leaf<String>) child).token.obj.toLowerCase(Locale.ROOT).toCharArray();
-            for (char c : chars) modifiers.add(Character.toString(c));
+            for (final char c : chars) modifiers.add(Character.toString(c));
         }
         int flag = 0;
         if (modifiers.contains("x")) flag = flag | Pattern.COMMENTS;
@@ -140,7 +140,7 @@ public class RuleParser {
                 flag);
     }
 
-    private static ParseTree.FlattenOption getFlattenOption(List<ParseTree> parents, ParseTree parseTree) {
+    private static ParseTree.FlattenOption getFlattenOption(final List<ParseTree> parents, final ParseTree parseTree) {
         final ParseTree parent = (!parents.isEmpty()) ? parents.get(parents.size() - 1) : null;
         if (parseTree instanceof ParseTree.Leaf && parent != null) {
             if (parent.category.equals(REGEX)) return ParseTree.FlattenOption.KEEP;
@@ -158,12 +158,12 @@ public class RuleParser {
             return ParseTree.FlattenOption.REMOVE;
     }
 
-    Category[] parseRHS(String rhsStr) {
+    Category[] parseRHS(final String rhsStr) {
         ParseTree viterbi = new Parser(grammarRHS)
                 .getViterbiParse(RIGHT_HAND_SIDE, lexRhs(rhsStr.toCharArray()));
         if (viterbi == null) throw new IllegalArgumentException("Could not parse grammar");
         viterbi = viterbi.flatten(RuleParser::getFlattenOption);
-        List<Category> rhsList = viterbi.getChildren().stream()
+        final List<Category> rhsList = viterbi.getChildren().stream()
                 .map(this::getCategory)
                 .collect(Collectors.toList());
 
@@ -172,7 +172,7 @@ public class RuleParser {
         return RHS;
     }
 
-    private Category getCategory(ParseTree parseTree) {
+    private Category getCategory(final ParseTree parseTree) {
         final boolean isSimpleCategory = parseTree.category.equals(CATEGORY);
         final boolean isRegex = parseTree.category.equals(REGEX);
         if (!isSimpleCategory && !isRegex) throw new IllegalStateException("Error while parsing grammar");
@@ -183,19 +183,19 @@ public class RuleParser {
                 .collect(Collectors.joining()));
     }
 
-    public Rule fromString(String line) {
-        Matcher m = RULE.matcher(line);
+    public Rule fromString(final String line) {
+        final Matcher m = RULE.matcher(line);
         if (!m.matches())
             throw new IllegalArgumentException("String was not a valid rule: " + line);
         else {
             final NonTerminal LHS = new NonTerminal(m.group(1));
 
-            Category[] RHS = parseRHS(m.group(2).trim());
+            final Category[] RHS = parseRHS(m.group(2).trim());
 
             final String prob = m.group(3);
             final double probability = prob == null ? 1.0 : Double.parseDouble(prob);
             final double semiringElement = semiring.fromProbability(probability);
-            boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof NonLexicalToken));
+            final boolean isErrorRule = (Stream.of(RHS).anyMatch(cat -> cat instanceof NonLexicalToken));
 
             if (isErrorRule) {
                 return new LexicalErrorRule(probability, semiringElement, LHS, RHS);
@@ -209,7 +209,7 @@ public class RuleParser {
         final boolean isWhitespace;
         final boolean isRegexDelimiter;
 
-        public RhsToken(String s) {
+        public RhsToken(final String s) {
             super(s);
             this.isWhitespace = WHITESPACE.matcher(s).matches();
             this.isRegexDelimiter = s.length() == 1 && s.charAt(0) == '/';

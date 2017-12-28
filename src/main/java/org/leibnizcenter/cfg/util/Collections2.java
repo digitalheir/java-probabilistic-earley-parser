@@ -11,15 +11,15 @@ import java.util.Set;
  * Created by maarten on 8-2-17.
  */
 public class Collections2 {
-    public static <T> boolean nullOrEmpty(Collection<T> collection) {
+    public static <T> boolean nullOrEmpty(final Collection<T> collection) {
         return collection == null || collection.isEmpty();
     }
 
-    public static <T> boolean isFilled(Collection<T> collection) {
+    public static <T> boolean isFilled(final Collection<T> collection) {
         return !nullOrEmpty(collection);
     }
 
-    public static <T> Collection<T> emptyIfNull(Collection<T> collection) {
+    public static <T> Collection<T> emptyIfNull(final Collection<T> collection) {
         return collection == null ? Collections.emptySet() : collection;
     }
 }

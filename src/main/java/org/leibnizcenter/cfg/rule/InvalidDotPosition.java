@@ -10,7 +10,7 @@ import java.security.InvalidParameterException;
  * Created by maarten on 24-6-16.
  */
 class InvalidDotPosition extends InvalidParameterException {
-    InvalidDotPosition(int dotPosition, Category[] right) {
+    InvalidDotPosition(final int dotPosition, final Category[] right) {
         super("Dot could not be placed at position " + dotPosition + " for a RHS of length " + right.length);
     }
 }

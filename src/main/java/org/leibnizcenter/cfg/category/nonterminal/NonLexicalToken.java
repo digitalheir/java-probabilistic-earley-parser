@@ -11,7 +11,7 @@ public final class NonLexicalToken implements Terminal, KleeneClosure {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return o == this;
     }
 
@@ -21,7 +21,7 @@ public final class NonLexicalToken implements Terminal, KleeneClosure {
     }
 
     @Override
-    public boolean hasCategory(Token token) {
+    public boolean hasCategory(final Token token) {
         throw new IllegalStateException("Knowing whether a token is lexical only makes sense in the context of a vocabulary / grammar");
     }
 

@@ -53,19 +53,19 @@ public class ParserTest {
 
     @Test
     public void simpleGrammar2() throws Exception {
-        double p = (0.6);
-        double q = (0.4);
+        final double p = (0.6);
+        final double q = (0.4);
         // b surrounded by a's, or a single a
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a)
                 .addRule(q, S, S, b, S)
                 .build();
-        List<Token<String>> tokens1 = Tokens.tokenize("a");
-        ParseTreeWithScore parse1 = new Parser<>(grammar).getViterbiParseWithScore(S, tokens1);
+        final List<Token<String>> tokens1 = Tokens.tokenize("a");
+        final ParseTreeWithScore parse1 = new Parser<>(grammar).getViterbiParseWithScore(S, tokens1);
         assertEquals(0.6, parse1.getProbability(), 0.0000000001);
 
-        List<Token<String>> tokens2 = Tokens.tokenize("a  b a b a");
-        ParseTreeWithScore parse2 = new Parser<>(grammar).getViterbiParseWithScore(S, tokens2);
+        final List<Token<String>> tokens2 = Tokens.tokenize("a  b a b a");
+        final ParseTreeWithScore parse2 = new Parser<>(grammar).getViterbiParseWithScore(S, tokens2);
 
         Assert.assertEquals(parse2.getProbability(), 0.4 * 0.4 * 0.6 * 0.6 * 0.6, 0.00001);
     }
@@ -73,17 +73,17 @@ public class ParserTest {
 
     @Test
     public void simpleGrammar3() throws Exception {
-        double p = (0.6);
-        double q = (0.4);
+        final double p = (0.6);
+        final double q = (0.4);
         final LogSemiring sr = LogSemiring.get();
         // a surrounded by b's, or a single a
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, b, S, b)
                 .build();
-        List<Token<String>> tokens = Tokens.tokenize("b b a b b");
-        ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
+        final List<Token<String>> tokens = Tokens.tokenize("b b a b b");
+        final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
         Assert.assertEquals(parse.getProbability(), q * q * p, 0.00001);
     }
@@ -91,15 +91,15 @@ public class ParserTest {
     @Test
     public void viterbi() throws Exception {
         final LogSemiring sr = LogSemiring.get();
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.5, S, S, S)
                 .addRule(0.5, A, a)
                 .build();
 
-        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
-        ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
+        final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
+        final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
         Assert.assertNotNull(parse);
         assertEquals(parse.getProbability(), Math.pow(0.5, 5), 0.0001);
@@ -108,7 +108,7 @@ public class ParserTest {
     @Test
     public void viterbi2() throws Exception {
         final LogSemiring sr = LogSemiring.get();
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.1, S, S, S)
@@ -121,8 +121,8 @@ public class ParserTest {
                 .addRule(0.5, D, a)
                 .build();
 
-        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
-        ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
+        final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
+        final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
         Assert.assertEquals(parse.getProbability(), 0.01, 0.0001);
     }
@@ -131,7 +131,7 @@ public class ParserTest {
     @Test
     public void viterbi3() throws Exception {
         final LogSemiring sr = LogSemiring.get();
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(1.0, S, A, A)
                 .addRule(1.0, A, B)
@@ -143,8 +143,8 @@ public class ParserTest {
                 .addRule(0.5, C, a, a)
                 .build();
 
-        List<Token<String>> tokens = Tokens.tokenize("a", "a", "a", "a");
-        ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
+        final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a", "a");
+        final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
         Assert.assertEquals(parse.getProbability(), 0.6561, 0.0001);
     }
@@ -165,9 +165,9 @@ public class ParserTest {
         final NonTerminal Det = Category.nonTerminal("Det");
         final NonTerminal N = Category.nonTerminal("N");
 
-        double PSVP = 0.9;
-        double PSNP = 1 - PSVP;
-        Grammar<String> grammar = new Grammar.Builder<String>("test")
+        final double PSVP = 0.9;
+        final double PSNP = 1 - PSVP;
+        final Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .withSemiring(LogSemiring.get())
                 .addRule(PSVP, S, NP, VP)
                 .addRule(PSNP, S, NP)
@@ -184,7 +184,7 @@ public class ParserTest {
                 .addRule(N, girl)
                 .build();
 
-        Parser<String> parser = new Parser<>(grammar);
+        final Parser<String> parser = new Parser<>(grammar);
         // Parsable
         Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the girl left")), PSVP, 0.0001);
         Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous

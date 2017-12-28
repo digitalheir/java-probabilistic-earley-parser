@@ -115,8 +115,8 @@ public class ParseTreeTest {
 
     @Test
     public final void testNewParseTree() {
-        LinkedList<ParseTree> children1 = new LinkedList<>();
-        LinkedList<ParseTree> children2 = new LinkedList<>();
+        final LinkedList<ParseTree> children1 = new LinkedList<>();
+        final LinkedList<ParseTree> children2 = new LinkedList<>();
         final ParseTree tree1 = new ParseTree.NonLeaf(S, children1);
         final ParseTree tree2 = new ParseTree.NonLeaf(S, children2);
 

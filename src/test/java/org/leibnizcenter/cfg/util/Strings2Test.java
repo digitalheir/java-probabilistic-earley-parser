@@ -17,6 +17,7 @@ public class Strings2Test {
         assertEquals(true, Strings2.isNullOrEmpty(""));
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void isNull() throws Exception {
         assertEquals(true, Strings2.isNullOrEmpty(null));

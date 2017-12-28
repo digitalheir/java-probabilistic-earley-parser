@@ -29,17 +29,17 @@ public class ParseOptions<T> {
 //    public final boolean parallelizeComplete;
 
     public ParseOptions(
-            ScanProbability<T> scanProbability,
+            final ScanProbability<T> scanProbability,
 
-            ParseCallback<T> onPostPredict,
-            ParseCallback<T> onPostScan,
-            ParseCallback<T> onPostComplete,
+            final ParseCallback<T> onPostPredict,
+            final ParseCallback<T> onPostScan,
+            final ParseCallback<T> onPostComplete,
 
-            ParseCallback<T> onPrePredict,
-            ParseCallback<T> onPreScan,
-            ParseCallback<T> onPreComplete,
+            final ParseCallback<T> onPrePredict,
+            final ParseCallback<T> onPreScan,
+            final ParseCallback<T> onPreComplete,
 
-            ScanMode scanMode/*,
+            final ScanMode scanMode/*,
 
             boolean parallelizePredict,
             boolean parallelizeScan,
@@ -62,27 +62,27 @@ public class ParseOptions<T> {
 //        this.parallelizeComplete = parallelizeComplete;
     }
 
-    public void onPredict(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void onPredict(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPostPredict != null) onPostPredict.on(i, token, chart);
     }
 
-    public void onScan(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void onScan(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPostScan != null) onPostScan.on(i, token, chart);
     }
 
-    public void onComplete(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void onComplete(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPostComplete != null) onPostComplete.on(i, token, chart);
     }
 
-    public void beforePredict(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void beforePredict(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPrePredict != null) onPostComplete.on(i, token, chart);
     }
 
-    public void beforeScan(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void beforeScan(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPreScan != null) onPostComplete.on(i, token, chart);
     }
 
-    public void beforeComplete(int i, TokenWithCategories<T> token, Chart<T> chart) {
+    public void beforeComplete(final int i, final TokenWithCategories<T> token, final Chart<T> chart) {
         if (this.onPreComplete != null) onPostComplete.on(i, token, chart);
     }
 
@@ -103,48 +103,48 @@ public class ParseOptions<T> {
 //        private boolean parallelizeScan = false;
 //        private boolean parallelizeComplete = false;
 
-        public Builder<T> withScanProbability(ScanProbability<T> scanProbability) {
+        public Builder<T> withScanProbability(final ScanProbability<T> scanProbability) {
             this.scanProbability = scanProbability;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPostPredict(ParseCallback<T> onPostPredict) {
+        public Builder<T> onPostPredict(final ParseCallback<T> onPostPredict) {
             this.onPostPredict = onPostPredict;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPostScan(ParseCallback<T> onPostScan) {
+        public Builder<T> onPostScan(final ParseCallback<T> onPostScan) {
             this.onPostScan = onPostScan;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPostComplete(ParseCallback<T> onPostComplete) {
+        public Builder<T> onPostComplete(final ParseCallback<T> onPostComplete) {
             this.onPostComplete = onPostComplete;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPrePredict(ParseCallback<T> onPrePredict) {
+        public Builder<T> onPrePredict(final ParseCallback<T> onPrePredict) {
             this.onPrePredict = onPrePredict;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPreScan(ParseCallback<T> onPreScan) {
+        public Builder<T> onPreScan(final ParseCallback<T> onPreScan) {
             this.onPreScan = onPreScan;
             return this;
         }
 
         @SuppressWarnings("unused")
-        public Builder<T> onPreComplete(ParseCallback<T> onPreComplete) {
+        public Builder<T> onPreComplete(final ParseCallback<T> onPreComplete) {
             this.onPreComplete = onPreComplete;
             return this;
         }
 
-        public Builder<T> withScanMode(ScanMode scanMode) {
+        public Builder<T> withScanMode(final ScanMode scanMode) {
             this.scanMode = scanMode;
             return this;
         }

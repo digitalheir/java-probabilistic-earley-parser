@@ -11,13 +11,13 @@ import static org.junit.Assert.assertTrue;
 public class ExpressionWrapperTest {
     @Test
     public void getExpression() throws Exception {
-        ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
+        final ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
         assertEquals(new Atom(1), w.getExpression());
     }
 
     @Test
     public void setExpression() throws Exception {
-        ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
+        final ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
         assertEquals(new Atom(1), w.getExpression());
         w.setExpression(new Atom(3));
         assertEquals(new Atom(3), w.getExpression());
@@ -25,7 +25,7 @@ public class ExpressionWrapperTest {
 
     @Test(expected = IllegalStateException.class)
     public void setExpressionIllegal() throws Exception {
-        ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
+        final ExpressionWrapper w = new ExpressionWrapper(new Atom(1));
         w.resolveFinal();
         w.setExpression(null);
     }

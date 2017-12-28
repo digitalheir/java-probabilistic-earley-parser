@@ -6,7 +6,7 @@ public class MapEntry<K, V> implements Map.Entry<K, V> {
     private final K key;
     private final V value;
 
-  public MapEntry(K key, V value) {
+  public MapEntry(final K key, final V value) {
     this.key = key;
     this.value = value;
   }
@@ -22,7 +22,7 @@ public class MapEntry<K, V> implements Map.Entry<K, V> {
   }
 
   @Override
-  public final V setValue(V value) {
+  public final V setValue(final V value) {
     throw new UnsupportedOperationException();
   }
 }

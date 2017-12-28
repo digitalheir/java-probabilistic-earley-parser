@@ -26,7 +26,7 @@ public enum ScanMode {
     private static final Pattern _DROP = Pattern.compile("(?i)(drop|ignore)");
     private static final Pattern _SYNCHRONIZE = Pattern.compile("(?i)synchroni[zs](e|ation)");
 
-    public static ScanMode fromString(String scanMode) {
+    public static ScanMode fromString(final String scanMode) {
         if (_STRICT.matcher(scanMode).matches())
             return STRICT;
         else if (_WILDCARD.matcher(scanMode).matches())

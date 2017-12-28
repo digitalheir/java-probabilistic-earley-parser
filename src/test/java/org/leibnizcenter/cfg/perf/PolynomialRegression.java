@@ -42,7 +42,7 @@ public class PolynomialRegression {
      * @param degree the degree of the polynomial to fit
      * @throws IllegalArgumentException if the lengths of the two arrays are not equal
      */
-    public PolynomialRegression(double[] x, double[] y, int degree) {
+    public PolynomialRegression(final double[] x, final double[] y, final int degree) {
         this(x, y, degree, "n");
     }
 
@@ -55,11 +55,11 @@ public class PolynomialRegression {
      * @param variableName the name of the predictor variable
      * @throws IllegalArgumentException if the lengths of the two arrays are not equal
      */
-    public PolynomialRegression(double[] x, double[] y, int degree, String variableName) {
+    public PolynomialRegression(final double[] x, final double[] y, final int degree, final String variableName) {
         this.degree = degree;
         this.variableName = variableName;
 
-        int n = x.length;
+        final int n = x.length;
         QRDecomposition qr;
         Matrix matrixX;
 
@@ -67,7 +67,7 @@ public class PolynomialRegression {
         while (true) {
 
             // build Vandermonde matrix
-            double[][] vandermonde = new double[n][this.degree + 1];
+            final double[][] vandermonde = new double[n][this.degree + 1];
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= this.degree; j++) {
                     vandermonde[i][j] = Math.pow(x[i], j);
@@ -84,7 +84,7 @@ public class PolynomialRegression {
         }
 
         // create matrix from vector
-        Matrix matrixY = new Matrix(y, n);
+        final Matrix matrixY = new Matrix(y, n);
 
         // linear regression coefficients
         beta = qr.solve(matrixY);
@@ -93,16 +93,16 @@ public class PolynomialRegression {
         double sum = 0.0;
         for (int i = 0; i < n; i++)
             sum += y[i];
-        double mean = sum / n;
+        final double mean = sum / n;
 
         // total variation to be accounted for
         for (int i = 0; i < n; i++) {
-            double dev = y[i] - mean;
+            final double dev = y[i] - mean;
             sst += dev * dev;
         }
 
         // variation not accounted for
-        Matrix residuals = matrixX.times(beta).minus(matrixY);
+        final Matrix residuals = matrixX.times(beta).minus(matrixY);
         sse = residuals.norm2() * residuals.norm2();
     }
 
@@ -111,17 +111,17 @@ public class PolynomialRegression {
      *
      * @param args the command-line arguments
      */
-    public static void main(String[] args) {
-        List<long[]> results = Perf.run();
-        double[] x = new double[results.size()];
-        double[] y = new double[results.size()];
+    public static void main(final String[] args) {
+        final List<long[]> results = Perf.run();
+        final double[] x = new double[results.size()];
+        final double[] y = new double[results.size()];
         for (int i = 0; i < results.size(); i++) {
             final long[] r = results.get(i);
             x[i] = r[0];
             y[i] = r[1];
         }
 
-        PolynomialRegression regression = new PolynomialRegression(x, y, 3);
+        final PolynomialRegression regression = new PolynomialRegression(x, y, 3);
         System.out.println(regression);
     }
 
@@ -131,7 +131,7 @@ public class PolynomialRegression {
      * @param j the index
      * @return the {@code j}th regression coefficient
      */
-    public double beta(int j) {
+    public double beta(final int j) {
         // to make -0.0 print as 0.0
         if (Math.abs(beta.get(j, 0)) < 1E-4) return 0.0;
         return beta.get(j, 0);
@@ -165,7 +165,7 @@ public class PolynomialRegression {
      * @return the expected response {@code y} given the value of the predictor
      * variable {@code x}
      */
-    public double predict(double x) {
+    public double predict(final double x) {
         // horner's method
         double y = 0.0;
         for (int j = degree; j >= 0; j--)

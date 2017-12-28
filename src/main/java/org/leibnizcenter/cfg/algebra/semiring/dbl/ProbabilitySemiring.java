@@ -24,13 +24,13 @@ public class ProbabilitySemiring extends ExpressionSemiring {
     }
 
     @Override
-    public double plus(double w1, double w2) {
+    public double plus(final double w1, final double w2) {
         if (!member(w1) || !member(w2)) return Double.NEGATIVE_INFINITY;
         return w1 + w2;
     }
 
     @Override
-    public double times(double w1, double w2) {
+    public double times(final double w1, final double w2) {
         if (!member(w1) || !member(w2)) return Double.NEGATIVE_INFINITY;
         return w1 * w2;
     }
@@ -46,24 +46,24 @@ public class ProbabilitySemiring extends ExpressionSemiring {
     }
 
     @Override
-    public boolean member(double candidate) {
+    public boolean member(final double candidate) {
         return !Double.isNaN(candidate) // not a NaN,
                 && (candidate >= 0.0); // and positive
     }
 
 
     @Override
-    public double fromProbability(double x) {
+    public double fromProbability(final double x) {
         return x;
     }
 
     @Override
-    public double toProbability(double x) {
+    public double toProbability(final double x) {
         return x;
     }
 
     @Override
-    public int compare(double x, double y) {
+    public int compare(final double x, final double y) {
         return Double.compare(x, y);
     }
 }

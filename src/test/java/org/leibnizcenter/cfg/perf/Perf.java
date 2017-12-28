@@ -19,21 +19,21 @@ import java.util.List;
  * Created by Maarten on 23-8-2016.
  */
 public class Perf {
-    public static void main(String[] ignored) {
-        List<long[]> l = run();
+    public static void main(final String[] ignored) {
+        final List<long[]> l = run();
         //l.forEach(line -> System.out.println(line[0] + "\t" + line[1]));
     }
 
     public static List<long[]> run() {
-        NonTerminal A = Category.nonTerminal("A");
-        NonTerminal B = Category.nonTerminal("B");
-        NonTerminal C = Category.nonTerminal("C");
-        NonTerminal D = Category.nonTerminal("D");
-        NonTerminal S = Category.nonTerminal("S");
-        Category aa = new ExactStringTerminal("a");
+        final NonTerminal A = Category.nonTerminal("A");
+        final NonTerminal B = Category.nonTerminal("B");
+        final NonTerminal C = Category.nonTerminal("C");
+        final NonTerminal D = Category.nonTerminal("D");
+        final NonTerminal S = Category.nonTerminal("S");
+        final Category aa = new ExactStringTerminal("a");
 
         final LogSemiring sr = LogSemiring.get();
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(1.0, S, A)
                 .addRule(0.1, S, S, S)
@@ -46,9 +46,9 @@ public class Perf {
                 .build();
 
         final Token<String> a = new Token<>("a");
-        List<Token<String>> tokens = Tokens.tokenize();
+        final List<Token<String>> tokens = Tokens.tokenize();
 
-        List<long[]> l = new ArrayList<>();
+        final List<long[]> l = new ArrayList<>();
 
         for (int i = 0; i <= 1; i++)
             tokens.add(a);
@@ -59,11 +59,11 @@ public class Perf {
 //                .parallelizePredict()
                 .build();
 
-        Parser<String> p = new Parser<>(grammar);
+        final Parser<String> p = new Parser<>(grammar);
         for (int i = 0; i <= 200; i++) {
-            long timeStart = System.currentTimeMillis();
+            final long timeStart = System.currentTimeMillis();
             p.getViterbiParseWithScore(S, tokens, parseOptions);
-            long timeEnd = System.currentTimeMillis();
+            final long timeEnd = System.currentTimeMillis();
             final long time = timeEnd - timeStart;
             //noinspection ObjectAllocationInLoop
             l.add(new long[]{i, time});

@@ -13,7 +13,6 @@ package org.leibnizcenter.cfg.algebra.matrix;
  * LU decomposition is in the solution of square systems of simultaneous
  * linear equations.  This will fail if isNonsingular() returns false.
  */
-
 public class LUDecomposition implements Decomposition {
     /**
      * Array for internal storage of decomposition.

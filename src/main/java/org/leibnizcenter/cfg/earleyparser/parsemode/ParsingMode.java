@@ -17,9 +17,9 @@ import static org.leibnizcenter.cfg.util.Collections2.nullOrEmpty;
 public enum ParsingMode {
     NORMAL, PANIC_MODE, WILDCARD, DROP, STRICT;
 
-    private static <T> int processTokenNormal(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    private static <T> int processTokenNormal(final Chart<T> chart, int indexForChart, final Token<T> t, final Set<Terminal<T>> categories) {
         if (!nullOrEmpty(categories)) {
-            TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
+            final TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
             chart.predict(indexForChart, token);
             chart.scan(indexForChart, token);
             chart.complete(indexForChart, token);
@@ -28,7 +28,7 @@ public enum ParsingMode {
         return indexForChart;
     }
 
-    private static <T> int processTokenStrict(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    private static <T> int processTokenStrict(final Chart<T> chart, final int indexForChart, final Token<T> t, final Set<Terminal<T>> categories) {
         if (nullOrEmpty(categories)) {
             throw new TokenNotInLexiconException(t, indexForChart, indexForChart);
             /*TODO fix indexForChart, should be indexForTokens*/
@@ -37,21 +37,21 @@ public enum ParsingMode {
         return processTokenNormal(chart, indexForChart, t, categories);
     }
 
-    private static <T> int processTokenDrop(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    private static <T> int processTokenDrop(final Chart<T> chart, final int indexForChart, final Token<T> t, final Set<Terminal<T>> categories) {
         return nullOrEmpty(categories) ? indexForChart : processTokenNormal(chart, indexForChart, t, categories);
     }
 
-    private static <T> int processTokenWildcard(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    private static <T> int processTokenWildcard(final Chart<T> chart, final int indexForChart, final Token<T> t, final Set<Terminal<T>> categories) {
         return nullOrEmpty(categories)
                 ? processTokenNormal(chart, indexForChart, t, chart.grammar.terminals)
                 : processTokenNormal(chart, indexForChart, t, categories);
     }
 
-    private static <T> int processTokenPanicMode(Chart<T> chart, final int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    private static <T> int processTokenPanicMode(final Chart<T> chart, final int indexForChart, final Token<T> t, Set<Terminal<T>> categories) {
         //if (!Collections2.nullOrEmpty(categories)) {
 
         if (categories.stream().noneMatch((Terminal<T> cat) -> {
-            Collection<State> activeStates = chart.stateSets.activeStates.getActiveOn(indexForChart, cat);
+            final Collection<State> activeStates = chart.stateSets.activeStates.getActiveOn(indexForChart, cat);
             return activeStates != null;// && activeStates.stream().anyMatch(state -> state.rule instanceof LexicalErrorRule);
         })) {
             // TODO If there are no <error> rules active on this terminal, advance <error>
@@ -60,7 +60,7 @@ public enum ParsingMode {
         }
 
 
-        TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
+        final TokenWithCategories<T> token = new TokenWithCategories<>(t, categories);
         // todo make more robust
 
         chart.predict(indexForChart, token);
@@ -79,7 +79,7 @@ public enum ParsingMode {
         return indexForChart + 1;
     }
 
-    public <T> int processToken(Chart<T> chart, int indexForChart, Token<T> t, Set<Terminal<T>> categories) {
+    public <T> int processToken(final Chart<T> chart, final int indexForChart, final Token<T> t, final Set<Terminal<T>> categories) {
         switch (this) {
             case NORMAL:
                 return processTokenNormal(chart, indexForChart, t, categories);

@@ -10,13 +10,13 @@ import org.leibnizcenter.cfg.token.Token;
 public class ExactStringTerminal implements StringTerminal {
     public final String string;
 
-    public ExactStringTerminal(String s) {
+    public ExactStringTerminal(final String s) {
         if (s == null) throw new NullPointerException();
         this.string = s;
     }
 
     @Override
-    public boolean hasCategory(Token<String> token) {
+    public boolean hasCategory(final Token<String> token) {
         return string.equals(token.obj);
     }
 
@@ -26,11 +26,11 @@ public class ExactStringTerminal implements StringTerminal {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ExactStringTerminal that = (ExactStringTerminal) o;
+        final ExactStringTerminal that = (ExactStringTerminal) o;
 
         return string.equals(that.string);
 

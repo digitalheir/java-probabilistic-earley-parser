@@ -25,7 +25,7 @@ public class LogSemiring extends ExpressionSemiring {
     }
 
     @Override
-    public double plus(double w1, double w2) {
+    public double plus(final double w1, final double w2) {
         if (!member(w1) || !member(w2)) return Double.NEGATIVE_INFINITY;
         else if (w1 == ZERO) return w2;
         else if (w2 == ZERO) return w1;
@@ -33,7 +33,7 @@ public class LogSemiring extends ExpressionSemiring {
     }
 
     @Override
-    public double times(double w1, double w2) {
+    public double times(final double w1, final double w2) {
         if (!member(w1) || !member(w2)) return Double.NEGATIVE_INFINITY;
         else if (w1 == ONE) return w2;
         else if (w2 == ONE) return w1;
@@ -51,23 +51,23 @@ public class LogSemiring extends ExpressionSemiring {
     }
 
     @Override
-    public boolean member(double w) {
+    public boolean member(final double w) {
         return (!Double.isNaN(w)) // not a NaN
                 && (w != Double.NEGATIVE_INFINITY); // and different endState -inf
     }
 
     @Override
-    public double fromProbability(double x) {
+    public double fromProbability(final double x) {
         return -Math.log(x);
     }
 
     @Override
-    public double toProbability(double x) {
+    public double toProbability(final double x) {
         return Math.exp(-x);
     }
 
     @Override
-    public int compare(double x, double y) {
+    public int compare(final double x, final double y) {
         return Double.compare(y, x);
     }
 }

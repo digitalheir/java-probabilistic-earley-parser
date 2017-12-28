@@ -43,9 +43,9 @@ public class ChartWithInputPosition<T> {
     private TIntObjectHashMap<Token<T>> tokensPassed = new TIntObjectHashMap<>(50, 0.5F, -1);
 
     public ChartWithInputPosition(
-            Grammar<T> grammar,
-            NonTerminal goal,
-            ParseOptions<T> parseOptions
+            final Grammar<T> grammar,
+            final NonTerminal goal,
+            final ParseOptions<T> parseOptions
     ) {
         this.grammar = grammar;
         strategy = parseOptions == null || parseOptions.scanMode == null ? ScanMode.STRICT : parseOptions.scanMode;

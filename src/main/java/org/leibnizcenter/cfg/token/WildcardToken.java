@@ -5,7 +5,7 @@ package org.leibnizcenter.cfg.token;
  * Created by maarten on 11/02/17.
  */
 public class WildcardToken<T> extends Token<T> {
-    public WildcardToken(Token<T> token) {
+    public WildcardToken(final Token<T> token) {
         super(token.obj);
         // this.token = token;
     }

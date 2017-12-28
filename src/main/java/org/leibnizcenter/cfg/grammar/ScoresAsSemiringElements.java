@@ -18,7 +18,7 @@ public class ScoresAsSemiringElements {
     private final Map<Category, TObjectDoubleMap<Category>> mapToSemiringElements = new HashMap<>();
     private final MyMultimap<NonTerminal, NonTerminal> nonZeroNonTerminalScores;
 
-    ScoresAsSemiringElements(LeftCorners leftCorners, DblSemiring semiring) {
+    ScoresAsSemiringElements(final LeftCorners leftCorners, final DblSemiring semiring) {
         this.nonZeroNonTerminalScores = leftCorners.nonZeroScores;
         leftCorners.mapToProb.forEach(
                 (catFrom, m) -> {
@@ -31,22 +31,22 @@ public class ScoresAsSemiringElements {
         );
     }
 
-    private TObjectDoubleMap<Category> getCategoryToScoreMap(double zero, Category catFrom) {
+    private TObjectDoubleMap<Category> getCategoryToScoreMap(final double zero, final Category catFrom) {
         if (mapToSemiringElements.containsKey(catFrom))
             return mapToSemiringElements.get(catFrom);
         else {
-            TObjectDoubleHashMap<Category> toScore = new TObjectDoubleHashMap<>(500, 0.5F, zero);
+            final TObjectDoubleHashMap<Category> toScore = new TObjectDoubleHashMap<>(500, 0.5F, zero);
             mapToSemiringElements.put(catFrom, toScore);
             return toScore;
         }
     }
 
 
-    public Collection<NonTerminal> getNonZeroNonTerminals(NonTerminal Y) {
+    public Collection<NonTerminal> getNonZeroNonTerminals(final NonTerminal Y) {
         return nonZeroNonTerminalScores.get(Y);
     }
 
-    double get(Category lhs, Category rhs) {
+    double get(final Category lhs, final Category rhs) {
         return mapToSemiringElements.get(lhs).get(rhs);
     }
 }

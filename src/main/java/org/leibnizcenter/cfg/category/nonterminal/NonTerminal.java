@@ -20,21 +20,21 @@ public class NonTerminal implements Category {
      * @throws IllegalArgumentException If <code>name</code> is
      *                                  <code>null</code> or zero-length.
      */
-    public NonTerminal(String name) {
+    public NonTerminal(final String name) {
         if (Strings2.isNullOrEmpty(name)) throw new IllegalArgumentException("empty name specified for category");
         this.name = name;
     }
 
-    public static NonTerminal of(String name) {
+    public static NonTerminal of(final String name) {
         return new NonTerminal(name);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        NonTerminal that = (NonTerminal) o;
+        final NonTerminal that = (NonTerminal) o;
 
         return name != null ? name.equals(that.name) : that.name == null;
 

@@ -16,7 +16,7 @@ public class AtomFactory {
     private final TDoubleObjectMap<AtomWeakReference> atoms = new TDoubleObjectHashMap<>();
     private final ReferenceQueue<Atom> referenceQueue = new ReferenceQueue<>();
 
-    public Atom getAtom(double dbl) {
+    public Atom getAtom(final double dbl) {
 //        return new Atom(dbl);
         final WeakReference<Atom> atomWeakReference = atoms.get(dbl);
 
@@ -35,8 +35,8 @@ public class AtomFactory {
         return atom;
     }
 
-    private Atom putNewAtom(double dbl) {
-        Atom atom = new Atom(dbl);
+    private Atom putNewAtom(final double dbl) {
+        final Atom atom = new Atom(dbl);
         final AtomWeakReference weakReference = new AtomWeakReference(atom, referenceQueue);
         atoms.put(dbl, weakReference);
         return atom;
@@ -54,7 +54,7 @@ public class AtomFactory {
     private static class AtomWeakReference extends WeakReference<Atom> {
         final double value;
 
-        AtomWeakReference(Atom atom, ReferenceQueue<Atom> referenceQueue) {
+        AtomWeakReference(final Atom atom, final ReferenceQueue<Atom> referenceQueue) {
             super(atom, referenceQueue);
             value = atom.value;
         }

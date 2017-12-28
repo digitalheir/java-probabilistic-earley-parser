@@ -112,7 +112,7 @@ public interface DblSemiring {
     int compare(double x, double y);
 
 
-    default double pow(double ruleProv, int i) {
+    default double pow(final double ruleProv, final int i) {
         if (i == 0)
             return one();
         else if (i > 0)

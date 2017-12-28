@@ -240,7 +240,7 @@ public class DocGramTest {
 
     @Test
     public void tryGram() {
-        List<Token<String>> listSoFar = new ArrayList<>(1000);
+        final List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
 
 
@@ -259,9 +259,9 @@ public class DocGramTest {
                 listSoFar.addAll(s == 0 ? one_doc : s == 1 ? two_doc : s == 2 ? three_doc : four_doc);
             }
             if (i > 100) {
-                long start = System.currentTimeMillis();
+                final long start = System.currentTimeMillis();
                 Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
-                long end = System.currentTimeMillis();
+                final long end = System.currentTimeMillis();
                 System.out.println(listSoFar.size() + "\t" + (end - start));
             }
         }

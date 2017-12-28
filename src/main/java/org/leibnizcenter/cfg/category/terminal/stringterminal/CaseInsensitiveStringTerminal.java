@@ -14,27 +14,27 @@ public class CaseInsensitiveStringTerminal implements StringTerminal {
     public final String string;
     public final Locale locale;
 
-    public CaseInsensitiveStringTerminal(String s) {
+    public CaseInsensitiveStringTerminal(final String s) {
         this.locale = Locale.ROOT;
         this.string = s.toLowerCase(locale);
     }
 
-    public CaseInsensitiveStringTerminal(String s, Locale locale) {
+    public CaseInsensitiveStringTerminal(final String s, final Locale locale) {
         this.locale = locale;
         this.string = s.toLowerCase(locale);
     }
 
     @Override
-    public boolean hasCategory(Token<String> token) {
+    public boolean hasCategory(final Token<String> token) {
         return string.equalsIgnoreCase(token.obj);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        CaseInsensitiveStringTerminal that = (CaseInsensitiveStringTerminal) o;
+        final CaseInsensitiveStringTerminal that = (CaseInsensitiveStringTerminal) o;
 
         return string.equals(that.string) && locale.equals(that.locale);
     }

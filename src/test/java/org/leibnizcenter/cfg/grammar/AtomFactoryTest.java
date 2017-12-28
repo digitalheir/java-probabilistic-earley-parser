@@ -11,7 +11,7 @@ import static org.junit.Assert.assertFalse;
 public class AtomFactoryTest {
     @Test
     public void getAtom() throws Exception {
-        AtomFactory am = new AtomFactory();
+        final AtomFactory am = new AtomFactory();
         final Atom got = am.getAtom(1);
         assertFalse(got == new Atom(1));
         //assertTrue(got == am.getAtom(1));

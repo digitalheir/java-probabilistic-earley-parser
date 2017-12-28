@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.stream.IntStream;
 
 public class PanicMode {
-    public static <T> void proceedAllStatesThatWereActiveOnError(Chart<T> chart, int chartIndex, TIntObjectHashMap<Token<T>> tokensPassed) {
+    public static <T> void proceedAllStatesThatWereActiveOnError(final Chart<T> chart, final int chartIndex, final TIntObjectHashMap<Token<T>> tokensPassed) {
         final ExpressionSemiring sr = chart.grammar.semiring;
         new HashSet<>(chart.stateSets.activeStates.activeOnNonLexicalToken)
                 .stream()
@@ -33,17 +33,17 @@ public class PanicMode {
                                                 rootStateActiveOnError.rule
                                         );
 
-                                        int numberOfScannedTokens = position - rootStateActiveOnError.position;
-                                        double ruleProv = rootStateActiveOnError.rule.probabilityAsSemiringElement;
+                                        final int numberOfScannedTokens = position - rootStateActiveOnError.position;
+                                        final double ruleProv = rootStateActiveOnError.rule.probabilityAsSemiringElement;
                                         final double newInner = sr.times(rootInner, sr.pow(ruleProv, numberOfScannedTokens - 1));
-                                        double newForward = sr.times(rootForward, newInner);
+                                        final double newForward = sr.times(rootForward, newInner);
 
                                         chart.addPredictedStateToChart(rootStateActiveOnError, newInner, newForward, preScanState);
 
-                                        Token<T> token = tokensPassed.get(position);
+                                        final Token<T> token = tokensPassed.get(position);
 
                                         if (position <= chartIndex) {
-                                            double scanProbPow = determineScanProbabilityOfMultipleTokens(
+                                            final double scanProbPow = determineScanProbabilityOfMultipleTokens(
                                                     chart,
                                                     rootStateActiveOnError.position,
                                                     position,
@@ -64,7 +64,7 @@ public class PanicMode {
                 );
     }
 
-    private static <T> double determineScanProbabilityOfMultipleTokens(Chart<T> chart, int startPositionInclusive, int endPositionInclusive, ExpressionSemiring sr, Token<T> token) {
+    private static <T> double determineScanProbabilityOfMultipleTokens(final Chart<T> chart, final int startPositionInclusive, final int endPositionInclusive, final ExpressionSemiring sr, final Token<T> token) {
         final ScanProbability<T> scanProbability = chart.parseOptions.scanProbability;
         double scanProbPow = Double.NaN;
         if (scanProbability != null) {

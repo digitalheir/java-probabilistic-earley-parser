@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  */
 public class LexicalErrorRule extends Rule {
 
-    LexicalErrorRule(double probability, double rawProbability, NonTerminal left, Category... right) {
+    LexicalErrorRule(final double probability, final double rawProbability, final NonTerminal left, final Category... right) {
         super(probability, rawProbability, left, right);
         assert Stream.of(right).anyMatch(r -> r instanceof NonLexicalToken);
     }
@@ -32,7 +32,7 @@ public class LexicalErrorRule extends Rule {
      * @param RHS      RHS
      * @return Rule with p = 1.0
      */
-    public static LexicalErrorRule create(DblSemiring semiring, NonTerminal LHS, Category... RHS) {
+    public static LexicalErrorRule create(final DblSemiring semiring, final NonTerminal LHS, final Category... RHS) {
         return new LexicalErrorRule(1.0, semiring.one(), LHS, RHS);
     }
 
@@ -42,12 +42,12 @@ public class LexicalErrorRule extends Rule {
      * @param LHS left hand side
      * @param RHS right hand side
      */
-    public static LexicalErrorRule create(DblSemiring semiring, double probability, NonTerminal LHS, Category... RHS) {
+    public static LexicalErrorRule create(final DblSemiring semiring, final double probability, final NonTerminal LHS, final Category... RHS) {
         return new LexicalErrorRule(probability, semiring.fromProbability(probability), LHS, RHS);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return o instanceof LexicalErrorRule && super.equals(o);
     }
 

@@ -21,12 +21,12 @@ public class CategoryTest {
         try {
             Category.nonTerminal("");
             Assert.fail("able to create non-terminal category with empty name");
-        } catch (IllegalArgumentException ignored) {
+        } catch (final IllegalArgumentException ignored) {
         }
 
         try {
             Category.terminal(new ExactStringTerminal(""));
-        } catch (IllegalArgumentException iae) {
+        } catch (final IllegalArgumentException iae) {
             Assert.fail("creating terminal category with empty name threw: "
                     + iae);
         }
@@ -34,7 +34,7 @@ public class CategoryTest {
         try {
             Category.nonTerminal(null);
             Assert.fail("able to create category with null name");
-        } catch (IllegalArgumentException ignored) {
+        } catch (final IllegalArgumentException ignored) {
         }
     }
 

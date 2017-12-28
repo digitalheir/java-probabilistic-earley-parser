@@ -33,7 +33,7 @@ public class LeftCorners {
     /**
      * Compute left corner relations
      */
-    LeftCorners(DblSemiring semiring, Set<NonTerminal> nonTerminals, MyMultimap<NonTerminal, Rule> rules) {
+    LeftCorners(final DblSemiring semiring, final Set<NonTerminal> nonTerminals, final MyMultimap<NonTerminal, Rule> rules) {
         // Sum all probabilities for left corners
         nonTerminals.forEach(leftHandSide -> {
             final Collection<Rule> rulesOnNonTerminal = rules.get(leftHandSide);
@@ -49,7 +49,7 @@ public class LeftCorners {
      * @param element LHS
      * @return map for given LHS.
      */
-    private static TObjectDoubleMap<Category> getYToProbs(Map<Category, TObjectDoubleMap<Category>> mapToProb, Category element) {
+    private static TObjectDoubleMap<Category> getYToProbs(final Map<Category, TObjectDoubleMap<Category>> mapToProb, final Category element) {
         if (mapToProb.containsKey(element))
             return mapToProb.get(element);
         else {
@@ -64,7 +64,7 @@ public class LeftCorners {
      * @param to          To category
      * @param probability Between 0.0 and 1.0
      */
-    void plusProbability(NonTerminal from, NonTerminal to, double probability, DblSemiring semiring) {
+    void plusProbability(final NonTerminal from, final NonTerminal to, final double probability, final DblSemiring semiring) {
         //setPlusElement(from, to, semiring.fromProbability(probability), semiring);
         setPlusProbability(from, to, probability);
     }
@@ -111,8 +111,8 @@ public class LeftCorners {
 //        putProbability_(x, y, semiring.toProbability(val));
 //    }
 
-    private void setPlusProbability(NonTerminal x, NonTerminal y, double probability) {
-        TObjectDoubleMap<Category> yToProb = getYToProbs(mapToProb, x);
+    private void setPlusProbability(final NonTerminal x, final NonTerminal y, final double probability) {
+        final TObjectDoubleMap<Category> yToProb = getYToProbs(mapToProb, x);
         final double newProbability = yToProb.get(y) + probability;
         if (Double.isNaN(newProbability)) throw new Error();
 
@@ -126,16 +126,16 @@ public class LeftCorners {
     /**
      * @return stored value in left-corner relationship. zero by default
      */
-    public double getProbability(Category x, Category y) {
+    public double getProbability(final Category x, final Category y) {
         return getYToProbs(mapToProb, x).get(y)/*defaults to zero*/;
     }
 
-    private void putProb_(Map<Category, TObjectDoubleMap<Category>> mapToProb,
-                          NonTerminal x,
-                          NonTerminal y,
-                          double val,
-                          double zero) {
-        TObjectDoubleMap<Category> yToElements = getYToProbs(mapToProb, x);
+    private void putProb_(final Map<Category, TObjectDoubleMap<Category>> mapToProb,
+                          final NonTerminal x,
+                          final NonTerminal y,
+                          final double val,
+                          final double zero) {
+        final TObjectDoubleMap<Category> yToElements = getYToProbs(mapToProb, x);
         yToElements.put(y, val);
         if (val != zero) {
             nonZeroScores.put(x, y);
@@ -146,12 +146,12 @@ public class LeftCorners {
     /**
      * Sets table entry to a given probability. Will instantiate empty map if it does not exist yet.
      */
-    void setProbability(NonTerminal x, NonTerminal y, final double prob, DblSemiring semiring) {
+    void setProbability(final NonTerminal x, final NonTerminal y, final double prob, final DblSemiring semiring) {
         //putProb_(mapToElements, x, y, semiring.fromProbability(prob), semiring.zero());
         putProb_(mapToProb, x, y, prob, 0.0);
     }
 
-    Collection<NonTerminal> getNonZeroScores(NonTerminal Y) {
+    Collection<NonTerminal> getNonZeroScores(final NonTerminal Y) {
         return nonZeroScores.get(Y);
     }
 }

@@ -34,7 +34,7 @@ public interface Category {
          * category).
          */
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final Object obj) {
             return obj instanceof NonTerminal && this == obj;
         }
 
@@ -50,7 +50,7 @@ public interface Category {
      * @return The terminal status specified for this category upon
      * construction.
      */
-    static boolean isTerminal(Category c) {
+    static boolean isTerminal(final Category c) {
         return c instanceof Terminal;
     }
 
@@ -59,7 +59,7 @@ public interface Category {
      *
      * @see Category#terminal(Function)
      */
-    static NonTerminal nonTerminal(String name) {
+    static NonTerminal nonTerminal(final String name) {
         return new NonTerminal(name);
     }
 
@@ -68,7 +68,7 @@ public interface Category {
      *
      * @see Category#nonTerminal(String)
      */
-    static <T> Terminal<T> terminal(Function<Token<T>, Boolean> categoryFunction) {
+    static <T> Terminal<T> terminal(final Function<Token<T>, Boolean> categoryFunction) {
         if (categoryFunction == null)
             throw new Error("Can not instantiate category with null function. Did you mean to create a null category?");
         return categoryFunction::apply;
@@ -79,7 +79,7 @@ public interface Category {
      *
      * @see Category#terminal(Function)
      */
-    static <T> Terminal<T> terminal(Terminal<T> terminal) {
+    static <T> Terminal<T> terminal(final Terminal<T> terminal) {
         if (terminal == null)
             throw new Error("Can not instantiate category with null function. Did you mean to create a null category?");
         return terminal;

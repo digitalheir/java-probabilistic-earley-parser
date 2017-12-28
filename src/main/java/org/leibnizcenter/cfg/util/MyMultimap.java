@@ -11,12 +11,12 @@ public class MyMultimap<T, T1> {
     private Set<T1> values = new HashSet<>();
     private boolean isLocked = false;
 
-    public Collection<T1> get(T el) {
+    public Collection<T1> get(final T el) {
         if (map.containsKey(el)) return map.get(el);
         else return null;
     }
 
-    public void put(T k, T1 v) {
+    public void put(final T k, final T1 v) {
         final Set<T1> s;
         if (map.containsKey(k)) {
             s = map.get(k);
@@ -28,7 +28,7 @@ public class MyMultimap<T, T1> {
         values.add(v);
     }
 
-    public boolean containsKey(T s) {
+    public boolean containsKey(final T s) {
         return map.containsKey(s);
     }
 
@@ -36,7 +36,7 @@ public class MyMultimap<T, T1> {
         map = Collections.unmodifiableMap(map);
         values = Collections.unmodifiableSet(values);
 
-        boolean wasLocked = isLocked;
+        final boolean wasLocked = isLocked;
         isLocked = true;
         return wasLocked;
     }

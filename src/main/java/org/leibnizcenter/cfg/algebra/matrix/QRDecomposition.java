@@ -9,12 +9,12 @@ package org.leibnizcenter.cfg.algebra.matrix;
  * <p>
  * The QR decompostion always exists, even if the matrix does not have
  * full rank, so the constructor will never fail.  The primary use of the
- * QR decomposition is in the least squares solution of nonsquare systems
- * of simultaneous linear equations.  This will fail if isFullRank()
+ * QR decomposition is in the least squares solution of non-square systems
+ * of simultaneous linear equations.  This will fail if {@link #isFullRank}
  * returns false.
  */
 
-public class QRDecomposition implements Decomposition{
+public class QRDecomposition implements Decomposition {
 
 /* ------------------------
    Class variables
@@ -47,7 +47,7 @@ public class QRDecomposition implements Decomposition{
      * @param A Rectangular matrix
      */
 
-    public QRDecomposition(Matrix A) {
+    public QRDecomposition(final Matrix A) {
         // Initialize.
         QR = A.getArrayCopy();
         m = A.getRowDimension();
@@ -91,7 +91,7 @@ public class QRDecomposition implements Decomposition{
     /**
      * sqrt(a^2 + b^2) without under/overflow.
      **/
-    private static double hypot(double a, double b) {
+    private static double hypot(final double a, final double b) {
         double r;
         if (Math.abs(a) > Math.abs(b)) {
             r = b / a;
@@ -112,10 +112,7 @@ public class QRDecomposition implements Decomposition{
      */
 
     public boolean isFullRank() {
-        for (int j = 0; j < n; j++) {
-            if (Rdiag[j] == 0)
-                return false;
-        }
+        for (int j = 0; j < n; j++) if (Rdiag[j] == 0) return false;
         return true;
     }
 
@@ -126,8 +123,8 @@ public class QRDecomposition implements Decomposition{
      */
 
     public Matrix getR() {
-        Matrix X = new Matrix(n, n);
-        double[][] R = X.getArray();
+        final Matrix X = new Matrix(n, n);
+        final double[][] R = X.getArray();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i < j) {
@@ -151,7 +148,7 @@ public class QRDecomposition implements Decomposition{
      * @throws RuntimeException         Matrix is rank deficient.
      */
 
-    public Matrix solve(Matrix B) {
+    public Matrix solve(final Matrix B) {
         if (B.getRowDimension() != m) {
             throw new IllegalArgumentException("Matrix row dimensions must agree.");
         }
@@ -160,8 +157,8 @@ public class QRDecomposition implements Decomposition{
         }
 
         // Copy right hand side
-        int nx = B.getColumnDimension();
-        double[][] X = B.getArrayCopy();
+        final int nx = B.getColumnDimension();
+        final double[][] X = B.getArrayCopy();
 
         // Compute Y = transpose(Q)*B
         for (int k = 0; k < n; k++) {

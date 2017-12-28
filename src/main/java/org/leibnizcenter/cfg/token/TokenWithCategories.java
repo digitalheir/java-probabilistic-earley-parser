@@ -17,7 +17,7 @@ public class TokenWithCategories<T> {
     public final Token<T> token;
     public final Set<Terminal<T>> categories;
 
-    public TokenWithCategories(Token<T> token, Set<Terminal<T>> categories) {
+    public TokenWithCategories(final Token<T> token, final Set<Terminal<T>> categories) {
         this.token = token;
         this.categories = categories;
     }

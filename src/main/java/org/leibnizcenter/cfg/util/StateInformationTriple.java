@@ -12,9 +12,9 @@ public class StateInformationTriple {
     public final Resolvable completedInner;
 
     public StateInformationTriple(
-            State stateToAdvance,
-            State completedState,
-            Resolvable completedInner
+            final State stateToAdvance,
+            final State completedState,
+            final Resolvable completedInner
     ) {
         this.stateToAdvance = stateToAdvance;
         this.completedState = completedState;

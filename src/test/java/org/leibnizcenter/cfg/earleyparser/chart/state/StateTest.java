@@ -25,34 +25,34 @@ public class StateTest {
 
     @Test
     public void isCompleted() throws Exception {
-        State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
+        final State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
         assertTrue(s1.isCompleted());
 
-        State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL));
+        final State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL));
         assertFalse(s2.isCompleted());
     }
 
     @Test
     public void isActive() throws Exception {
-        State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
+        final State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
         assertFalse(s1.isActive());
 
-        State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL));
+        final State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL));
         assertTrue(s2.isActive());
     }
 
     @Test
     public void getActiveCategory() throws Exception {
-        State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL_2));
+        final State s1 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL_2));
         assertEquals(TERMINAL_2, s1.getActiveCategory());
 
-        State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
+        final State s2 = State.create(1, 1, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL));
         assertNull(s2.getActiveCategory());
     }
 
     @Test
     public void advanceDot() throws Exception {
-        State s1 = State.create(0, 0, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL_2));
+        final State s1 = State.create(0, 0, 1, Rule.create(SEMIRING, NON_TERMINAL, TERMINAL, TERMINAL_2));
         assertEquals(2, s1.advanceDot());
     }
 

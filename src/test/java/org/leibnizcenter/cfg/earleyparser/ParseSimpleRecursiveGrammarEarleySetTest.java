@@ -29,8 +29,8 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
     private static final double p = (0.6);
     private static final double q = (0.4);
 
-    private static void stateSet3(Chart<String> chart) {
-        ExpressionSemiring sr = chart.grammar.semiring;
+    private static void stateSet3(final Chart<String> chart) {
+        final ExpressionSemiring sr = chart.grammar.semiring;
         // scanned
         //new Token<>("a"),
         final State s23Sa1 = new State(
@@ -40,8 +40,8 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
         assertEquals(sr.toProbability(chart.getInnerScore(s23Sa1)), p, 0.0001);
     }
 
-    private static void stateSet2(Chart<String> chart) {
-        ExpressionSemiring sr = chart.grammar.semiring;
+    private static void stateSet2(final Chart<String> chart) {
+        final ExpressionSemiring sr = chart.grammar.semiring;
         // scanned
         final State s12Sa1 = new State(Rule.create(sr, p, S, a), 2, 1, 1);
         Assert.assertTrue(chart.getStates(2).contains(s12Sa1));
@@ -64,7 +64,7 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
         assertEquals(sr.toProbability(chart.getInnerScore(s02SSS1)), p * p * q * q, 0.0001);
 
         final State s02S1 = new State(Rule.create(sr, Category.START, S), 2, 0, 1);
-        Collection<State> states2 = chart.getStates(2);
+        final Collection<State> states2 = chart.getStates(2);
         Assert.assertTrue(states2.contains(s02S1));
         assertEquals(sr.toProbability(chart.getForwardScore(s02S1)), p * p * q, 0.0001);
         assertEquals(sr.toProbability(chart.getInnerScore(s02S1)), p * p * q, 0.0001);
@@ -115,8 +115,8 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
         assertEquals(sr.toProbability(chart.getInnerScore(s33S1)), 2 * (Math.pow(p, 3) * Math.pow(q, 2)), 0.0001);
     }
 
-    private static void stateSet1(Chart<String> chart) {
-        ExpressionSemiring sr = chart.grammar.semiring;
+    private static void stateSet1(final Chart<String> chart) {
+        final ExpressionSemiring sr = chart.grammar.semiring;
         // scanned
 //        new Token<>("a")
         final State s01Sa1 = new State(Rule.create(sr, p, S, a), 1, 0, 1);
@@ -144,8 +144,8 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
         Assert.assertTrue(chart.getStates(1).contains(new State(Rule.create(sr, q, S, S, S), 1, 1, 0)));
     }
 
-    private static void stateSet0(Chart<String> chart) {
-        ExpressionSemiring sr = chart.grammar.semiring;
+    private static void stateSet0(final Chart<String> chart) {
+        final ExpressionSemiring sr = chart.grammar.semiring;
 
         final State s00Sa = new State(Rule.create(sr, p, S, a), 0, 0, 0);
         Assert.assertTrue(chart.getStates(0).contains(s00Sa));
@@ -161,15 +161,15 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
     @Test
     public void simpleRecursiveGrammar() throws Exception {
         final LogSemiring sr = LogSemiring.get();
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(p, S, a)
                 .addRule(q, S, S, S)
                 .build();
 
-        List<Token<String>> tokens = IntStream.range(0, 3).mapToObj(i -> new Token<>("a")).collect(Collectors.toList());
+        final List<Token<String>> tokens = IntStream.range(0, 3).mapToObj(i -> new Token<>("a")).collect(Collectors.toList());
 
-        Chart<String> chart = new Parser<>(grammar).parse(S, tokens);
+        final Chart<String> chart = new Parser<>(grammar).parse(S, tokens);
 
         // State set 0
         stateSet0(chart);
@@ -200,9 +200,9 @@ public class ParseSimpleRecursiveGrammarEarleySetTest {
                     // System.out.println(s + "[" + probFw + "]" + "[" + probInn + "] value: " + v);
                 }));
 
-        Collection<State> howMany = chart.stateSets.completedStates.getCompletedStates(tokens.size(), Category.START);
+        final Collection<State> howMany = chart.stateSets.completedStates.getCompletedStates(tokens.size(), Category.START);
         assertEquals(howMany.size(), 1);
-        State finalState = howMany.iterator().next();
+        final State finalState = howMany.iterator().next();
         // ParseTree viterbi = Parser.getViterbiParse(finalState, chart);
 
         // 1 of 2 options

@@ -44,17 +44,17 @@ public class ChartTest {
 
     @Test
     public final void paper_example() {
-        double p = 0.6;
-        double q = 0.4;
-        Grammar<String> grammar = new Grammar.Builder<String>()
+        final double p = 0.6;
+        final double q = 0.4;
+        final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a)
                 .addRule(q, S, B)
                 .addRule(1, B, S)
                 .build();
-        Chart<String> chart = new Chart<>(grammar);
-        DblSemiring sr = grammar.semiring;
+        final Chart<String> chart = new Chart<>(grammar);
+        final DblSemiring sr = grammar.semiring;
 
-        State initialState = new State(Rule.create(sr, Category.START, S), 0);
+        final State initialState = new State(Rule.create(sr, Category.START, S), 0);
         chart.addState(initialState, sr.one(), sr.one());
 
         chart.predict(0);
@@ -83,7 +83,7 @@ public class ChartTest {
         final Rule ruleAa = Rule.create(semiring, 1.0, A, a);
         final Rule rule3 = Rule.create(semiring, 1.0, X, Y, Z);
 
-        Grammar<String> grammar = new Grammar.Builder<String>("test")
+        final Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .withSemiring(semiring)
                 .addRule(ruleB)
                 .addRule(ruleC)
@@ -93,8 +93,8 @@ public class ChartTest {
                 .addRule(ruleAa)
                 .addRule(rule3)
                 .build();
-        DblSemiring sr = grammar.semiring;
-        Chart<String> chart = new Chart<>(grammar);
+        final DblSemiring sr = grammar.semiring;
+        final Chart<String> chart = new Chart<>(grammar);
 
         chart.addState(new State(Rule.create(sr, 1, Category.START, A), 0), sr.one(), sr.one());
 //        Predict.predict(0, grammar, chart.stateSets);
