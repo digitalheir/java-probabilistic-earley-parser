@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.grammar;
 
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -12,6 +13,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
@@ -33,14 +35,33 @@ public class LeftCorners {
     /**
      * Compute left corner relations
      */
-    LeftCorners(final DblSemiring semiring, final Set<NonTerminal> nonTerminals, final MyMultimap<NonTerminal, Rule> rules) {
+    LeftCorners(final Set<NonTerminal> nonTerminals, final MyMultimap<NonTerminal, Rule> rules) {
         // Sum all probabilities for left corners
         nonTerminals.forEach(leftHandSide -> {
             final Collection<Rule> rulesOnNonTerminal = rules.get(leftHandSide);
-            if (rulesOnNonTerminal != null) rulesOnNonTerminal.stream()
-                    .filter(yRule -> yRule.right.length > 0 && yRule.right[0] instanceof NonTerminal)
-                    .forEach(YRule -> plusProbability(leftHandSide, (NonTerminal) YRule.right[0], YRule.probability, semiring));
+            if (rulesOnNonTerminal != null) {
+                for (final Rule yRule : rulesOnNonTerminal) {
+                    final boolean startsWithNonTerminal = yRule.right.length > 0 && yRule.right[0] instanceof NonTerminal;
+                    if (startsWithNonTerminal) {
+                        plusRawProbability(leftHandSide, (NonTerminal) yRule.right[0], yRule.probability);
+                    }
+                }
+            }
         });
+    }
+
+    /**
+     * Copy all matrix values into a new {@link LeftCorners} object
+     *
+     * @param r_L          matrix to copy values from
+     * @param nonTerminals indexes of matrix
+     */
+    LeftCorners(final Matrix r_L, final NonTerminal[] nonTerminals) {
+        final int bound = r_L.getRowDimension();
+        for (int i = 0; i < bound; i++) {
+            final int row = i;
+            IntStream.range(0, r_L.getColumnDimension()).forEach(col -> setRawProbability(nonTerminals[row], nonTerminals[col], r_L.get(row, col)));
+        }
     }
 
     /**
@@ -64,7 +85,7 @@ public class LeftCorners {
      * @param to          To category
      * @param probability Between 0.0 and 1.0
      */
-    void plusProbability(final NonTerminal from, final NonTerminal to, final double probability, final DblSemiring semiring) {
+    void plusRawProbability(final NonTerminal from, final NonTerminal to, final double probability) {
         //setPlusElement(from, to, semiring.fromProbability(probability), semiring);
         setPlusProbability(from, to, probability);
     }
@@ -142,11 +163,18 @@ public class LeftCorners {
         }
     }
 
-
     /**
      * Sets table entry to a given probability. Will instantiate empty map if it does not exist yet.
      */
+    @SuppressWarnings("unused")
     void setProbability(final NonTerminal x, final NonTerminal y, final double prob, final DblSemiring semiring) {
+        putProb_(mapToProb, x, y, semiring.fromProbability(prob), semiring.zero());
+    }
+
+    /**
+     * Sets table entry to a given raw probability (default 0.0). Will instantiate empty map if it does not exist yet.
+     */
+    void setRawProbability(final NonTerminal x, final NonTerminal y, final double prob) {
         //putProb_(mapToElements, x, y, semiring.fromProbability(prob), semiring.zero());
         putProb_(mapToProb, x, y, prob, 0.0);
     }

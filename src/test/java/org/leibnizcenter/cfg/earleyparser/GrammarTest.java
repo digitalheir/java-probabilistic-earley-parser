@@ -40,27 +40,16 @@ public class GrammarTest {
     private static final Rule ruleB = Rule.create(sr, 0.5, B, C);
     private static final Rule ruleC = Rule.create(sr, 0.5, C, D);
     private static final Rule ruleD = Rule.create(sr, 0.5, D, E);
+    private static final Rule ruleDe = Rule.create(sr, 0.2, D, E, e);
     private static final Rule ruleDa = Rule.create(sr, 0.5, D, a);
     private static final Rule ruleEE = Rule.create(sr, 0.5, E, E, E);
     private static final Rule ruleE = Rule.create(sr, 0.5, E, e);
     private static final Rule ruleEC = Rule.create(sr, 0, E, C);
-    private static final Grammar<String> g = new Grammar.Builder<String>("test")
-            .withSemiring(sr)
-            .addRule(ruleB)
-            .addRule(ruleC)
-            .addRule(ruleD)
-            .addRule(ruleDa)
-            .addRule(ruleE)
-            .addRule(ruleEE)
-            .addRule(ruleEC)
-            .addRule(rule1)
-            .addRule(rule2)
-            .addRule(rule3)
-            .build();
-
 
     @Test
     public final void testContainsRules() {
+        final Grammar<String> g = makeDefaultGrammar();
+
         assertTrue(g.containsRules(rule1.left));
         assertTrue(g.getRules(rule2.left).contains(rule2));
         Assert.assertFalse(g.getRules(rule3.left).contains(rule2));
@@ -78,16 +67,48 @@ public class GrammarTest {
         assertEquals(Rule.create(sr, 1.0, X, e), Rule.create(sr, 1.0, X, e));
     }
 
+    private static Grammar<String> makeDefaultGrammar() {
+        return new Grammar.Builder<String>("test")
+                .withSemiring(sr)
+                .addRule(ruleB)
+                .addRule(ruleC)
+                .addRule(ruleD)
+                .addRule(ruleDa)
+                .addRule(ruleE)
+                .addRule(ruleEE)
+                .addRule(ruleEC)
+                .addRule(rule1)
+                .addRule(rule2)
+                .addRule(rule3)
+                .build();
+    }
+
     @Test
     public final void testLeftRelation() {
-        assertEquals(g.getLeftScore(A, B), 1.0, 0.01);
-        assertEquals(g.getLeftScore(A, D), 0.0, 0.01);
-        assertEquals(g.getLeftScore(A, X), 0.0, 0.01);
-        assertEquals(g.getLeftScore(B, C), 0.5, 0.01);
+        final Grammar<String> g = new Grammar.Builder<String>("test")
+                .withSemiring(sr)
+                .addRule(ruleB)
+                .addRule(ruleC)
+                .addRule(ruleD)
+                .addRule(ruleDe)
+                .addRule(ruleDa)
+                .addRule(ruleE)
+                .addRule(ruleEE)
+                .addRule(ruleEC)
+                .addRule(rule1)
+                .addRule(rule2)
+                .addRule(rule3)
+                .build();
+        assertEquals(g.getLeftScore(A, B), 1.0, 0.001);
+        assertEquals(g.getLeftScore(A, D), 0.0, 0.001);
+        assertEquals(g.getLeftScore(A, X), 0.0, 0.001);
+        assertEquals(g.getLeftScore(B, C), 0.5, 0.001);
+        assertEquals(g.getLeftScore(D, E), 0.7, 0.001);
     }
 
     @Test
     public final void testLeftStarRelation() {
+        final Grammar<String> g = makeDefaultGrammar();
         assertEquals(g.getLeftStarScore(A, B), 1.0, 0.01);
         assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
         assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
@@ -108,6 +129,7 @@ public class GrammarTest {
      */
     @Test
     public final void testGetRules() {
+        final Grammar<String> g = makeDefaultGrammar();
         final Set<Rule> setOfrules = new HashSet<>();
         setOfrules.add(rule1);
         setOfrules.add(rule2);
@@ -128,15 +150,17 @@ public class GrammarTest {
         final Rule errorRule = errorRules.iterator().next();
         assertTrue(errorRule instanceof LexicalErrorRule);
     }
+
     @Test
     public final void parseRightRecursive() throws IOException {
-        final Grammar<String> grammar = Grammar.fromString("S->S a b(0.9" +
-//                "999999999999999999999999999999999" +
-                ")#comment\n#comment\n\n#\n   #  com\n  \n\n " +
-                "S -> a (0.9)\n" +
-                "B -> a B c (0.9)\n" +
-                "B -> a b c (0.9" +
-                ")");
+        final Grammar<String> grammar = new Grammar.Builder<String>("test")
+                .withSemiring(sr)
+                .addRule(Rule.create(sr, 0.9999999999, A, A, a))
+                .addRule(Rule.create(sr, 1.0, A, a))
+                .addRule(Rule.create(sr, 0.8, B, B, a, e))
+                .addRule(Rule.create(sr, 0.1, B, e, a, e))
+                .build();
+
         final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
         assertNull(errorRules);
     }

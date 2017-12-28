@@ -234,11 +234,7 @@ public class Chart<T> {
     private void predictStatesForState(final State statePredecessor) {
         final Category Z = statePredecessor.getActiveCategory();
         // For all productions Y → v such that R(Z =*L> Y) is nonzero
-        grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> predictStatesForRule(
-                statePredecessor,
-                Z,
-                Y_to_v
-        ));
+        grammar.nonZeroLeftStartRules.get(Z).forEach(Y_to_v -> predictStatesForRule(statePredecessor, Z, Y_to_v));
     }
 
     private void predictStatesForRule(final State statePredecessor, final Category activeOnPredecessor, final Rule Y_to_v) {

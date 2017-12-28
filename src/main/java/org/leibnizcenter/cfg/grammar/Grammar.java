@@ -1,10 +1,6 @@
 
 package org.leibnizcenter.cfg.grammar;
 
-import org.leibnizcenter.cfg.algebra.matrix.Decomposition;
-import org.leibnizcenter.cfg.algebra.matrix.LUDecomposition;
-import org.leibnizcenter.cfg.algebra.matrix.Matrix;
-import org.leibnizcenter.cfg.algebra.matrix.QRDecomposition;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.LogSemiring;
@@ -12,26 +8,26 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
-import org.leibnizcenter.cfg.category.terminal.stringterminal.CaseInsensitiveStringTerminal;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.rule.RuleFactory;
 import org.leibnizcenter.cfg.rule.RuleParser;
 import org.leibnizcenter.cfg.token.Token;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+
+import static org.leibnizcenter.cfg.grammar.GrammarAnalysis.computeUnitStarCorners;
+import static org.leibnizcenter.cfg.grammar.GrammarAnalysis.findNonZeroLeftStartRules;
+import static org.leibnizcenter.cfg.grammar.GrammarAnalysis.computeReflexiveTransitiveClosure;
+import static org.leibnizcenter.cfg.grammar.GrammarParser.STRING_CATEGORY_FUNCTION;
+import static org.leibnizcenter.cfg.grammar.GrammarParser.TRAILING_COMMENT;
 
 
 /**
@@ -47,9 +43,6 @@ import java.util.stream.Stream;
  * Once the Grammar is instantiated, it is immutable.
  */
 public final class Grammar<T> {
-    private static final Function<String, Category> STRING_CATEGORY_FUNCTION = s -> NonLexicalToken.ERROR_SYMBOL.equals(s) ? (Terminal) NonLexicalToken.INSTANCE : Character.isUpperCase(s.charAt(0)) ? new NonTerminal(s) : new CaseInsensitiveStringTerminal(s);
-    private static final Pattern NEWLINE = Pattern.compile("\\n");
-    private static final Pattern TRAILING_COMMENT = Pattern.compile("#.*$");
     @SuppressWarnings("WeakerAccess")
     public final String name;
     /**
@@ -89,169 +82,75 @@ public final class Grammar<T> {
     public Grammar(final String name, final MyMultimap<NonTerminal, Rule> rules, final ExpressionSemiring semiring) {
         this.name = name;
         this.rules = rules;
+        this.semiring = semiring;
         rules.lock();
 
-        rules.values().forEach(rule -> {
+        collectTerminalsAndNonTerminals(rules.values());
+        final NonTerminal[] nonTerminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
+
+
+        leftCorners = new LeftCorners(nonTerminals, rules);
+        final LeftCorners leftStarCorners = computeReflexiveTransitiveClosure(leftCorners, nonTerminalsArr);
+
+        leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);
+        unitStarScores = new ScoresAsSemiringElements(computeUnitStarCorners(this.rules, nonTerminalsArr), this.semiring);
+        nonZeroLeftStartRules = findNonZeroLeftStartRules(leftStarCorners, nonTerminals, rules);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void collectTerminalsAndNonTerminals(final Collection<Rule> rules) {
+        rules.forEach(rule -> {
             nonTerminals.add(rule.left);
             for (final Category c : rule.right)
-                if (c instanceof Terminal) {//noinspection unchecked
-                    terminals.add((Terminal) c);
-                } else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
+                if (c instanceof Terminal) terminals.add((Terminal) c);
+                else if (c instanceof NonTerminal) nonTerminals.add((NonTerminal) c);
                 else throw new Error("This is a bug");
         });
-
-        this.semiring = semiring;
-        leftCorners = new LeftCorners(semiring, nonTerminals, rules);
-
-        final LeftCorners leftStarCorners = getReflexiveTransitiveClosure(semiring, nonTerminals, leftCorners);
-        leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);
-
-        unitStarScores = getUnitStarCorners();
-
-        final Map<Category, Set<Rule>> nonZeroLeftStartRules_ = new HashMap<>();
-        nonTerminals.forEach(Yy -> {
-            final Collection<NonTerminal> nonZeroScores = leftStarCorners.getNonZeroScores(Yy);
-            if (nonZeroScores != null) {
-                final Set<Rule> ruleSet = nonZeroScores.stream().flatMap(Y -> {
-                    final Collection<Rule> rulesForY = getRules(Y);
-                    return rulesForY == null ? Stream.empty() : rulesForY.stream();
-                }).collect(Collectors.toSet());
-                nonZeroLeftStartRules_.put(Yy, ruleSet);
-            }
-        });
-
-        nonZeroLeftStartRules = Collections.unmodifiableMap(nonZeroLeftStartRules_);
-    }
-
-    /**
-     * Uses a trick to compute left*Corners (R_L), the reflexive transitive closure of leftCorners:
-     * <p>
-     * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
-     */
-    private static LeftCorners getReflexiveTransitiveClosure(final DblSemiring semiring, final Set<NonTerminal> nonTerminals, final LeftCorners P) {
-        final int nonTerminalsCount = nonTerminals.size();
-        final NonTerminal[] nonterminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminalsCount]);
-
-        final Matrix R_L_inverse = new Matrix(nonTerminalsCount, nonTerminalsCount);
-        R_L_inverse.forEach((row, col, value) -> {
-            final NonTerminal X = nonterminalsArr[row];
-            final NonTerminal Y = nonterminalsArr[col];
-            // I - P_L
-            R_L_inverse.set(row, col, (row == col ? 1 : 0) - P.getProbability(X, Y));
-        });
-
-
-        final Matrix R_L = inverseMatrix(R_L_inverse);
-        final LeftCorners R__L = new LeftCorners();
-            /*
-             * Copy all matrix values into our {@link LeftCorners} object
-             */
-        final int bound = R_L.getRowDimension();
-        for (int i = 0; i < bound; i++) {
-            final int row = i;
-            IntStream.range(0, R_L.getColumnDimension()).forEach(col ->
-                    R__L.setProbability(nonterminalsArr[row], nonterminalsArr[col], R_L.get(row, col), semiring));
-        }
-        return R__L;
-    }
-
-    private static Matrix inverseMatrix(final Matrix R_L_inverse) {
-        final LUDecomposition luDecomposition = new LUDecomposition(R_L_inverse);
-        if (luDecomposition.isNonsingular()) {
-            return R_L_inverse.inverse(luDecomposition);
-        } else {
-            return R_L_inverse.inverse(new QRDecomposition(R_L_inverse));
-            // throw new Error();
-        }
     }
 
     @SuppressWarnings("SameParameterValue")
     public static Grammar<String> fromString(final String str) {
-        return fromString(str, STRING_CATEGORY_FUNCTION,
-                LogSemiring.get());
+        return fromString(str, STRING_CATEGORY_FUNCTION, LogSemiring.get());
     }
 
     @SuppressWarnings("WeakerAccess")
     public static Grammar<String> fromString(final String s, final Function<String, Category> parseCategory, final DblSemiring semiring) {
-        final Builder<String> b = new Builder<>();
-
         final RuleParser parser = new RuleParser(parseCategory, semiring);
-        b.addRules(Arrays.stream(NEWLINE.split(s.trim()))
+        return new Builder<String>().addRules(Arrays.stream(GrammarParser.NEWLINE.split(s.trim()))
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
                 .map(parser::fromString)
-                .collect(Collectors.toSet())
-        );
-        return b.build();
+                .collect(Collectors.toSet())).build();
     }
 
     public static Grammar<String> fromString(final Path path, final Charset charset) throws IOException {
-        return fromString(
-                path,
-                charset,
-                STRING_CATEGORY_FUNCTION,
-                LogSemiring.get());
+        return fromString(path, charset, STRING_CATEGORY_FUNCTION, LogSemiring.get());
     }
 
     @SuppressWarnings("WeakerAccess")
     public static Grammar<String> fromString(final Path path, final Charset charset, final Function<String, Category> parseCategory, final DblSemiring semiring) throws IOException {
-        final Builder<String> b = new Builder<>();
         final RuleParser ruleParser = new RuleParser(parseCategory, semiring);
-        final Collection<Rule> rules = Files.lines(path, charset).parallel()
+        return new Builder<String>().addRules(Files.lines(path, charset).parallel()
                 .map(line -> TRAILING_COMMENT.matcher(line).replaceAll("").trim())
                 .filter(line -> !line.isEmpty())
                 .map(ruleParser::fromString)
-                .collect(Collectors.toSet());
-        b.addRules(rules);
-        return b.build();
+                .collect(Collectors.toSet())).build();
     }
 
 
     @SuppressWarnings("unused")
     public static Grammar<String> fromString(final InputStream inputStream, final Charset charset) throws IOException {
-        return fromString(
-                inputStream,
-                charset,
-                STRING_CATEGORY_FUNCTION,
-                LogSemiring.get());
+        return fromString(inputStream, charset, STRING_CATEGORY_FUNCTION, LogSemiring.get());
     }
 
     @SuppressWarnings("WeakerAccess")
     public static Grammar<String> fromString(final InputStream inputStream, final Charset charset, final Function<String, Category> parseCategory, final DblSemiring semiring) throws IOException {
-        final Builder<String> b = new Builder<>();
-
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
-        final RuleParser ruleParser = new RuleParser(parseCategory, semiring);
-
-        String line = reader.readLine();
-        final Collection<Rule> rules = new HashSet<>();
-        while (line != null) {
-            line = TRAILING_COMMENT.matcher(line).replaceAll("").trim();
-            if (!line.isEmpty())
-                rules.add(ruleParser.fromString(line));
-            line = reader.readLine();
-        }
-        b.addRules(rules);
-        return b.build();
+        return GrammarParser.fromString(inputStream, charset, parseCategory, semiring);
     }
 
-//    public Collection<Rule> getSynchronizingRules(NonTerminal left) {
+    //    public Collection<Rule> getSynchronizingRules(NonTerminal left) {
 //        return lexicalErrorRules.get(left);
 //    }
-
-    private ScoresAsSemiringElements getUnitStarCorners() {
-        // Sum all probabilities for unit relations
-        final LeftCorners P_U = new LeftCorners();
-        nonTerminals.forEach(nonTerminal -> {
-            final Collection<Rule> rulesForNonTerminal = getRules(nonTerminal);
-            if (rulesForNonTerminal != null) rulesForNonTerminal.stream()
-                    .filter(Rule::isUnitProduction)
-                    .forEach(Yrule -> P_U.plusProbability(nonTerminal, (NonTerminal) Yrule.right[0], Yrule.probability, semiring));
-        });
-
-        // R_U = (I - P_U)
-        return new ScoresAsSemiringElements(getReflexiveTransitiveClosure(semiring, nonTerminals, P_U), semiring);
-    }
 
     //    /**
 //     * Gets a singleton preterminal rule with the specified left category,
@@ -427,11 +326,10 @@ public final class Grammar<T> {
             return new Grammar<>(name, rules, semiring);
         }
 
-        @SuppressWarnings({"unused", "WeakerAccess"})
+        @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
         public Builder<E> addRules(final Collection<Rule> rules) {
             rules.forEach(this::addRule);
             return this;
         }
     }
-
 }

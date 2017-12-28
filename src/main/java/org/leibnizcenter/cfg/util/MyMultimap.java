@@ -12,8 +12,7 @@ public class MyMultimap<T, T1> {
     private boolean isLocked = false;
 
     public Collection<T1> get(final T el) {
-        if (map.containsKey(el)) return map.get(el);
-        else return null;
+        return map.getOrDefault(el, null);
     }
 
     public void put(final T k, final T1 v) {
@@ -32,6 +31,7 @@ public class MyMultimap<T, T1> {
         return map.containsKey(s);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean lock() {
         map = Collections.unmodifiableMap(map);
         values = Collections.unmodifiableSet(values);
@@ -45,4 +45,7 @@ public class MyMultimap<T, T1> {
         return values;
     }
 
+    public Set<T> keys() {
+        return map.keySet();
+    }
 }
