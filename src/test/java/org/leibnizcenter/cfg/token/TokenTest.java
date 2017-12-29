@@ -13,7 +13,7 @@ public class TokenTest {
 
     @Test
     public void from() throws Exception {
-        Token.from("tôken").equals(token1);
+        assertEquals(Token.from("tôken"), token1);
     }
 
     @Test
@@ -23,7 +23,7 @@ public class TokenTest {
 
     @Test
     public void testHashCode() throws Exception {
-        assertEquals(new Token("tôken").hashCode(), token1.hashCode());
+        assertEquals(new Token<>("tôken").hashCode(), token1.hashCode());
     }
 
 }

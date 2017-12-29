@@ -93,12 +93,12 @@ public class Parser<T> {
         return viterbiParseWithScore.getParseTree();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     @Deprecated
     public static <T> ParseTreeWithScore getViterbiParseWithScore(
             final NonTerminal S,
             final Grammar<T> grammar,
-            final Iterable<Token<T>> tokens
-    ) {
+            final Iterable<Token<T>> tokens) {
         return new Parser<>(grammar).getViterbiParseWithScore(S, tokens, null);
     }
 

@@ -1,4 +1,4 @@
-//package org.leibnizcenter.cfg.earleyparser.chart.statesets;
+package org.leibnizcenter.cfg.earleyparser.chart.statesets;//package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 //
 //import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 //

@@ -6,7 +6,7 @@ import org.leibnizcenter.cfg.token.Token;
 /**
  * <p>
  * Terminal {@link Category}. Implements a function {@link #hasCategory} that returns, given a
- * {@link org.leibnizcenter.cfg.token.Token token}, whether that token a terminal of this type.
+ * {@link Token token}, whether that token a terminal of this type.
  * </p>
  * Created by maarten on 10-6-16.
  *

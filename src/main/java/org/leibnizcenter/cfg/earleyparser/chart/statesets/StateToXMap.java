@@ -1,4 +1,4 @@
-//package org.leibnizcenter.cfg.earleyparser.chart.statesets;
+package org.leibnizcenter.cfg.earleyparser.chart.statesets;//package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 //
 //import gnu.trove.map.TIntObjectMap;
 //import gnu.trove.map.hash.TIntObjectHashMap;

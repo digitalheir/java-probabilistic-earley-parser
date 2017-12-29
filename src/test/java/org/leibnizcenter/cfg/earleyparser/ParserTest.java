@@ -240,7 +240,7 @@ public class ParserTest {
                 .addRule(TV, transitiveVerb)
                 .addRule(Mod, with, NP) // eg. with a stick
                 .build();
-        Assert.assertEquals(Parser.recognize(S, grammar, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+        Assert.assertEquals(new Parser<>(grammar).recognize(S, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
     }
 
 
