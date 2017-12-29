@@ -34,8 +34,8 @@ public class GrammarTest {
     private final static Category e = new ExactStringTerminal("e");
     private final static Category a = new ExactStringTerminal("a");
 
-    private final static Rule rule1 = Rule.create(sr, 1.0, A, B, C, D, E);
-    private final static Rule rule2 = Rule.create(sr, 1.0, A, e);
+    private final static Rule rule1 = Rule.create(sr, 0.5, A, B, C, D, E);
+    private final static Rule rule2 = Rule.create(sr, 0.5, A, e);
     private final static Rule rule3 = Rule.create(sr, 1.0, X, Y, Z);
     private static final Rule ruleB = Rule.create(sr, 0.5, B, C);
     private static final Rule ruleC = Rule.create(sr, 0.5, C, D);
@@ -80,7 +80,7 @@ public class GrammarTest {
                 .addRule(rule1)
                 .addRule(rule2)
                 .addRule(rule3)
-                .build();
+                .build(true);
     }
 
     @Test
@@ -98,21 +98,21 @@ public class GrammarTest {
                 .addRule(rule1)
                 .addRule(rule2)
                 .addRule(rule3)
-                .build();
-        assertEquals(g.getLeftScore(A, B), 1.0, 0.001);
+                .build(true);
+        assertEquals(g.getLeftScore(A, B), 0.5, 0.001);
         assertEquals(g.getLeftScore(A, D), 0.0, 0.001);
         assertEquals(g.getLeftScore(A, X), 0.0, 0.001);
-        assertEquals(g.getLeftScore(B, C), 0.5, 0.001);
-        assertEquals(g.getLeftScore(D, E), 0.7, 0.001);
+        assertEquals(g.getLeftScore(B, C), 1.0, 0.001);
+        assertEquals(g.getLeftScore(D, E), .07/.12, 0.001);
     }
 
     @Test
     public final void testLeftStarRelation() {
         final Grammar<String> g = makeDefaultGrammar();
-        assertEquals(g.getLeftStarScore(A, B), 1.0, 0.01);
-        assertEquals(g.getLeftStarScore(B, C), 0.5, 0.01);
-        assertEquals(g.getLeftStarScore(B, D), 0.25, 0.01);
-        assertEquals(g.getLeftStarScore(A, D), 0.25, 0.01);
+        assertEquals(g.getLeftStarScore(A, B), 0.5, 0.01);
+        assertEquals(g.getLeftStarScore(B, C), 1.0, 0.01);
+        assertEquals(g.getLeftStarScore(B, D), 1.0, 0.01);
+        assertEquals(g.getLeftStarScore(A, D), 0.5, 0.01);
         assertEquals(sr.toProbability(g.getLeftStarScore(A, X)), 0.0, 0.01);
     }
 
@@ -143,7 +143,9 @@ public class GrammarTest {
 
     @Test
     public final void parseErrorRule() throws IOException {
-        final Grammar<String> grammar = Grammar.fromString("S->NP(0.9)#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar (0.9)\n");
+        final Grammar<String> grammar = Grammar.fromString(
+                "S->NP(1.0)#comment\n#comment\n\n#\n   #  com\n  \n\n VP -> eat <error> clar (1.0)\n"
+        );
         final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));
         assertNotNull(errorRules);
         assertEquals(1, errorRules.size());
@@ -156,9 +158,9 @@ public class GrammarTest {
         final Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .withSemiring(sr)
                 .addRule(Rule.create(sr, 0.9999999999, A, A, a))
-                .addRule(Rule.create(sr, 1.0, A, a))
+                .addRule(Rule.create(sr, 0.0000000001, A, a))
                 .addRule(Rule.create(sr, 0.8, B, B, a, e))
-                .addRule(Rule.create(sr, 0.1, B, e, a, e))
+                .addRule(Rule.create(sr, 0.2, B, e, a, e))
                 .build();
 
         final Collection<Rule> errorRules = grammar.getRules(NonTerminal.of("VP"));

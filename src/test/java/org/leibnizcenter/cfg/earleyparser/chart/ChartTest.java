@@ -92,7 +92,7 @@ public class ChartTest {
                 .addRule(rule1)
                 .addRule(ruleAa)
                 .addRule(rule3)
-                .build();
+                .build(true);
         final DblSemiring sr = grammar.semiring;
         final Chart<String> chart = new Chart<>(grammar);
 

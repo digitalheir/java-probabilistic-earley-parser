@@ -45,8 +45,7 @@ public class ChartWithInputPosition<T> {
     public ChartWithInputPosition(
             final Grammar<T> grammar,
             final NonTerminal goal,
-            final ParseOptions<T> parseOptions
-    ) {
+            final ParseOptions<T> parseOptions) {
         this.grammar = grammar;
         strategy = parseOptions == null || parseOptions.scanMode == null ? ScanMode.STRICT : parseOptions.scanMode;
         chart = new Chart<>(grammar, parseOptions);

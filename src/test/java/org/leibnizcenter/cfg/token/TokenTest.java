@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
  * Created by maarten on 27-1-17.
  */
 public class TokenTest {
-    private Token token1 = Token.of("tôken");
+    private final Token token1 = Token.of("tôken");
 
     @Test
     public void from() throws Exception {

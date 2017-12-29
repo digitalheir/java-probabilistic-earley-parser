@@ -76,13 +76,14 @@ public final class Grammar<T> {
      * X. Formal definitions of these conditions are given in Appendix A of An Efficient Probabilistic .
      *
      * @param name     The mnemonic name for this grammar.
-     * @param rules    Rules for the grammar
+     * @param rules_   Rules for the grammar
      * @param semiring Semiring
      */
-    public Grammar(final String name, final MyMultimap<NonTerminal, Rule> rules, final ExpressionSemiring semiring) {
+    public Grammar(final String name, final MyMultimap<NonTerminal, Rule> rules_, final ExpressionSemiring semiring) {
         this.name = name;
-        this.rules = rules;
+        this.rules = rules_;
         this.semiring = semiring;
+
         rules.lock();
 
         collectTerminalsAndNonTerminals(rules.values());
@@ -95,6 +96,7 @@ public final class Grammar<T> {
         leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);
         unitStarScores = new ScoresAsSemiringElements(computeUnitStarCorners(this.rules, nonTerminalsArr), this.semiring);
         nonZeroLeftStartRules = findNonZeroLeftStartRules(leftStarCorners, nonTerminals, rules);
+
     }
 
     @SuppressWarnings("unchecked")
@@ -322,8 +324,29 @@ public final class Grammar<T> {
             return addRule(rf.newRule(left, right));
         }
 
+        /**
+         * Ensures grammar is proper, i.e. the sum of production probabilities should equal 1.0 for each producible category
+         */
+        private MyMultimap<NonTerminal, Rule> normalizeRuleWeights(final MyMultimap<NonTerminal, Rule> rules, final DblSemiring semiring) {
+            final MyMultimap<NonTerminal, Rule> newRuleMap = new MyMultimap<>();
+            for (final Map.Entry<NonTerminal, Set<Rule>> entry : rules.entries()) {
+                final Set<Rule> rulesForCategory = entry.getValue();
+                final double probabilitySum = rulesForCategory.stream().mapToDouble(r -> r.probability).reduce(Double::sum).orElseThrow(IllegalStateException::new);
+                if (probabilitySum != 1.0) {
+                    final Collection<Rule> newRules = new ArrayList<>(rulesForCategory.size());
+                    rulesForCategory.forEach(r -> newRules.add(Rule.create(semiring, r.probability / probabilitySum, r.left, r.right)));
+                    newRuleMap.putAll(entry.getKey(), newRules);
+                } else newRuleMap.putAll(entry.getKey(), rulesForCategory);
+            }
+            return newRuleMap;
+        }
+
         public Grammar<E> build() {
-            return new Grammar<>(name, rules, semiring);
+            return build(true);
+        }
+
+        public Grammar<E> build(final boolean makeProper) {
+            return new Grammar<>(name, makeProper ? normalizeRuleWeights(rules, semiring) : rules, semiring);
         }
 
         @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})

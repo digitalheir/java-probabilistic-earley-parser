@@ -19,6 +19,8 @@ import org.leibnizcenter.cfg.token.Tokens;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  */
 public class ParseScanModeTest {
@@ -35,12 +37,13 @@ public class ParseScanModeTest {
         final double p = (0.6);
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a)
-                .build();
+                .addRule(1 - p, S, c)
+                .build(true);
         final List<Token<String>> tokens = Tokens.tokenize("b a");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.DROP).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
-        Assert.assertEquals(p, parse.getProbability(), 0.00001);
+        assertEquals(p, parse.getProbability(), 0.00001);
     }
 
     @Test(expected = TokenNotInLexiconException.class)
@@ -48,12 +51,13 @@ public class ParseScanModeTest {
         final double p = (0.6);
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a)
+                .addRule(1-p, S, c)
                 .build();
         final List<Token<String>> tokens = Tokens.tokenize("b a");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.STRICT).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
-        Assert.assertEquals(p, parse.getProbability(), 0.00001);
+        assertEquals(p, parse.getProbability(), 0.00001);
     }
 
     @Test
@@ -63,12 +67,12 @@ public class ParseScanModeTest {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(p, S, a, a)
                 .addRule(q, S, b, a)
-                .build();
+                .build(true);
         final List<Token<String>> tokens = Tokens.tokenize("z a");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.WILDCARD).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
-        Assert.assertEquals(q, parse.getProbability(), 0.00001);
+        assertEquals(q / (p + q), parse.getProbability(), 0.00001);
 
         System.out.println(parse);
     }
@@ -77,9 +81,9 @@ public class ParseScanModeTest {
     public void scanModeSynchronizeTokensPre() throws Exception {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(0.8, S, A)
-                .addRule(0.7, S, S, A)
+                .addRule(0.2, S, S, A)
                 .addRule(0.6, A, a, a, period)
-                .addRule(0.5, A, b, b, NonLexicalToken.INSTANCE, period)
+                .addRule(0.4, A, b, b, NonLexicalToken.INSTANCE, period)
                 .build();
         final List<Token<String>> tokens = Tokens.tokenize("a a . b b z a . a a .");
 
@@ -87,7 +91,7 @@ public class ParseScanModeTest {
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.7 * .7 * 0.8 * 0.6 * Math.pow(.5, 2) * .6, parse.getProbability(), 0.00001);
+        assertEquals(.2 * .2 * 0.8 * 0.6 * Math.pow(.4, 2) * .6, parse.getProbability(), 0.00001);
     }
 
 // TODO
@@ -139,11 +143,11 @@ public class ParseScanModeTest {
     @Test
     public void scanModeSynchronizeTokens() throws Exception {
         final Grammar<String> grammar = new Grammar.Builder<String>()
-                .addRule(1.0, S, A)
+                .addRule(0.1, S, A)
                 .addRule(0.9, S, S, A)
                 .addRule(0.1, A, a, a, period)
-                .addRule(1, A, c, c, period)
-                .addRule(0.9, A, NonLexicalToken.INSTANCE, period)
+                .addRule(0.1, A, c, c, period)
+                .addRule(0.8, A, NonLexicalToken.INSTANCE, period)
                 .build();
 
         final List<Token<String>> s0 = Tokens.tokenize("c c . ");
@@ -160,7 +164,7 @@ public class ParseScanModeTest {
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.9 * 0.9 * 1.0 * Math.pow(.9, s1.size() + s2.size() - 1) * .1, parse.getProbability(), 0.00001);
+        assertEquals(0.9 * 0.1 * Math.pow(.8, s0.size() + s1.size() + s2.size() - 1) * .1, parse.getProbability(), 0.00001);
         //assertTrue(.5 * .5 * Math.pow(.9, s1.size() + s2.size() - 1) * .1 < .5 * Math.pow(.9, tokens.size() - 1));
     }
 
@@ -171,14 +175,14 @@ public class ParseScanModeTest {
                 .addRule(0.7, S, S, A)
                 .addRule(0.6, A, a, a, period)
                 .addRule(0.5, A, NonLexicalToken.INSTANCE, period)
-                .build();
+                .build(true);
         final List<Token<String>> tokens = Tokens.tokenize("a a . a b c d e f g h i j k l m n o p q r s t u v w x y z a . a a .");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.SYNCHRONIZE).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(
+        assertEquals(
                 .7 * .7 * .8 * .6 * Math.pow(.5, 27) * .6,
                 parse.getProbability(), 0.00001);
     }
@@ -188,21 +192,24 @@ public class ParseScanModeTest {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(1.0, S, A)
                 .addRule(0.2, A, NonLexicalToken.INSTANCE, period)
-                .build();
+                .addRule(0.8, A, a, period)
+                .build(true);
         final List<Token<String>> tokens = Tokens.tokenize("z a .");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.SYNCHRONIZE).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.2 * 0.2, parse.getProbability(), 0.00001);
+        assertEquals(0.2 * 0.2, parse.getProbability(), 0.00001);
     }
 
     @Test
     public void scanModeSynchronizeWhereNonLexicalIsFirstCategoryOfErrorRuleTwiceApplied() throws Exception {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .addRule(0.2, S, A, A)
+                .addRule(0.8, S, c)
                 .addRule(0.2, A, NonLexicalToken.INSTANCE, period)
+                .addRule(0.8, A, c)
                 .build();
         final List<Token<String>> tokens = Tokens.tokenize("z a . a .");
 
@@ -210,26 +217,26 @@ public class ParseScanModeTest {
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.2 * 0.2 * 0.2 * 0.2, parse.getProbability(), 0.00001);
+        assertEquals(0.2 * 0.2 * 0.2 * 0.2, parse.getProbability(), 0.00001);
     }
 
     @Test
     public void scanModeSynchronizeWhereErrorIsBetweenRuleApplicationsAndLexicalTokens() throws Exception {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(ProbabilitySemiring.get())
-                .addRule(0.9, S, a, S, a)
-                .addRule(0.9, S, b, S, b)
-                .addRule(0.5, S, c)
+                .addRule(0.5, S, a, S, a)
+                .addRule(0.2, S, b, S, b)
+                .addRule(0.1, S, c)
 
-                .addRule(0.5, S, a, NonLexicalToken.INSTANCE, a)
-                .addRule(0.5, S, b, NonLexicalToken.INSTANCE, b)
-                .build();
+                .addRule(0.1, S, a, NonLexicalToken.INSTANCE, a)
+                .addRule(0.1, S, b, NonLexicalToken.INSTANCE, b)
+                .build(true);
         final List<Token<String>> tokens = Tokens.tokenize(" a    b c b a s b b   a");
 
         final ParseOptions<String> cb = new ParseOptions.Builder<String>().withScanMode(ScanMode.SYNCHRONIZE).build();
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens, cb);
 
         System.out.println(parse);
-        Assert.assertEquals(0.9 * Math.pow(.5, 5), parse.getProbability(), 0.00001);
+        assertEquals(0.5 * Math.pow(.1, 5), parse.getProbability(), 0.00001);
     }
 }

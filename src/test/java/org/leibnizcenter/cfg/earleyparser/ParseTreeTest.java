@@ -20,32 +20,31 @@ public class ParseTreeTest {
     private static final NonTerminal Det = Category.nonTerminal("Det");
     private static final NonTerminal N = Category.nonTerminal("N");
 
-    private static NonTerminal VS = Category.nonTerminal("VS"),
-            VI = Category.nonTerminal("VI"),
-            VT = Category.nonTerminal("VT");
-    private static Terminal
-            saw = new ExactStringTerminal("saw"),
-            duck = new ExactStringTerminal("duck"),
-            her = new ExactStringTerminal("her"),
-            he = new ExactStringTerminal("he");
+    private static final NonTerminal VS = Category.nonTerminal("VS");
+    private static final NonTerminal VI = Category.nonTerminal("VI");
+    private static final NonTerminal VT = Category.nonTerminal("VT");
+    private static final Terminal
+            saw = new ExactStringTerminal("saw");
+    private static final Terminal duck = new ExactStringTerminal("duck");
+    private static final Terminal her = new ExactStringTerminal("her");
+    private static final Terminal he = new ExactStringTerminal("he");
 
-    @SuppressWarnings("unused")
-    private static Grammar<String> mygrammar = new Grammar.Builder<String>("test")
-            .addRule(S, NP, VP)
-            .addRule(NP, he)
-            .addRule(NP, her)
-            .addRule(NP, Det, N)
-            .addRule(VT, saw)
-            .addRule(VS, saw)
-            .addRule(VI, duck)
-            .addRule(N, duck)
-            .addRule(Det, her)
-            .addRule(VP, VT, NP)
-            .addRule(VP, VS, S)
-            .addRule(VP, VI).build();
 
     @Test
     public final void testParseTrees() {
+//    final Grammar<String> myGrammar = new Grammar.Builder<String>("test")
+//            .addRule(S, NP, VP)
+//            .addRule(NP, he)
+//            .addRule(NP, her)
+//            .addRule(NP, Det, N)
+//            .addRule(VT, saw)
+//            .addRule(VS, saw)
+//            .addRule(VI, duck)
+//            .addRule(N, duck)
+//            .addRule(Det, her)
+//            .addRule(VP, VT, NP)
+//            .addRule(VP, VS, S)
+//            .addRule(VP, VI).build();
 //        List<Token<String>> tokens = new ArrayList<>();
 //        tokens.add(new Token<>("he"));
 //        tokens.add(new Token<>("saw"));
@@ -53,7 +52,7 @@ public class ParseTreeTest {
 //        tokens.add(new Token<>("duck"));
 //
 //         TODO implement treewalker
-//        parseTrees = new Parser<>(mygrammar).getParses(S, tokens);
+//        parseTrees = new Parser<>(myGrammar).getParses(S, tokens);
 //        // structural ambiguity reflected?
 //        Assert.assertEquals("problem with parse trees: " + parseTrees,
 //                2, parseTrees.size());

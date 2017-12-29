@@ -18,9 +18,9 @@ public class PanicMode {
     public static <T> void proceedAllStatesThatWereActiveOnError(final Chart<T> chart, final int chartIndex, final TIntObjectHashMap<Token<T>> tokensPassed) {
         final ExpressionSemiring sr = chart.grammar.semiring;
         new HashSet<>(chart.stateSets.activeStates.activeOnNonLexicalToken)
-                .stream()
+                .stream().sequential()
                 .filter(s -> s.comesBefore(chartIndex))
-                .forEach(rootStateActiveOnError -> {
+                .forEachOrdered(rootStateActiveOnError -> {
                             final double rootForward = chart.getForwardScore(rootStateActiveOnError);
                             final double rootInner = chart.getInnerScore(rootStateActiveOnError);
 
@@ -64,7 +64,11 @@ public class PanicMode {
                 );
     }
 
-    private static <T> double determineScanProbabilityOfMultipleTokens(final Chart<T> chart, final int startPositionInclusive, final int endPositionInclusive, final ExpressionSemiring sr, final Token<T> token) {
+    private static <T> double determineScanProbabilityOfMultipleTokens(final Chart<T> chart,
+                                                                       final int startPositionInclusive,
+                                                                       final int endPositionInclusive,
+                                                                       final ExpressionSemiring sr,
+                                                                       final Token<T> token) {
         final ScanProbability<T> scanProbability = chart.parseOptions.scanProbability;
         double scanProbPow = Double.NaN;
         if (scanProbability != null) {
@@ -77,9 +81,7 @@ public class PanicMode {
             //noinspection unchecked
             scanProbPow = IntStream.range(startPositionInclusive, endPositionInclusive)
                     .mapToDouble(p -> Scan.getScanProb(scanProbability,
-                            new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.INSTANCE)),
-                            p
-                    ))
+                            new TokenWithCategories<>(token, Collections.singleton(NonLexicalToken.INSTANCE)), p))
                     .reduce(scanProbAtPosition, sr::times);
         }
         return scanProbPow;

@@ -43,21 +43,21 @@ public class RuleParser {
             && !((RhsToken) token).isRegexDelimiter;
 
     private static final Grammar<String> grammarRHS = new Grammar.Builder<String>()
-            .addRule(0.9, RIGHT_HAND_SIDE, REGEX)
-            .addRule(0.9, RIGHT_HAND_SIDE, CATEGORY)
-            .addRule(0.9, RIGHT_HAND_SIDE, RIGHT_HAND_SIDE, WHITE_SPACE, RIGHT_HAND_SIDE)
+            .addRule(0.4, RIGHT_HAND_SIDE, REGEX)
+            .addRule(0.3, RIGHT_HAND_SIDE, CATEGORY)
+            .addRule(0.3, RIGHT_HAND_SIDE, RIGHT_HAND_SIDE, WHITE_SPACE, RIGHT_HAND_SIDE)
 
-            .addRule(0.9, CATEGORY, CATEGORY_CONTENT)
-            .addRule(0.9, CATEGORY_CONTENT, CATEGORY_CONTENT, REGEX_DELIMITER)
-            .addRule(0.9, CATEGORY_CONTENT, DANK_CONTENT)
-            .addRule(0.9, CATEGORY_CONTENT, CATEGORY_CONTENT, CATEGORY_CONTENT)
+            .addRule(1.0, CATEGORY, CATEGORY_CONTENT)
+            .addRule(0.4, CATEGORY_CONTENT, CATEGORY_CONTENT, REGEX_DELIMITER)
+            .addRule(0.3, CATEGORY_CONTENT, DANK_CONTENT)
+            .addRule(0.3, CATEGORY_CONTENT, CATEGORY_CONTENT, CATEGORY_CONTENT)
 
-            .addRule(0.9, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER)
-            .addRule(0.9, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER, REGEX_MODIFIERS)
-            .addRule(0.9, REGEX_CONTENT, NON_REGEX_DELIMITER)
-            .addRule(0.9, REGEX_CONTENT, REGEX_CONTENT, REGEX_CONTENT)
-            .addRule(0.9, NON_REGEX_DELIMITER, DANK_CONTENT)
-            .addRule(0.9, NON_REGEX_DELIMITER, WHITE_SPACE)
+            .addRule(0.5, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER)
+            .addRule(0.5, REGEX, REGEX_DELIMITER, REGEX_CONTENT, REGEX_DELIMITER, REGEX_MODIFIERS)
+            .addRule(0.5, REGEX_CONTENT, NON_REGEX_DELIMITER)
+            .addRule(0.5, REGEX_CONTENT, REGEX_CONTENT, REGEX_CONTENT)
+            .addRule(0.5, NON_REGEX_DELIMITER, DANK_CONTENT)
+            .addRule(0.5, NON_REGEX_DELIMITER, WHITE_SPACE)
 
             .build();
 

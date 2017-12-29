@@ -1,5 +1,8 @@
 package org.leibnizcenter.cfg.util;
 
+import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
+import org.leibnizcenter.cfg.rule.Rule;
+
 import java.util.*;
 
 /**
@@ -27,6 +30,19 @@ public class MyMultimap<T, T1> {
         values.add(v);
     }
 
+    public void putAll(final T k, final Collection<T1> v) {
+        final Set<T1> s;
+        if (map.containsKey(k)) {
+            s = map.get(k);
+        } else {
+            s = new HashSet<>();
+            map.put(k, s);
+        }
+
+        s.addAll(v);
+        values.addAll(v);
+    }
+
     public boolean containsKey(final T s) {
         return map.containsKey(s);
     }
@@ -48,4 +64,9 @@ public class MyMultimap<T, T1> {
     public Set<T> keys() {
         return map.keySet();
     }
+
+    public Set<Map.Entry<T, Set<T1>>> entries() {
+        return map.entrySet();
+    }
+
 }

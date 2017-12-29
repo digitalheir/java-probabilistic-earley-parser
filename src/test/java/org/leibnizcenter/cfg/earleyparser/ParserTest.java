@@ -93,9 +93,9 @@ public class ParserTest {
         final LogSemiring sr = LogSemiring.get();
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
-                .addRule(1.0, S, A)
+                .addRule(0.5, S, A)
                 .addRule(0.5, S, S, S)
-                .addRule(0.5, A, a)
+                .addRule(1.0, A, a)
                 .build();
 
         final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
@@ -110,21 +110,21 @@ public class ParserTest {
         final LogSemiring sr = LogSemiring.get();
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
-                .addRule(1.0, S, A)
+                .addRule(0.9, S, A)
                 .addRule(0.1, S, S, S)
-                .addRule(1.0, A, B)
-                .addRule(0.5, A, D)
-                .addRule(0.5, B, C)
-                .addRule(1.0, B, a)
-                .addRule(0.5, C, D)
-                .addRule(0.5, C, a)
-                .addRule(0.5, D, a)
+                .addRule(0.2, A, B)
+                .addRule(0.8, A, D)
+                .addRule(0.6, B, C)
+                .addRule(0.4, B, a)
+                .addRule(0.6, C, D)
+                .addRule(0.4, C, a)
+                .addRule(1.0, D, a)
                 .build();
 
         final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a");
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
-        Assert.assertEquals(parse.getProbability(), 0.01, 0.0001);
+        Assert.assertEquals(parse.getProbability(), 0.00373248, 0.0001);
     }
 
 
@@ -134,11 +134,11 @@ public class ParserTest {
         final Grammar<String> grammar = new Grammar.Builder<String>()
                 .withSemiring(sr)
                 .addRule(1.0, S, A, A)
-                .addRule(1.0, A, B)
+                .addRule(0.9, A, B)
                 .addRule(0.1, A, D)
-                .addRule(1.0, B, C)
-                .addRule(0.9, D, a, a)
-                .addRule(0.9, C, D)
+                .addRule(0.1, B, C)
+                .addRule(1.0, D, a, a)
+                .addRule(0.5, C, D)
                 .addRule(0.9, B, a)
                 .addRule(0.5, C, a, a)
                 .build();
@@ -146,7 +146,7 @@ public class ParserTest {
         final List<Token<String>> tokens = Tokens.tokenize("a", "a", "a", "a");
         final ParseTreeWithScore parse = new Parser<>(grammar).getViterbiParseWithScore(S, tokens);
 
-        Assert.assertEquals(parse.getProbability(), 0.6561, 0.0001);
+        Assert.assertEquals(parse.getProbability(), 0.01, 0.0001);
     }
 
 
@@ -165,12 +165,12 @@ public class ParserTest {
         final NonTerminal Det = Category.nonTerminal("Det");
         final NonTerminal N = Category.nonTerminal("N");
 
-        final double PSVP = 0.9;
-        final double PSNP = 1 - PSVP;
+        final double pSVP = 0.9;
+        final double pSNP = 1 - pSVP;
         final Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .withSemiring(LogSemiring.get())
-                .addRule(PSVP, S, NP, VP)
-                .addRule(PSNP, S, NP)
+                .addRule(pSVP, S, NP, VP)
+                .addRule(pSNP, S, NP)
                 .addRule(NP, Det, N)
                 .addRule(N, BV, N)
                 .addRule(VP, left)
@@ -182,31 +182,34 @@ public class ParserTest {
                 .addRule(N, right)
                 .addRule(N, left)
                 .addRule(N, girl)
-                .build();
+                .build(true);
 
         final Parser<String> parser = new Parser<>(grammar);
         // Parsable
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the girl left")), PSVP, 0.0001);
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the right left")), PSNP + PSVP, 0.0001); // ambiguous
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the wrong right")), PSNP, 0.0001); // ambiguous
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the right")), PSNP, 0.0001);
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the girl")), PSNP, 0.0001);
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the right right")), PSNP, 0.0001);
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the left right")), PSNP, 0.0001);
+        final double pDet = grammar.getRules(Det).iterator().next().probability;
+        final double pN = grammar.getRules(N).iterator().next().probability;
+        final double pNP = grammar.getRules(NP).iterator().next().probability;
+        final double pBV = grammar.getRules(BV).iterator().next().probability;
+        final double pVP = grammar.getRules(VP).iterator().next().probability;
 
-        Assert.assertEquals(parser.recognize(N, Tokens.tokenize("left girl")), 1.0, 0.0001);
-        Assert.assertEquals(parser.recognize(N, Tokens.tokenize("left left")), 1.0, 0.0001);
-        Assert.assertEquals(parser.recognize(N, Tokens.tokenize("wrong left")), 1.0, 0.0001);
+        assertEquals(pSVP * pNP * pDet * pN * pVP, parser.recognize(S, Tokens.tokenize("the girl left")), 0.0001);
+        assertEquals((pSVP * pNP * pDet * pN * pVP) + (pSNP * pNP * pDet * pN * pBV * pN), parser.recognize(S, Tokens.tokenize("the right left")), 0.0001); // ambiguous
+        assertEquals(pSNP * pNP * pDet * pN * pBV * pN, parser.recognize(S, Tokens.tokenize("the wrong right")), 0.0001); // ambiguous
+        assertEquals(pSNP * pDet * pN, parser.recognize(S, Tokens.tokenize("the right")), 0.0001);
+        assertEquals(pSNP * pDet * pN, parser.recognize(S, Tokens.tokenize("the girl")), 0.0001);
+        assertEquals(pSNP * pNP * pDet * pN * pBV * pN, parser.recognize(S, Tokens.tokenize("the right right")), 0.0001);
+        assertEquals(pSNP * pNP * pDet * pN * pBV * pN, parser.recognize(S, Tokens.tokenize("the left right")), 0.0001);
+        assertEquals(pN * pBV * pN, parser.recognize(N, Tokens.tokenize("left girl")), 0.0001);
+        assertEquals(pN * pBV * pN, parser.recognize(N, Tokens.tokenize("left left")), 0.0001);
+        assertEquals(pN * pBV * pN, parser.recognize(N, Tokens.tokenize("wrong left")), 0.0001);
 
         // Unparsable
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("girl left")), 0.0, 0.0001);
-        Assert.assertEquals(parser.recognize(S, Tokens.tokenize("the")), 0.0, 0.0001);
+        assertEquals(0.0, parser.recognize(S, Tokens.tokenize("girl left")), 0.0001);
+        assertEquals(0.0, parser.recognize(S, Tokens.tokenize("the")), 0.0001);
     }
 
     @Test(expected = TokenNotInLexiconException.class)
     public final void unparseable() {
-
-
         final Grammar<String> grammar = new Grammar.Builder<String>("test")
                 .withSemiring(LogSemiring.get()) // If not set, defaults to Log semiring which is probably what you want
                 .addRule(
@@ -235,12 +238,12 @@ public class ParserTest {
                         TV, NP // eg. (chased) (the man with a stick)
                 )
                 .addRule(Det, the)
-                .addRule(N, man)
-                .addRule(N, stick)
+                .addRule(0.5, N, man)
+                .addRule(0.5, N, stick)
                 .addRule(TV, transitiveVerb)
                 .addRule(Mod, with, NP) // eg. with a stick
                 .build();
-        Assert.assertEquals(new Parser<>(grammar).recognize(S, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
+        assertEquals(new Parser<>(grammar).recognize(S, Tokens.tokenize("the notinlexicon left")), 0.0, 0.0001);
     }
 
 

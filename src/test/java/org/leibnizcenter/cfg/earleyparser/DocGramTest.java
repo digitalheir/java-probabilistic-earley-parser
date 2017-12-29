@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Document grammar
- *
+ * <p>
  * Created by Maarten on 23-8-2016.
  */
 public class DocGramTest {
@@ -42,44 +42,6 @@ public class DocGramTest {
     public static final ExactStringTerminal TERMINAL_SECTION_TITLE = new ExactStringTerminal("SECTION_TITLE");
     public static final ExactStringTerminal TERMINAL_TEXT = new ExactStringTerminal("TEXT_BLOCK");
     public static final ExactStringTerminal TERMINAL_NEWLINE = new ExactStringTerminal("NEWLINE");
-    public final static Grammar<String> grammar = new Grammar.Builder<String>()
-            .withSemiring(LogSemiring.get())
-            .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)
-
-            .addRule(0.7, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE)
-            .addRule(0.1, DOCUMENT_BODY, /* -> */ TEXT_BLOB, SECTION_SEQUENCE)
-            .addRule(0.1, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE, TEXT_BLOB)
-            .addRule(0.1, DOCUMENT_BODY, /* -> */ TEXT_BLOB, SECTION_SEQUENCE, TEXT_BLOB)
-//
-            .addRule(1.0, SECTION_SEQUENCE, SECTION_BLOB)
-//
-            .addRule(0.3, SECTION_BLOB, /* -> */ SECTION_BLOB, SECTION_BLOB)
-            .addRule(0.3, SECTION_BLOB, /* -> */ SECTION)
-            .addRule(0.2, SECTION_BLOB, /* -> */ SECTION, TEXT_BLOB)
-            .addRule(0.2, SECTION_BLOB, /* -> */ TEXT_BLOB, SECTION)
-
-            .addRule(0.99, SECTION, /* -> */ SECTION_TITLE, SECTION_CONTENT)
-            .addRule(1 - 0.99, SECTION, /* -> */ SECTION_TITLE)
-
-            .addRule(0.4, SECTION_CONTENT, /* -> */ SECTION_CONTENT, SECTION_CONTENT)
-            .addRule(0.4, SECTION_CONTENT, /* -> */ TEXT_BLOB)
-            .addRule(0.2, SECTION_CONTENT, /* -> */ SECTION_SEQUENCE)
-
-            .addRule(0.5, TEXT_BLOB, /* -> */ TEXT_BLOB, TEXT_BLOB)
-            .addRule(0.3, TEXT_BLOB, /* -> */ TERMINAL_TEXT)
-            .addRule(0.2, TEXT_BLOB, /* -> */ TERMINAL_NEWLINE)
-
-            //
-            // Section Title
-            //
-            .addRule(0.2, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING)
-            .addRule(0.3, SECTION_TITLE, /* -> */ SECTION_TITLE_TEXT)
-            .addRule(0.5, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING, SECTION_TITLE_TEXT)
-
-            .addRule(0.9, SECTION_TITLE_TEXT, /* -> */ TERMINAL_SECTION_TITLE)
-            .addRule(0.1, SECTION_TITLE_TEXT, /* -> */ TERMINAL_NEWLINE, SECTION_TITLE_TEXT)
-
-            .build();
     private static final Token<String> TEXT_BLOCK = new Token<>("TEXT_BLOCK");
     private static final Token<String> NEWLINE = new Token<>("NEWLINE");
     private static final Token<String> NR = new Token<>("NR");
@@ -240,9 +202,47 @@ public class DocGramTest {
 
     @Test
     public void tryGram() {
+        final Grammar<String> grammar = new Grammar.Builder<String>()
+                .withSemiring(LogSemiring.get())
+                .addRule(1.0, DOCUMENT, /* -> */ DOCUMENT_BODY)
+
+                .addRule(0.7, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE)
+                .addRule(0.1, DOCUMENT_BODY, /* -> */ TEXT_BLOB, SECTION_SEQUENCE)
+                .addRule(0.1, DOCUMENT_BODY, /* -> */ SECTION_SEQUENCE, TEXT_BLOB)
+                .addRule(0.1, DOCUMENT_BODY, /* -> */ TEXT_BLOB, SECTION_SEQUENCE, TEXT_BLOB)
+                //
+                .addRule(1.0, SECTION_SEQUENCE, SECTION_BLOB)
+                //
+                .addRule(0.3, SECTION_BLOB, /* -> */ SECTION_BLOB, SECTION_BLOB)
+                .addRule(0.3, SECTION_BLOB, /* -> */ SECTION)
+                .addRule(0.2, SECTION_BLOB, /* -> */ SECTION, TEXT_BLOB)
+                .addRule(0.2, SECTION_BLOB, /* -> */ TEXT_BLOB, SECTION)
+
+                .addRule(0.99, SECTION, /* -> */ SECTION_TITLE, SECTION_CONTENT)
+                .addRule(1 - 0.99, SECTION, /* -> */ SECTION_TITLE)
+
+                .addRule(0.4, SECTION_CONTENT, /* -> */ SECTION_CONTENT, SECTION_CONTENT)
+                .addRule(0.4, SECTION_CONTENT, /* -> */ TEXT_BLOB)
+                .addRule(0.2, SECTION_CONTENT, /* -> */ SECTION_SEQUENCE)
+
+                .addRule(0.5, TEXT_BLOB, /* -> */ TEXT_BLOB, TEXT_BLOB)
+                .addRule(0.3, TEXT_BLOB, /* -> */ TERMINAL_TEXT)
+                .addRule(0.2, TEXT_BLOB, /* -> */ TERMINAL_NEWLINE)
+
+                //
+                // Section Title
+                //
+                .addRule(0.2, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING)
+                .addRule(0.3, SECTION_TITLE, /* -> */ SECTION_TITLE_TEXT)
+                .addRule(0.5, SECTION_TITLE, /* -> */ TERMINAL_NUMBERING, SECTION_TITLE_TEXT)
+
+                .addRule(0.9, SECTION_TITLE_TEXT, /* -> */ TERMINAL_SECTION_TITLE)
+                .addRule(0.1, SECTION_TITLE_TEXT, /* -> */ TERMINAL_NEWLINE, SECTION_TITLE_TEXT)
+
+                .build(true);
+
         final List<Token<String>> listSoFar = new ArrayList<>(1000);
         int s = 0;
-
 
         //noinspection ConstantConditions
         for (int i = 0; i < 0; i++) {

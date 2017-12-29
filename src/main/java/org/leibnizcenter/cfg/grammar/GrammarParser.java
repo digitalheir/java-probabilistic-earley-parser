@@ -39,6 +39,6 @@ public class GrammarParser {
             line = reader.readLine();
         }
         b.addRules(rules);
-        return b.build();
+        return b.build(false);
     }
 }
