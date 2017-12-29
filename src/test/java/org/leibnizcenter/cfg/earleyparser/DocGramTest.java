@@ -260,8 +260,7 @@ public class DocGramTest {
             }
             if (i > 100) {
                 final long start = System.currentTimeMillis();
-                //noinspection deprecation
-                Parser.getViterbiParseWithScore(DOCUMENT, grammar, listSoFar);
+                new Parser<>(grammar).getViterbiParseWithScore(DOCUMENT, listSoFar);
                 final long end = System.currentTimeMillis();
                 System.out.println(listSoFar.size() + "\t" + (end - start));
             }
