@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.parsemode;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.category.nonterminal.NonLexicalToken;
 import org.leibnizcenter.cfg.earleyparser.Scan;
@@ -12,10 +11,13 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.IntStream;
 
 public class PanicMode {
-    public static <T> void proceedAllStatesThatWereActiveOnError(final Chart<T> chart, final int chartIndex, final TIntObjectHashMap<Token<T>> tokensPassed) {
+    public static <T> void proceedAllStatesThatWereActiveOnError(final Chart<T> chart,
+                                                                 final int chartIndex,
+                                                                 final List<Token<T>> tokensPassed) {
         final ExpressionSemiring sr = chart.grammar.semiring;
         new HashSet<>(chart.stateSets.activeStates.activeOnNonLexicalToken)
                 .stream().sequential()

@@ -21,10 +21,8 @@ import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.leibnizcenter.cfg.errors.IssueRequest.ensure;
 import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
@@ -156,7 +154,7 @@ public class Chart<T> {
 
     /**
      * Makes predictions in the specified chart at the given index.
-     *
+     * <p>
      * For each state at position i, look at the the nonterminal at the dot position,
      * add a state that expands that nonterminal at position i, with the dot position at 0
      *
@@ -423,7 +421,8 @@ public class Chart<T> {
         while (completedStates.size() > 0) {
             final Set<State> nextSetOfCompletedStates = new HashSet<>();
             for (final State completedState : completedStates) {
-                if (stateSets.viterbiScores.get(completedState) == null) throw new IssueRequest("Expected Viterbi score to be set on completed state.");
+                if (stateSets.viterbiScores.get(completedState) == null)
+                    throw new IssueRequest("Expected Viterbi score to be set on completed state.");
 
                 //Get all states in j <= i, such that <code>j: X<sub>k</sub> →  λ·Yμ</code>
                 final Set<State> statesToAdvance = stateSets.activeStates.getStatesActiveOnNonTerminal(completedState.rule.left, completedState.ruleStartPosition, completedState.position);
@@ -447,12 +446,12 @@ public class Chart<T> {
         final State resultingState = State.create(completedState.position, stateToAdvance.ruleStartPosition, stateToAdvance.advanceDot(), stateToAdvance.rule);
         if (stateToAdvance.position > resultingState.position || stateToAdvance.position != completedState.ruleStartPosition)
             throw new IssueRequest("Index failed. This is a bug.");
-        final double oldViterbiScore = stateSets.viterbiScoresDbl.get(stateToAdvance);
+        final double oldViterbiScore = stateSets.getViterbiScoreDbl(stateToAdvance);
         assert Double.isFinite(oldViterbiScore);
         final double newViterbiScore = grammar.semiring.times(
                 completedViterbi,
-                oldViterbiScore // must be set
-        );
+                oldViterbiScore); // must be set
+
         final boolean newViterbiIsBetter = newViterbiIsBetter(stateSets.viterbiScores.get(resultingState), newViterbiScore);
         final State.ViterbiScore newViterbiScore_ = newViterbiIsBetter ? new State.ViterbiScore(
                 newViterbiScore,

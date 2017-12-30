@@ -1,16 +1,14 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
+
+import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.util.MyMultimap;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+
+import static org.leibnizcenter.cfg.util.Collections2.*;
 
 /**
  * Represented chart indexes to completed states
@@ -18,24 +16,17 @@ import java.util.Set;
  * Created by maarten on 18-1-17.
  */
 public class CompletedStates {
-    private final TIntObjectHashMap<Set<State>> completedStates = new TIntObjectHashMap<>(500);
-    private final TIntObjectHashMap<MyMultimap<NonTerminal, State>> completedStatesFor = new TIntObjectHashMap<>(500);
-    private final TIntObjectHashMap<Set<State>> completedStatesThatAreNotUnitProductions = new TIntObjectHashMap<>(500);
-    private final TIntIntMap justCompletedErrorRulesCount = new TIntIntHashMap(50, 0.5F, 0, 0);
+    private final List<Set<State>> completedStates = new ArrayList<>(500);
+    private final List<MyMultimap<NonTerminal, State>> completedStatesFor = new ArrayList<>(500);
+    private final List<Set<State>> completedStatesThatAreNotUnitProductions = new ArrayList<>(500);
+    private final List<List<Rule>> justCompletedErrorRulesCount = new ArrayList<>();
 
     private MyMultimap<NonTerminal, State> getMapFromLeftHandSide(final int position) {
-        return completedStatesFor.get(position);
+        return getOrInitEmptyMultimap(completedStatesFor, position);
     }
 
     private Set<State> getCompletedStates(final int index, final boolean allowUnitProductions) {
-        if (allowUnitProductions) {
-            if (!completedStates.containsKey(index)) completedStates.put(index, new HashSet<>());
-            return completedStates.get(index);
-        } else {
-            if (!completedStatesThatAreNotUnitProductions.containsKey(index))
-                completedStatesThatAreNotUnitProductions.put(index, new HashSet<>());
-            return completedStatesThatAreNotUnitProductions.get(index);
-        }
+        return getOrInitEmptySet(allowUnitProductions ? completedStates : completedStatesThatAreNotUnitProductions, index);
     }
 
     public Set<State> getCompletedStates(final int index) {
@@ -56,14 +47,15 @@ public class CompletedStates {
                 StateSets.add(completedStatesThatAreNotUnitProductions, state.position, state);
             addToCompletedStatesFor(state);
             if (state.rule.isErrorRule) {
-                incrementCompletedErrorRulesCount(state.position);
+                addCompletedErrorRule(state.position, state.rule);
             }
         }
     }
 
     public Collection<State> getCompletedStates(final int i, final NonTerminal s) {
+
         final MyMultimap<NonTerminal, State> m = this.getMapFromLeftHandSide(i);
-        if (m != null && m.containsKey(s)) return m.get(s);
+        if (m.containsKey(s)) return m.get(s);
         return Collections.emptySet();
     }
 
@@ -74,21 +66,23 @@ public class CompletedStates {
      */
     private void addToCompletedStatesFor(final State state) {
         final int index = state.position;
+        add(completedStatesFor, index, state.rule.left, state);
+    }
 
-        MyMultimap<NonTerminal, State> m = completedStatesFor.get(index);
-        if (m == null) m = new MyMultimap<>();
-
-        m.put(state.rule.left, state);
-        completedStatesFor.putIfAbsent(index, m);
+    private static <T> T getSafe(final List<T> list, final int index) {
+        return list.size() > index ? list.get(index) : null;
     }
 
     public int getCompletedErrorRulesCount(final int index) {
-        return justCompletedErrorRulesCount.get(index);
+        if (index >= justCompletedErrorRulesCount.size()) return 0;
+        final List<Rule> rules = justCompletedErrorRulesCount.get(index);
+        if (rules == null) return 0;
+        return rules.size();
     }
 
-    private int incrementCompletedErrorRulesCount(final int index) {
-        final int prev = justCompletedErrorRulesCount.get(index);
-        justCompletedErrorRulesCount.put(index, prev + 1);
+    private int addCompletedErrorRule(final int index, final Rule rule) {
+        final int prev = getCompletedErrorRulesCount(index);
+        addSafe(getOrInitEmptyList(justCompletedErrorRulesCount, index), index, rule);
         return prev;
     }
 }

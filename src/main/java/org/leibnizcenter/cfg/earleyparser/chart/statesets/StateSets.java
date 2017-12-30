@@ -1,8 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart.statesets;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.earleyparser.Complete;
 import org.leibnizcenter.cfg.earleyparser.Scan;
@@ -10,8 +7,12 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.ScannedToken;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.token.Token;
+import org.leibnizcenter.cfg.util.Collections2;
 
 import java.util.*;
+
+import static org.leibnizcenter.cfg.util.Collections2.addSafe;
+import static org.leibnizcenter.cfg.util.Collections2.containsKey;
 
 /**
  * Represents an index of states, indexed by many different aspects
@@ -38,14 +39,13 @@ public class StateSets<T> {
      */
     public final InnerScores innerScores;
     public final Map<State, State.ViterbiScore> viterbiScores = new HashMap<>(500);
-    public final TObjectDoubleHashMap<State> viterbiScoresDbl;
     public final CompletedStates completedStates = new CompletedStates();
     public final ActiveStates<T> activeStates = new ActiveStates<>();
     public final Grammar<T> grammar;
     private final Set<State> states = new HashSet<>(500);
-    private final TIntObjectHashMap<Set<State>> byIndex = new TIntObjectHashMap<>(500);
+    private final List<Set<State>> byIndex = new ArrayList<>(500);
     private final Map<State, ScannedToken<T>> scannedTokens = new HashMap<>(50);
-    private final TIntObjectMap<Token<T>> scannedTokensAtPosition = new TIntObjectHashMap<>(50, 0.5F, -1);
+    private final List<Token<T>> scannedTokensAtPosition = new ArrayList<>(50);
 
 
     public StateSets(final Grammar<T> grammar) {
@@ -53,15 +53,14 @@ public class StateSets<T> {
         final DblSemiring semiring = grammar.semiring;
         this.forwardScores = new ForwardScores(grammar);
         this.innerScores = new InnerScores(semiring, grammar.atoms);
-        viterbiScoresDbl = new TObjectDoubleHashMap<>(500, 0.5F, Double.NaN);
     }
+
 
     /**
      * Runs in O(1) (expected time of map put)
      */
-    static void add(final TIntObjectHashMap<Set<State>> states, final int position, final State state) {
-        if (!states.containsKey(position)) states.put(position, new HashSet<>());
-        states.get(position).add(state);
+    static void add(final List<Set<State>> states, final int position, final State state) {
+        Collections2.add(states, position, state);
     }
 
 
@@ -103,9 +102,11 @@ public class StateSets<T> {
                     state.ruleDotPosition
             );
             scannedTokens.put(state, eScannedToken);
-            assert !scannedTokensAtPosition.containsKey(index)
-                    || scannedTokensAtPosition.get(index).equals(eScannedToken.scannedToken);
-            scannedTokensAtPosition.putIfAbsent(index, eScannedToken.scannedToken);
+
+            if (!containsKey(scannedTokensAtPosition, index))
+                addSafe(scannedTokensAtPosition, index, eScannedToken.scannedToken);
+            else assert scannedTokensAtPosition.get(index).equals(eScannedToken.scannedToken);
+
         }
     }
 
@@ -127,8 +128,7 @@ public class StateSets<T> {
 
 
     public int countStates() {
-        //noinspection unchecked
-        return Arrays.stream(byIndex.values(new Set[byIndex.size()]))
+        return byIndex.stream().filter(Objects::nonNull)
                 .mapToInt(Set::size).sum();
     }
 
@@ -167,7 +167,12 @@ public class StateSets<T> {
 
     public void setViterbiScore(final State.ViterbiScore viterbiScore) {
         this.viterbiScores.put(viterbiScore.resultingState, viterbiScore);
-        this.viterbiScoresDbl.put(viterbiScore.resultingState, viterbiScore.probabilityAsSemiringElement);
+    }
+
+    public double getViterbiScoreDbl(final State s) {
+        final State.ViterbiScore viterbiScore = viterbiScores.get(s);
+        if (viterbiScore == null) return Double.NaN;
+        return viterbiScore.probabilityAsSemiringElement;
     }
 
     public ScannedToken<T> getScannedToken(final State state) {

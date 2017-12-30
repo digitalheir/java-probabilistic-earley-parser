@@ -1,6 +1,5 @@
 package org.leibnizcenter.cfg.earleyparser.chart;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
@@ -17,6 +16,7 @@ import java.util.Set;
 
 import static org.leibnizcenter.cfg.earleyparser.parsemode.ParsingMode.NORMAL;
 import static org.leibnizcenter.cfg.earleyparser.parsemode.ParsingMode.PANIC_MODE;
+import static org.leibnizcenter.cfg.util.Collections2.addIfAbsent;
 import static org.leibnizcenter.cfg.util.Collections2.nullOrEmpty;
 
 /**
@@ -40,7 +40,7 @@ public class ChartWithInputPosition<T> {
     public int tokenIndex = 0;
     public ParsingMode parsingMode = ParsingMode.NORMAL;
 
-    private TIntObjectHashMap<Token<T>> tokensPassed = new TIntObjectHashMap<>(50, 0.5F, -1);
+    private List<Token<T>> tokensPassed = new ArrayList<>();
 
     public ChartWithInputPosition(
             final Grammar<T> grammar,
@@ -97,7 +97,7 @@ public class ChartWithInputPosition<T> {
                 break;
         }
         chartIndex = parsingMode.processToken(chart, chartIndex, t, categories);
-        tokensPassed.putIfAbsent(chartIndex, t);
+        addIfAbsent(tokensPassed, chartIndex, t);
 
         if (PANIC_MODE.equals(parsingMode) && chart.getJustCompletedErrorRulesCount(chartIndex) > 0) {
             parsingMode = NORMAL;

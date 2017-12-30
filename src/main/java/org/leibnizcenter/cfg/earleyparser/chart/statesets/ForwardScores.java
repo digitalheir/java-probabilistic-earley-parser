@@ -11,8 +11,6 @@ import org.leibnizcenter.cfg.grammar.Grammar;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- */
 public class ForwardScores {
     private final DblSemiring semiring;
     private final TObjectDoubleMap<State> forwardScores;

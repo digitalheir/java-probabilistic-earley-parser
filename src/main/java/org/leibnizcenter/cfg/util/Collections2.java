@@ -1,8 +1,5 @@
 package org.leibnizcenter.cfg.util;
 
-import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
-import org.leibnizcenter.cfg.earleyparser.chart.state.State;
-
 import java.util.*;
 
 /**
@@ -26,7 +23,7 @@ public class Collections2 {
      * Runs in amortized constant time
      */
     public static <T> void add(final List<Set<T>> states, final int position, final T state) {
-        Set<T> stateSet = getOrInitEmptySet(states, position);
+        final Set<T> stateSet = getOrInitEmptySet(states, position);
         stateSet.add(state);
     }
 
@@ -38,11 +35,21 @@ public class Collections2 {
             states.addAll(Collections.nCopies(position - states.size() + 1, null));
             states.set(position, e);
         } else if (states.size() == position) states.add(e);
+        else return states.set(position, e);
+        return null;
+    }
+
+    /**
+     * Runs in amortized constant time
+     */
+    public static <T> T addIfAbsent(final List<T> states, final int position, final T e) {
+        if (states.size() < position) {
+            states.addAll(Collections.nCopies(position - states.size() + 1, null));
+            states.set(position, e);
+        } else if (states.size() == position) states.add(e);
         else {
             final T el = states.get(position);
-            if (el == null) {
-                states.set(position, e);
-            }
+            if (el == null) states.set(position, e);
             return el;
         }
         return null;
@@ -57,7 +64,7 @@ public class Collections2 {
         stateSet.put(state, v);
     }
 
-    private static <T, V> MyMultimap<T, V> getOrInitEmptyMultimap(final List<MyMultimap<T, V>> states, final int position) {
+    public static <T, V> MyMultimap<T, V> getOrInitEmptyMultimap(final List<MyMultimap<T, V>> states, final int position) {
         MyMultimap<T, V> stateSet;
         if (states.size() < position) {
             stateSet = new MyMultimap<>();
@@ -96,6 +103,7 @@ public class Collections2 {
         return stateSet;
     }
 
+
     public static <T> Set<T> getOrInitEmptySet(final List<Set<T>> states, final int position) {
         Set<T> stateSet;
         if (states.size() < position) {
@@ -113,5 +121,29 @@ public class Collections2 {
             }
         }
         return stateSet;
+    }
+
+    public static <T> List<T> getOrInitEmptyList(final List<List<T>> states, final int position) {
+        List<T> stateSet;
+        if (states.size() < position) {
+            stateSet = new ArrayList<>();
+            states.addAll(Collections.nCopies(position - states.size() + 1, null));
+            states.set(position, stateSet);
+        } else if (states.size() == position) {
+            stateSet = new ArrayList<>();
+            states.add(stateSet);
+        } else {
+            stateSet = states.get(position);
+            if (stateSet == null) {
+                stateSet = new ArrayList<>();
+                states.set(position, stateSet);
+            }
+        }
+        return stateSet;
+    }
+
+
+    public static boolean containsKey(final List<?> list, final int position) {
+        return list.size() > position && list.get(position) != null;
     }
 }
