@@ -18,19 +18,24 @@ public class ExpressionWrapper extends ResolvableLockable {
         this.literal = literal;
     }
 
-    @SuppressWarnings("unused")
     public Resolvable getExpression() {
         if (lock) throw new IllegalStateException("Value already locked");
         if (expression == null) throw new NullPointerException();
         return expression;
     }
 
-    @SuppressWarnings("unused")
     public void setExpression(final Resolvable expression) {
         if (lock) throw new IllegalStateException("Value already locked");
         if (expression == null) throw new NullPointerException();
         this.literal = Double.NaN;
         this.expression = expression;
+    }
+
+    public void setExpression(final double expression) {
+        System.out.println("YAAAAAs");
+        if (lock) throw new IllegalStateException("Value already locked");
+        this.literal = expression;
+        this.expression = null;
     }
 
     public double resolveAndClean() {

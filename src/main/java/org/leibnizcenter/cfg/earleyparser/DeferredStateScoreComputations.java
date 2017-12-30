@@ -9,8 +9,6 @@ import org.leibnizcenter.cfg.grammar.Grammar;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- */
 public class DeferredStateScoreComputations {
     public final Map<State, ExpressionWrapper> states;
     private final ExpressionSemiring semiring;
@@ -34,10 +32,13 @@ public class DeferredStateScoreComputations {
     public void plus(final State s, final Resolvable addValue) {
         final ExpressionWrapper current = this.getOrCreate(s, this.semiring.zero());
 
-        current.setExpression(
-                current.hasExpression()
-                        ? semiring.plus(addValue, current.getExpression())
-                        : semiring.plus(addValue, current.getLiteral()));
+        if (current.hasExpression()) {
+            current.setExpression(semiring.plus(addValue, current.getExpression()));
+        } else {
+            if (addValue instanceof Atom && !current.hasExpression())
+                current.setExpression(semiring.plus(((Atom) addValue).value, current.getLiteral()));
+            else current.setExpression(semiring.plus(addValue, current.getLiteral()));
+        }
         this.states.put(s, current);
     }
 }

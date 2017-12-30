@@ -76,7 +76,8 @@ public class Chart<T> {
                 position,
                 t.stateToAdvance.ruleStartPosition,
                 t.stateToAdvance.advanceDot(),
-                t.stateToAdvance.rule);
+                t.stateToAdvance.rule
+        );
         return new Complete.Delta(s, inner, fw,
                 // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
                 ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
