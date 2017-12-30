@@ -3,6 +3,7 @@ package org.leibnizcenter.cfg.algebra.semiring.dbl;
 import org.leibnizcenter.cfg.earleyparser.Atom;
 
 import java.text.DecimalFormat;
+import java.util.Objects;
 
 /**
  * Semiring for abstract expression trees
@@ -58,12 +59,9 @@ public abstract class ExpressionSemiring implements DblSemiring {
     }
 
     public Resolvable plus(final Resolvable r1, final double r2) {
-        if (r2 == ZERO)
-            return r1;
-        else if (isAdditiveIdentity(r1))
-            return new Atom(r2);
-        else
-            return new DblPlus(r1, r2);
+        if (r2 == ZERO) return r1;
+        else if (isAdditiveIdentity(r1)) return new Atom(r2);
+        else return new DblPlus(r1, r2);
     }
 
     private boolean isMultiplicativeIdentity(final Resolvable r) {
@@ -76,8 +74,8 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
 
     private final class Plus extends Resolvable {
-        private final Resolvable right;
-        private final Resolvable left;
+        private Resolvable right;
+        private Resolvable left;
 
         private Plus(final Resolvable left, final Resolvable right) {
             this.left = left;
@@ -85,11 +83,14 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
 
         @Override
-        public double resolve() {
+        public double resolveAndClean() {
             if (lock)
                 return cached;
             else {
-                return plus(left.resolveFinal(), right.resolveFinal());
+                double v = plus(left.resolveFinal(), right.resolveFinal());
+                left = null;
+                right = null;
+                return v;
             }
         }
 
@@ -118,7 +119,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
     private final class DblPlus extends Resolvable {
         private final double right;
-        private final Resolvable left;
+        private Resolvable left;
 
         private DblPlus(final Resolvable left, final double right) {
             this.left = left;
@@ -126,11 +127,12 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
 
         @Override
-        public double resolve() {
-            if (lock)
-                return cached;
+        public double resolveAndClean() {
+            if (lock) return cached;
             else {
-                return plus(left.resolveFinal(), right);
+                final double finalVal = plus(left.resolveFinal(), right);
+                left = null;
+                return finalVal;
             }
         }
 
@@ -146,7 +148,9 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
             final DblPlus dblPlus = (DblPlus) o;
 
-            return Double.compare(dblPlus.right, right) == 0 && left.equals(dblPlus.left);
+            return Double.compare(dblPlus.right, right) == 0
+                    && ((dblPlus.left == null && left == null)
+                    || (left != null && left.equals(dblPlus.left)));
         }
 
         @Override
@@ -155,15 +159,15 @@ public abstract class ExpressionSemiring implements DblSemiring {
             final long temp;
             temp = Double.doubleToLongBits(right);
             result = (int) (temp ^ (temp >>> 32));
-            result = 31 * result + left.hashCode();
+            result = 31 * result + (left == null ? 0 : left.hashCode());
             return result;
         }
     }
 
 
     private final class Times extends Resolvable {
-        private final Resolvable right;
-        private final Resolvable left;
+        private Resolvable right;
+        private Resolvable left;
 
         Times(final Resolvable left, final Resolvable right) {
             this.left = left;
@@ -171,13 +175,16 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
 
         @Override
-        public double resolve() {
-            return times(left.resolveFinal(), right.resolveFinal());
+        public double resolveAndClean() {
+            final double v = times(left.resolveFinal(), right.resolveFinal());
+            left = null;
+            right = null;
+            return v;
         }
 
         @Override
         public String toString() {
-            return '(' + left.toString() + " * " + right.toString() + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
+            return "(" + left + " * " + right + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -201,8 +208,8 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
     private final class DblTimes extends Resolvable {
         private final double left;
-        private final Resolvable right;
-        private final Resolvable right2;
+        private Resolvable right;
+        private Resolvable right2;
 
         DblTimes(final double left, final Resolvable right) {
             this.left = left;
@@ -217,14 +224,18 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
 
         @Override
-        public double resolve() {
+        public double resolveAndClean() {
             final double firstPart = times(left, right.resolveFinal());
-            return (right2 == null) ? firstPart : times(firstPart, right2.resolveFinal());
+            right = null;
+            if (right2 == null) return firstPart;
+            final double v = times(firstPart, right2.resolveFinal());
+            right2 = null;
+            return v;
         }
 
         @Override
         public String toString() {
-            return "(" + left + " * " + right.toString() + (right2 == null ? "" : (" * " + right2.toString())) + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
+            return "(" + left + " * " + right + (right2 == null ? "" : (" * " + right2)) + ')' + (lock ? '=' + df.format(toProbability(cached)) : "");
         }
 
         @Override
@@ -235,7 +246,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
             final DblTimes dblTimes = (DblTimes) o;
 
             return Double.compare(dblTimes.left, left) == 0
-                    && right.equals(dblTimes.right)
+                    && Objects.equals(right, dblTimes.right)
                     && (right2 != null ? right2.equals(dblTimes.right2) : dblTimes.right2 == null);
         }
 

@@ -14,7 +14,7 @@ public class Atom extends Resolvable {
     }
 
     @Override
-    public double resolve() {
+    public double resolveAndClean() {
         return value;
     }
 

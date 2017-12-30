@@ -7,11 +7,11 @@ public abstract class Resolvable {
     protected double cached = Double.NaN;
 
     public double resolveFinal() {
-        cached = resolve();
+        cached = resolveAndClean();
         this.lock = true;
         return cached;
     }
 
-    protected abstract double resolve();
+    protected abstract double resolveAndClean();
 
 }

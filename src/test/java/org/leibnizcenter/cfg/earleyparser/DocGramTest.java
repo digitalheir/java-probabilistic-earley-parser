@@ -245,7 +245,7 @@ public class DocGramTest {
         int s = 0;
 
         //noinspection ConstantConditions
-        for (int i = 0; i < 000; i++) {
+        for (int i = 0; i < 00; i++) {
             if (i < one_doc.size())
                 listSoFar.add(one_doc.get(i));
             else if (i < one_doc.size() + two_doc.size())

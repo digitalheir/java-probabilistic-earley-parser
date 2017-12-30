@@ -32,10 +32,14 @@ public class ExpressionWrapper extends Resolvable {
         this.expression = expression;
     }
 
-    public double resolve() {
+    public double resolveAndClean() {
         if (lock) return cached;
         if (expression == null) return literal;
-        else return expression.resolveFinal();
+        else {
+            literal = expression.resolveFinal();
+            expression = null;
+            return literal;
+        }
     }
 
     public boolean hasExpression() {

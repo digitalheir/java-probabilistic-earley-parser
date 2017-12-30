@@ -32,7 +32,7 @@ public class ExpressionWrapperTest {
 
     @Test
     public void resolve() throws Exception {
-        assertTrue(1.0 == new ExpressionWrapper(new Atom(1)).resolve());
+        assertTrue(1.0 == new ExpressionWrapper(new Atom(1)).resolveAndClean());
     }
 
 }
