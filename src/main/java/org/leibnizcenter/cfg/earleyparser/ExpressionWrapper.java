@@ -2,9 +2,10 @@ package org.leibnizcenter.cfg.earleyparser;
 
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ResolvableLockable;
 
 @SuppressWarnings("WeakerAccess")
-public class ExpressionWrapper extends Resolvable {
+public class ExpressionWrapper extends ResolvableLockable {
     private double literal = Double.NaN;
     private Resolvable expression = null;
 

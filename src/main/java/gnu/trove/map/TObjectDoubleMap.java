@@ -32,13 +32,14 @@ import java.util.Set;
 
 
 //////////////////////////////////////////////////
-// THIS IS A GENERATED CLASS. DO NOT HAND EDIT! //
+// THIS IS A GENERATED CLASS. DO  HAND EDIT! //
 //////////////////////////////////////////////////
 
 
 /**
  * Interface for a primitive map of Object keys and double values.
  */
+@SuppressWarnings("unused")
 public interface TObjectDoubleMap<K> {
 
     // Query Operations

@@ -28,14 +28,8 @@ package gnu.trove.iterator;
  * <p>
  * <p> Note that iteration is fastest if you forego the calls to
  * <tt>hasNext</tt> in favor of checking the size of the structure
- * yourself and then call next() that many times:
+ * yourself and then call next() that many times.
  * <p>
- * <pre>
- * Iterator i = collection.iterator();
- * for (int size = collection.size(); size-- > 0;) {
- *   Object o = i.next();
- * }
- * </pre>
  * <p>
  * <p>You may, of course, use the hasNext(), next() idiom too if
  * you aren't in a performance critical spot.</p>

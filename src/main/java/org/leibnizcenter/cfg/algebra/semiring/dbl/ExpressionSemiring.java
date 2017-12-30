@@ -24,11 +24,13 @@ public abstract class ExpressionSemiring implements DblSemiring {
      *   Checking for multiplicative and additive identities doesn't seem to add any performance in practice!
      */
     public Resolvable times(final double r1, final Resolvable r2, final Resolvable r3) {
+        if (r3 instanceof Atom && r2 instanceof Atom)
+            return new Atom(times(r1, times(((Atom) r3).value, ((Atom) r2).value)));
+
         if (r1 == ONE) return times(r2, r3);
         else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
         else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
-        else
-            return new DblTimes(r1, r2, r3);
+        else return new DblTimes(r1, r2, r3);
     }
 
     public double times(final double r1, final double r2, final double r3) {
@@ -41,25 +43,40 @@ public abstract class ExpressionSemiring implements DblSemiring {
     private Resolvable times(final Resolvable r1, final Resolvable r2) {
         if (isMultiplicativeIdentity(r1)) return r2;
         else if (isMultiplicativeIdentity(r2)) return r1;
+
+        else if (r1 instanceof Atom && r2 instanceof Atom)
+            return new Atom(times(((Atom) r1).value, ((Atom) r2).value));
+
         return new Times(r1, r2);
     }
 
     private Resolvable times(final double r1, final Resolvable r2) {
         if (r1 == ONE) return r2;
         else if (isMultiplicativeIdentity(r2)) return new Atom(r1);
-        else
-            return new DblTimes(r1, r2);
+
+        else if (r2 instanceof Atom)
+            return new Atom(times(r1, ((Atom) r2).value));
+
+        else return new DblTimes(r1, r2);
     }
 
     public Resolvable plus(final Resolvable r1, final Resolvable r2) {
         if (isAdditiveIdentity(r1)) return r2;
         else if (isAdditiveIdentity(r2)) return r1;
-        else return new Plus(r1, r2);
+
+        else if (r1 instanceof Atom && r2 instanceof Atom) {
+            return new Atom(plus(((Atom) r1).value, ((Atom) r2).value));
+        } else
+            return new Plus(r1, r2);
     }
 
     public Resolvable plus(final Resolvable r1, final double r2) {
         if (r2 == ZERO) return r1;
         else if (isAdditiveIdentity(r1)) return new Atom(r2);
+
+        else if (r1 instanceof Atom)
+            return new Atom(plus(((Atom) r1).value, r2));
+
         else return new DblPlus(r1, r2);
     }
 
@@ -72,7 +89,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     }
 
 
-    private final class Plus extends Resolvable {
+    private final class Plus extends ResolvableLockable {
         private Resolvable right;
         private Resolvable left;
 
@@ -114,7 +131,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
     }
 
-    private final class DblPlus extends Resolvable {
+    private final class DblPlus extends ResolvableLockable {
         private final double right;
         private Resolvable left;
 
@@ -162,7 +179,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     }
 
 
-    private final class Times extends Resolvable {
+    private final class Times extends ResolvableLockable {
         private Resolvable right;
         private Resolvable left;
 
@@ -203,7 +220,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         }
     }
 
-    private final class DblTimes extends Resolvable {
+    private final class DblTimes extends ResolvableLockable {
         private final double left;
         private Resolvable right;
         private Resolvable right2;

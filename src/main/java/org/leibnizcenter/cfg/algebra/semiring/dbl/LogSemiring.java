@@ -14,8 +14,7 @@ public class LogSemiring extends ExpressionSemiring {
     private static final EnumSet<Property> properties = EnumSet.of(
             Property.LeftSemiring,
             Property.RightSemiring,
-            Property.Commutative
-    );
+            Property.Commutative);
 
     private LogSemiring() {
     }

@@ -2,11 +2,14 @@ package org.leibnizcenter.cfg.earleyparser;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 
+import static java.lang.Double.compare;
+import static java.lang.String.valueOf;
+
 /**
  * Atomic value
  * Created by maarten on 21/01/17.
  */
-public class Atom extends Resolvable {
+public class Atom implements Resolvable {
     public final double value;
 
     public Atom(final double value) {
@@ -14,14 +17,10 @@ public class Atom extends Resolvable {
     }
 
     @Override
-    public double resolveAndClean() {
-        return value;
-    }
-
-
-    @Override
     public boolean equals(final Object o) {
-        return this == o || !(o == null || getClass() != o.getClass()) && Double.compare(((Atom) o).value, value) == 0;
+        return this == o
+                || !(o == null || getClass() != o.getClass())
+                && compare(((Atom) o).value, value) == 0;
     }
 
     @Override
@@ -32,6 +31,11 @@ public class Atom extends Resolvable {
 
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return valueOf(value);
+    }
+
+    @Override
+    public double resolveFinal() {
+        return value;
     }
 }

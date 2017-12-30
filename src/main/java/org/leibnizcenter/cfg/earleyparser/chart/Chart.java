@@ -2,6 +2,7 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
+import org.leibnizcenter.cfg.algebra.semiring.dbl.ResolvableLockable;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.KleeneClosure;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
@@ -55,8 +56,8 @@ public class Chart<T> {
     }
 
     private static <E> Complete.Delta completeNoViterbiForTriple(final int position,
-                                                                 final Resolvable prevInner,
-                                                                 final Resolvable prevForward,
+                                                                 final ResolvableLockable prevInner,
+                                                                 final ResolvableLockable prevForward,
                                                                  final StateSets<E> stateSets,
                                                                  final StateInformationTriple t) {
         final int j = t.completedState.ruleStartPosition;
@@ -75,18 +76,12 @@ public class Chart<T> {
                 position,
                 t.stateToAdvance.ruleStartPosition,
                 t.stateToAdvance.advanceDot(),
-                t.stateToAdvance.rule
-        );
-        return new Complete.Delta(
-                s,
-                inner,
-                fw,
+                t.stateToAdvance.rule);
+        return new Complete.Delta(s, inner, fw,
                 // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
                 ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
                         && !s.rule.isUnitProduction()
-                        && !stateSets.contains(s)))
-
-        );
+                        && !stateSets.contains(s))));
     }
 
     /**
