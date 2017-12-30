@@ -51,7 +51,7 @@ Create a UTF8-encoded `.cfg` file that contains your grammar, such as the follow
 S   -> NP VP   (0.8)    # specify probability between 0 and 1 by appending between parentheses
 S   -> NP      (0.2)
 NP  -> Det N            # probability defaults to 1.0
-NP  -> Det Nom
+NP  -> Det Nom          # all rules for a given category must sum to 1, so the builder normalizes probabilities to ensure they sum to 1.0
 Nom -> Adj N
 VP  →  V                # Use '->' or '→'
 Det →  the              # probability defaults to 1.0
