@@ -78,8 +78,8 @@ public class RuleParser {
     }
 
     @SuppressWarnings("ObjectAllocationInLoop")
-    static List<RhsToken> lexRhs(final char[] chars) {
-        final List<RhsToken> l = new ArrayList<>();
+    static Iterable<Token<String>> lexRhs(final char[] chars) {
+        final List<Token<String>> l = new ArrayList<>();
 
         StringBuilder sb = new StringBuilder(chars.length);
         for (int i = 0; i < chars.length; i++) {
@@ -159,7 +159,7 @@ public class RuleParser {
     }
 
     Category[] parseRHS(final String rhsStr) {
-        ParseTree viterbi = new Parser(grammarRHS)
+        ParseTree viterbi = new Parser<>(grammarRHS)
                 .getViterbiParse(RIGHT_HAND_SIDE, lexRhs(rhsStr.toCharArray()));
         if (viterbi == null) throw new IllegalArgumentException("Could not parse grammar");
         viterbi = viterbi.flatten(RuleParser::getFlattenOption);

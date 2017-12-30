@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
  * Created by maarten on 27-1-17.
  */
 public class TokensTest {
-    List<Token<String>> tokenList = Stream.of("i", "am", "token", "list").map(Token::of).collect(Collectors.toList());
+    private final List<Token<String>> tokenList = Stream.of("i", "am", "token", "list").map(Token::of).collect(Collectors.toList());
 
     @Test
     public void tokenize() throws Exception {

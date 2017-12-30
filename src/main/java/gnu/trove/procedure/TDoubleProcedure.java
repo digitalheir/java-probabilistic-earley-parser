@@ -37,5 +37,5 @@ public interface TDoubleProcedure {
      * @return true if additional invocations of the procedure are
      * allowed.
      */
-    public boolean execute( double value );
+    boolean execute(double value);
 }

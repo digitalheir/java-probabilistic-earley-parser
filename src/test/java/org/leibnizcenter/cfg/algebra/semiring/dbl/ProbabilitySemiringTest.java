@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ProbabilitySemiringTest {
 
-    public static final ProbabilitySemiring s = ProbabilitySemiring.get();
+    private static final ProbabilitySemiring s = ProbabilitySemiring.get();
 
     @Test
     public void plus() throws Exception {

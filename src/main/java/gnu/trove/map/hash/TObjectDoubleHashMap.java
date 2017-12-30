@@ -66,10 +66,10 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
     };
 
     /** the values of the map */
-    protected transient double[] _values;
+    private transient double[] _values;
 
     /** the value that represents null */
-    protected double no_entry_value;
+    private double no_entry_value;
 
 
     /**
@@ -484,7 +484,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
         final double[] values = _values;
         for ( int i = values.length; i-- > 0; ) {
             if ( keys[i] != FREE && keys[i] != REMOVED
-                && ! procedure.execute( values[i] ) ) {
+                && procedure.execute( values[i] )) {
                 return false;
             }
         }
@@ -642,9 +642,9 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
     private abstract class MapBackedView<E> extends AbstractSet<E>
             implements Set<E>, Iterable<E> {
 
-        public abstract boolean removeElement( E key );
+        protected abstract boolean removeElement(E key);
 
-        public abstract boolean containsElement( E key );
+        protected abstract boolean containsElement(E key);
 
         @SuppressWarnings({"unchecked"})
         public boolean contains(final Object key ) {
@@ -677,7 +677,8 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return result;
         }
 
-        public <T> T[] toArray( T[] a ) {
+        @SuppressWarnings("Duplicates")
+        public <T> T[] toArray(T[] a ) {
             final int size = size();
             if ( a.length < size ) {
                 //noinspection unchecked
@@ -745,7 +746,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
 
         /** {@inheritDoc} */
         public boolean contains(final double entry ) {
-            return TObjectDoubleHashMap.this.containsValue( entry );
+            return !TObjectDoubleHashMap.this.containsValue( entry );
         }
 
         /** {@inheritDoc} */
@@ -842,6 +843,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
         }
 
         /** {@inheritDoc} */
+        @SuppressWarnings("Duplicates")
         public boolean retainAll(final TDoubleCollection collection ) {
             if ( this == collection ) {
                 return false;
@@ -849,7 +851,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             boolean modified = false;
             final TDoubleIterator iter = iterator();
             while ( iter.hasNext() ) {
-                if ( ! collection.contains( iter.next() ) ) {
+                if (collection.contains( iter.next() )) {
                     iter.remove();
                     modified = true;
                 }
@@ -876,11 +878,12 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
         }
 
         /** {@inheritDoc} */
+        @SuppressWarnings("Duplicates")
         public boolean removeAll(final Collection<?> collection ) {
             boolean changed = false;
             for ( final Object element : collection ) {
                 if ( element instanceof Double ) {
-                    final double c = ( ( Double ) element ).doubleValue();
+                    final double c = (Double) element;
                     if ( remove( c ) ) {
                         changed = true;
                     }
@@ -890,6 +893,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
         }
 
         /** {@inheritDoc} */
+        @SuppressWarnings("Duplicates")
         public boolean removeAll(final TDoubleCollection collection ) {
             if ( this == collection ) {
                 clear();
@@ -942,7 +946,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
                     }
 
                     buf.append( value );
-                    return true;
+                    return false;
                 }
             } );
             buf.append( "}" );
@@ -952,16 +956,16 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
 
         class TObjectDoubleValueHashIterator implements TDoubleIterator {
 
-            protected THash _hash = TObjectDoubleHashMap.this;
+            final THash _hash = TObjectDoubleHashMap.this;
 
             /**
              * the number of elements this iterator believes are in the
              * data structure it accesses.
              */
-            protected int _expectedSize;
+            int _expectedSize;
 
             /** the index used for iteration. */
-            protected int _index;
+            int _index;
 
             /** Creates an iterator over the specified map */
             TObjectDoubleValueHashIterator() {
@@ -1003,7 +1007,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
              * Sets the internal <tt>index</tt> so that the `next' object
              * can be returned.
              */
-            protected final void moveToNextIndex() {
+            final void moveToNextIndex() {
                 // doing the assignment && < 0 in one line shaves
                 // 3 opcodes...
                 if ( ( _index = nextIndex() ) < 0 ) {
@@ -1021,7 +1025,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
              *          collection's size has been modified since the iterator was
              *          created.
              */
-            protected final int nextIndex() {
+            final int nextIndex() {
                 if ( _expectedSize != _hash.size() ) {
                     throw new ConcurrentModificationException();
                 }
@@ -1045,7 +1049,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
         /** the collection being iterated over */
         private final TObjectDoubleHashMap<K> _map;
 
-        public TObjectDoubleHashIterator(final TObjectDoubleHashMap<K> map ) {
+        TObjectDoubleHashIterator(final TObjectDoubleHashMap<K> map) {
             super( map );
             this._map = map;
         }

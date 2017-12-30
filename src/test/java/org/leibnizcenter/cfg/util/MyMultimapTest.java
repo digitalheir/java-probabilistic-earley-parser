@@ -12,9 +12,9 @@ import static org.junit.Assert.assertNull;
  * Created by maarten on 27-1-17.
  */
 public class MyMultimapTest {
-    public static MyMultimap<String, String> EMPTY_MULTIMAP = new MyMultimap<String, String>();
-    public static MyMultimap<String, String> NON_EMPTY_MULTIMAP = new MyMultimap<String, String>();
-    public static MyMultimap<String, String> NON_EMPTY_MULTIMAP_2 = new MyMultimap<String, String>();
+    private static final MyMultimap<String, String> EMPTY_MULTIMAP = new MyMultimap<String, String>();
+    private static final MyMultimap<String, String> NON_EMPTY_MULTIMAP = new MyMultimap<String, String>();
+    private static final MyMultimap<String, String> NON_EMPTY_MULTIMAP_2 = new MyMultimap<String, String>();
 
     static {
         NON_EMPTY_MULTIMAP.put("a", "b");

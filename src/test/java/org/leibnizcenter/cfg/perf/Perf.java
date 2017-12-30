@@ -18,13 +18,13 @@ import java.util.List;
  * <p>
  * Created by Maarten on 23-8-2016.
  */
-public class Perf {
+class Perf {
     public static void main(final String[] ignored) {
         final List<long[]> l = run();
         //l.forEach(line -> System.out.println(line[0] + "\t" + line[1]));
     }
 
-    public static List<long[]> run() {
+    static List<long[]> run() {
         final NonTerminal A = Category.nonTerminal("A");
         final NonTerminal B = Category.nonTerminal("B");
         final NonTerminal C = Category.nonTerminal("C");

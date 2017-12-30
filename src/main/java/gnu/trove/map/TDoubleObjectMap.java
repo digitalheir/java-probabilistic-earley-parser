@@ -341,7 +341,7 @@ public interface TDoubleObjectMap<V> {
      *
      * @return a <tt>TDoubleObjectIterator</tt> with access to this map's keys and values.
      */
-    public TDoubleObjectIterator<V> iterator();
+    TDoubleObjectIterator<V> iterator();
 
 
     /**
@@ -351,7 +351,7 @@ public interface TDoubleObjectMap<V> {
      * @return false if the loop over the keys terminated because
      *         the procedure returned false for some key.
      */
-    public boolean forEachKey( TDoubleProcedure procedure );
+    boolean forEachKey(TDoubleProcedure procedure);
 
 
     /**
@@ -361,7 +361,7 @@ public interface TDoubleObjectMap<V> {
      * @return false if the loop over the values terminated because
      *         the procedure returned false for some value.
      */
-    public boolean forEachValue( TObjectProcedure<? super V> procedure );
+    boolean forEachValue(TObjectProcedure<? super V> procedure);
 
 
     /**
@@ -372,7 +372,7 @@ public interface TDoubleObjectMap<V> {
      * @return false if the loop over the entries terminated because
      *         the procedure returned false for some entry.
      */
-    public boolean forEachEntry( TDoubleObjectProcedure<? super V> procedure );
+    boolean forEachEntry(TDoubleObjectProcedure<? super V> procedure);
 
 
     /**
@@ -380,7 +380,7 @@ public interface TDoubleObjectMap<V> {
      *
      * @param function a <code>TObjectFunction</code> value
      */
-    public void transformValues( TObjectFunction<V,V> function );
+    void transformValues(TObjectFunction<V, V> function);
 
 
     /**
@@ -390,7 +390,7 @@ public interface TDoubleObjectMap<V> {
      * @param procedure determines which entries to keep
      * @return true if the map was modified.
      */
-    public boolean retainEntries( TDoubleObjectProcedure<? super V> procedure );
+    boolean retainEntries(TDoubleObjectProcedure<? super V> procedure);
 
 
     // Comparison and hashing

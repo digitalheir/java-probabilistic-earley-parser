@@ -26,7 +26,7 @@ public class ActiveStates<T> {
     private final List<Map<Terminal<T>, Set<State>>> statesActiveOnTerminals = new ArrayList<>(500);
     private final Map<NonTerminal, List<Set<State>>> statesActiveOnNonTerminal = new HashMap<>(500);
     private final MyMultimap<Integer, State> justScannedError = new MyMultimap<>(); // todo int
-    public Collection<State> activeOnNonLexicalToken = new HashSet<>();
+    public final Collection<State> activeOnNonLexicalToken = new HashSet<>();
 
     /**
      * Runs in O(1).

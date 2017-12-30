@@ -1,6 +1,6 @@
 package org.leibnizcenter.cfg.util;
 
-public class EmptyArray {
+class EmptyArray {
     private EmptyArray() {
     }
 //    public static final boolean[] BOOLEAN = new boolean[0];

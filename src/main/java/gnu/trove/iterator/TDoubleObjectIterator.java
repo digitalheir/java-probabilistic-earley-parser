@@ -100,7 +100,7 @@ public interface TDoubleObjectIterator<V> extends TAdvancingIterator {
      *
      * @return the key of the entry at the iterator's current position.
      */
-    public double key();
+    double key();
 
 
     /**
@@ -110,7 +110,7 @@ public interface TDoubleObjectIterator<V> extends TAdvancingIterator {
      *
      * @return the value of the entry at the iterator's current position.
      */
-    public V value();
+    V value();
 
 
     /**
@@ -121,5 +121,5 @@ public interface TDoubleObjectIterator<V> extends TAdvancingIterator {
      * @param val the value to set in the current entry
      * @return the old value of the entry.
      */
-    public V setValue( V val );
+    V setValue(V val);
 }

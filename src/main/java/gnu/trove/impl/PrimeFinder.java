@@ -39,7 +39,7 @@ public final class PrimeFinder {
      * The largest prime this class can generate; currently equal to
      * <tt>Integer.MAX_VALUE</tt>.
      */
-    public static final int largestPrime = Integer.MAX_VALUE; //yes, it is prime.
+    private static final int largestPrime = Integer.MAX_VALUE; //yes, it is prime.
 
     /**
      * The prime number list consists of 11 chunks.

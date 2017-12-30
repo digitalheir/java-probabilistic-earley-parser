@@ -52,13 +52,13 @@ public abstract class THashIterator<V> implements TIterator, Iterator<V> {
     private final TObjectHash<V> _object_hash;
 
     /** the data structure this iterator traverses */
-    protected final THash _hash;
+    private final THash _hash;
 
     /**
      * the number of elements this iterator believes are in the
      * data structure it accesses.
      */
-    protected int _expectedSize;
+    private int _expectedSize;
 
     /** the index used for iteration. */
     protected int _index;
@@ -69,7 +69,7 @@ public abstract class THashIterator<V> implements TIterator, Iterator<V> {
      *
      * @param hash the object 
      */
-    protected THashIterator( TObjectHash<V> hash ) {
+    protected THashIterator(final TObjectHash<V> hash ) {
         _hash = hash;
         _expectedSize = _hash.size();
         _index = _hash.capacity();
@@ -151,15 +151,14 @@ public abstract class THashIterator<V> implements TIterator, Iterator<V> {
      *          collection's size has been modified since the iterator was
      *          created.
      */
-    protected final int nextIndex() {
+    private int nextIndex() {
         if ( _expectedSize != _hash.size() ) {
             throw new ConcurrentModificationException();
         }
 
-        Object[] set = _object_hash._set;
+        final Object[] set = _object_hash._set;
         int i = _index;
         while ( i-- > 0 && ( set[i] == TObjectHash.FREE || set[i] == TObjectHash.REMOVED ) ) {
-            ;
         }
         return i;
     }

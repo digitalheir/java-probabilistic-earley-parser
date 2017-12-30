@@ -48,7 +48,7 @@ abstract public class TPrimitiveHash extends THash {
     /* constants used for state flags */
 
     /** flag indicating that a slot in the hashtable is available */
-    public static final byte FREE = 0;
+    protected static final byte FREE = 0;
 
     /** flag indicating that a slot in the hashtable is occupied */
     public static final byte FULL = 1;
@@ -57,14 +57,14 @@ abstract public class TPrimitiveHash extends THash {
      * flag indicating that the value of a slot in the hashtable
      * was deleted
      */
-    public static final byte REMOVED = 2;
+    static final byte REMOVED = 2;
 
 
     /**
      * Creates a new <code>THash</code> instance with the default
      * capacity and load factor.
      */
-    public TPrimitiveHash() {
+    TPrimitiveHash() {
         super();
     }
 
@@ -76,7 +76,7 @@ abstract public class TPrimitiveHash extends THash {
      *
      * @param initialCapacity an <code>int</code> value
      */
-    public TPrimitiveHash( int initialCapacity ) {
+    TPrimitiveHash(final int initialCapacity) {
         this( initialCapacity, DEFAULT_LOAD_FACTOR );
     }
 
@@ -90,7 +90,7 @@ abstract public class TPrimitiveHash extends THash {
      * @param initialCapacity an <code>int</code> value
      * @param loadFactor      a <code>float</code> value
      */
-    public TPrimitiveHash( int initialCapacity, float loadFactor ) {
+    TPrimitiveHash(int initialCapacity, final float loadFactor) {
         super();
 		initialCapacity = Math.max( 1, initialCapacity );
         _loadFactor = loadFactor;
@@ -114,7 +114,7 @@ abstract public class TPrimitiveHash extends THash {
      *
      * @param index an <code>int</code> value
      */
-    protected void removeAt( int index ) {
+    protected void removeAt(final int index ) {
         _states[index] = REMOVED;
         super.removeAt( index );
     }
@@ -127,8 +127,8 @@ abstract public class TPrimitiveHash extends THash {
      * @param initialCapacity an <code>int</code> value
      * @return the actual capacity chosen
      */
-    protected int setUp( int initialCapacity ) {
-        int capacity;
+    protected int setUp(final int initialCapacity ) {
+        final int capacity;
 
         capacity = super.setUp( initialCapacity );
         _states = new byte[capacity];

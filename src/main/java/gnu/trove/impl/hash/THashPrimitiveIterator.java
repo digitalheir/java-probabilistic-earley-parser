@@ -47,12 +47,12 @@ import java.util.NoSuchElementException;
 public abstract class THashPrimitiveIterator implements TPrimitiveIterator {
 
     /** the data structure this iterator traverses */
-    protected final TPrimitiveHash _hash;
+    private final TPrimitiveHash _hash;
     /**
      * the number of elements this iterator believes are in the
      * data structure it accesses.
      */
-    protected int _expectedSize;
+    private int _expectedSize;
     /** the index used for iteration. */
     protected int _index;
 
@@ -62,7 +62,7 @@ public abstract class THashPrimitiveIterator implements TPrimitiveIterator {
      *
      * @param hash the <tt>TPrimitiveHash</tt> we want to iterate over.
      */
-    public THashPrimitiveIterator( TPrimitiveHash hash ) {
+    protected THashPrimitiveIterator(final TPrimitiveHash hash) {
         _hash = hash;
         _expectedSize = _hash.size();
         _index = _hash.capacity();
@@ -78,15 +78,14 @@ public abstract class THashPrimitiveIterator implements TPrimitiveIterator {
      *          if the underlying collection's
      *          size has been modified since the iterator was created.
      */
-    protected final int nextIndex() {
+    private int nextIndex() {
         if ( _expectedSize != _hash.size() ) {
             throw new ConcurrentModificationException();
         }
 
-        byte[] states = _hash._states;
+        final byte[] states = _hash._states;
         int i = _index;
         while ( i-- > 0 && ( states[i] != TPrimitiveHash.FULL ) ) {
-            ;
         }
         return i;
     }

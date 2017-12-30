@@ -234,10 +234,5 @@ public abstract class ParseTree {
             else
                 return super.toString();
         }
-
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
     }
 }

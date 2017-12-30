@@ -193,7 +193,7 @@ public class Example {
  
 You can parse `.cfg` files as follows:
 
-```java
+```
 Grammar<String> g = Grammar.fromString(Paths.get("path", "to", "grammar.cfg"), Charset.forName("UTF-8"));
 ```
 

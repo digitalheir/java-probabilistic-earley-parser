@@ -43,7 +43,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         return new Times(r1, r2);
     }
 
-    public Resolvable times(final double r1, final Resolvable r2) {
+    private Resolvable times(final double r1, final Resolvable r2) {
         if (r1 == ONE) return r2;
         else if (isMultiplicativeIdentity(r2)) return new Atom(r1);
         else

@@ -266,7 +266,7 @@ public interface TDoubleSet extends TDoubleCollection {
      * @param array an <code>array</code> of double primitives.
      * @return true if the set was modified by the remove all operation.
      */
-    public boolean removeAll( double[] array );
+    boolean removeAll(double[] array);
 
 
     /**

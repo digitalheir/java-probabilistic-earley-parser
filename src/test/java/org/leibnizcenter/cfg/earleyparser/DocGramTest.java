@@ -16,40 +16,40 @@ import java.util.List;
  * Created by Maarten on 23-8-2016.
  */
 public class DocGramTest {
-    public static final NonTerminal DOCUMENT = new NonTerminal("#root");
+    private static final NonTerminal DOCUMENT = new NonTerminal("#root");
     public static final NonTerminal HEADER = new NonTerminal("Header");
-    public static final NonTerminal DOCUMENT_BODY = new NonTerminal("DocumentContent");
+    private static final NonTerminal DOCUMENT_BODY = new NonTerminal("DocumentContent");
 
     /**
      * 1 or more sections in sequence
      */
-    public static final NonTerminal SECTION_BLOB = new NonTerminal("Sections");
+    private static final NonTerminal SECTION_BLOB = new NonTerminal("Sections");
 
-    public static final NonTerminal SECTION = new NonTerminal("Section");
-    public static final NonTerminal SECTION_TITLE = new NonTerminal("SectionTitle");
+    private static final NonTerminal SECTION = new NonTerminal("Section");
+    private static final NonTerminal SECTION_TITLE = new NonTerminal("SectionTitle");
     public static final NonTerminal NEWLINE_AND_TITLE_TEXT = new NonTerminal("NEWLINE_AND_TITLE_TEXT");
-    public static final NonTerminal SECTION_CONTENT = new NonTerminal("SectionContent");
-    public static final NonTerminal SECTION_SEQUENCE = new NonTerminal("SECTION_SEQUENCE");
+    private static final NonTerminal SECTION_CONTENT = new NonTerminal("SectionContent");
+    private static final NonTerminal SECTION_SEQUENCE = new NonTerminal("SECTION_SEQUENCE");
     public static final NonTerminal COMPLETE_SECTION_BLOB_W_TRAILING_TEXT = new NonTerminal("COMPLETE_SECTION_BLOB_W_TRAILING_TEXT");
 
-    public static final NonTerminal TEXT_BLOB = new NonTerminal("Text");
-    public static final NonTerminal SECTION_TITLE_TEXT = new NonTerminal("SECTION_TITLE_TEXT");
+    private static final NonTerminal TEXT_BLOB = new NonTerminal("Text");
+    private static final NonTerminal SECTION_TITLE_TEXT = new NonTerminal("SECTION_TITLE_TEXT");
     public static final NonTerminal SINGLE_TITLE_TEXT = new NonTerminal("SINGLE_TITLE_TEXT");
     public static final NonTerminal SINGLE_NUMBERING = new NonTerminal("SINGLE_NUMBERING");
     public static final NonTerminal NONTERMINAL_NEWLINE = new NonTerminal("NONTERMINAL_NEWLINE");
 
-    public static final ExactStringTerminal TERMINAL_NUMBERING = new ExactStringTerminal("NR");
-    public static final ExactStringTerminal TERMINAL_SECTION_TITLE = new ExactStringTerminal("SECTION_TITLE");
-    public static final ExactStringTerminal TERMINAL_TEXT = new ExactStringTerminal("TEXT_BLOCK");
-    public static final ExactStringTerminal TERMINAL_NEWLINE = new ExactStringTerminal("NEWLINE");
+    private static final ExactStringTerminal TERMINAL_NUMBERING = new ExactStringTerminal("NR");
+    private static final ExactStringTerminal TERMINAL_SECTION_TITLE = new ExactStringTerminal("SECTION_TITLE");
+    private static final ExactStringTerminal TERMINAL_TEXT = new ExactStringTerminal("TEXT_BLOCK");
+    private static final ExactStringTerminal TERMINAL_NEWLINE = new ExactStringTerminal("NEWLINE");
     private static final Token<String> TEXT_BLOCK = new Token<>("TEXT_BLOCK");
     private static final Token<String> NEWLINE = new Token<>("NEWLINE");
     private static final Token<String> NR = new Token<>("NR");
     private static final Token<String> SECTION_TITLE_ = new Token<>("SECTION_TITLE");
-    List<Token<String>> three_doc = new ArrayList<>(200);
-    List<Token<String>> four_doc = new ArrayList<>(200);
-    private List<Token<String>> one_doc = new ArrayList<>(200);
-    private List<Token<String>> two_doc = new ArrayList<>(200);
+    private final List<Token<String>> three_doc = new ArrayList<>(200);
+    private final List<Token<String>> four_doc = new ArrayList<>(200);
+    private final List<Token<String>> one_doc = new ArrayList<>(200);
+    private final List<Token<String>> two_doc = new ArrayList<>(200);
 
     {
         one_doc.add(TEXT_BLOCK);

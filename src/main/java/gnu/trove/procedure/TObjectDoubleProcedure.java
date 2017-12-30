@@ -38,5 +38,5 @@ public interface TObjectDoubleProcedure<K> {
      * @return true if additional invocations of the procedure are
      * allowed.
      */
-    public boolean execute( K a, double b );
+    boolean execute(K a, double b);
 }

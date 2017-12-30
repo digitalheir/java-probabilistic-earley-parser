@@ -41,7 +41,7 @@ import java.io.Serializable;
  */
 
 public interface TDoubleCollection {
-    static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
     /**
      * Returns the value that is used to represent null. The default

@@ -159,10 +159,9 @@ public class Matrix {
     @SuppressWarnings("WeakerAccess")
     public static Matrix identity(final int m, final int n) {
         final Matrix A = new Matrix(m, n);
-        final double[][] X = A.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                X[i][j] = (i == j ? 1.0 : 0.0);
+                A.array[i][j] = (i == j ? 1.0 : 0.0);
             }
         }
         return A;
@@ -259,10 +258,9 @@ public class Matrix {
      */
     Matrix getMatrix(final int i1, final int j1) {
         final Matrix X = new Matrix(i1 + 1, j1 + 1);
-        final double[][] B = X.array;
         try {
             for (int i = 0; i <= i1; i++) {
-                System.arraycopy(array[i], 0, B[i], 0, j1 + 1);
+                System.arraycopy(array[i], 0, X.array[i], 0, j1 + 1);
             }
         } catch (final ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
@@ -280,10 +278,9 @@ public class Matrix {
 
     Matrix getMatrix(final int[] r, final int j1) {
         final Matrix X = new Matrix(r.length, j1 + 1);
-        final double[][] B = X.array;
         try {
             for (int i = 0; i < r.length; i++) {
-                System.arraycopy(array[r[i]], 0, B[i], 0, j1 + 1);
+                System.arraycopy(array[r[i]], 0, X.array[i], 0, j1 + 1);
             }
         } catch (final ArrayIndexOutOfBoundsException e) {
             throw new ArrayIndexOutOfBoundsException("Submatrix indices");
@@ -316,7 +313,6 @@ public class Matrix {
             throw new IllegalArgumentException("Matrix inner dimensions must agree.");
         }
         final Matrix X = new Matrix(m, B.n);
-        final double[][] C = X.array;
         final double[] Bcolj = new double[n];
         for (int j = 0; j < B.n; j++) {
             for (int k = 0; k < n; k++) {
@@ -328,7 +324,7 @@ public class Matrix {
                 for (int k = 0; k < n; k++) {
                     s += Arowi[k] * Bcolj[k];
                 }
-                C[i][j] = s;
+                X.array[i][j] = s;
             }
         }
         return X;
@@ -384,10 +380,9 @@ public class Matrix {
     public Matrix minus(final Matrix B) {
         checkMatrixDimensions(B);
         final Matrix X = new Matrix(m, n);
-        final double[][] C = X.array;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                C[i][j] = array[i][j] - B.array[i][j];
+                X.array[i][j] = array[i][j] - B.array[i][j];
             }
         }
         return X;

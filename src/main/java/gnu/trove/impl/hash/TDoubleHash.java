@@ -52,7 +52,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      *       not final because of Externalization
      *
      */
-    protected double no_entry_value;
+    private final double no_entry_value;
 
     protected boolean consumeFreeSlot;
 
@@ -61,7 +61,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * Creates a new <code>TDoubleHash</code> instance with the default
      * capacity and load factor.
      */
-    public TDoubleHash() {
+    protected TDoubleHash() {
         super();
         no_entry_value = Constants.DEFAULT_DOUBLE_NO_ENTRY_VALUE;
         //noinspection RedundantCast
@@ -78,7 +78,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      *
      * @param initialCapacity an <code>int</code> value
      */
-    public TDoubleHash( int initialCapacity ) {
+    protected TDoubleHash(final int initialCapacity) {
         super( initialCapacity );
         no_entry_value = Constants.DEFAULT_DOUBLE_NO_ENTRY_VALUE;
         //noinspection RedundantCast
@@ -96,7 +96,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @param loadFactor used to calculate the threshold over which
      * rehashing takes place.
      */
-    public TDoubleHash( int initialCapacity, float loadFactor ) {
+    protected TDoubleHash(final int initialCapacity, final float loadFactor) {
         super(initialCapacity, loadFactor);
         no_entry_value = Constants.DEFAULT_DOUBLE_NO_ENTRY_VALUE;
         //noinspection RedundantCast
@@ -115,7 +115,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * rehashing takes place.
      * @param no_entry_value value that represents null
      */
-    public TDoubleHash( int initialCapacity, float loadFactor, double no_entry_value ) {
+    public TDoubleHash(final int initialCapacity, final float loadFactor, final double no_entry_value ) {
         super(initialCapacity, loadFactor);
         this.no_entry_value = no_entry_value;
         //noinspection RedundantCast
@@ -144,8 +144,8 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @param initialCapacity an <code>int</code> value
      * @return the actual capacity chosen
      */
-    protected int setUp( int initialCapacity ) {
-        int capacity;
+    protected int setUp(final int initialCapacity ) {
+        final int capacity;
 
         capacity = super.setUp( initialCapacity );
         _set = new double[capacity];
@@ -159,7 +159,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @param val an <code>double</code> value
      * @return a <code>boolean</code> value
      */
-    public boolean contains( double val ) {
+    protected boolean contains(final double val) {
         return index(val) >= 0;
     }
 
@@ -171,11 +171,11 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @return false if the loop over the set terminated because
      * the procedure returned false for some value.
      */
-    public boolean forEach( TDoubleProcedure procedure ) {
-        byte[] states = _states;
-        double[] set = _set;
+    protected boolean forEach(final TDoubleProcedure procedure) {
+        final byte[] states = _states;
+        final double[] set = _set;
         for ( int i = set.length; i-- > 0; ) {
-            if ( states[i] == FULL && ! procedure.execute( set[i] ) ) {
+            if ( states[i] == FULL && procedure.execute( set[i] )) {
                 return false;
             }
         }
@@ -188,7 +188,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      *
      * @param index an <code>int</code> value
      */
-    protected void removeAt( int index ) {
+    protected void removeAt(final int index ) {
         _set[index] = no_entry_value;
         super.removeAt( index );
     }
@@ -200,15 +200,18 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @param val an <code>double</code> value
      * @return the index of <tt>val</tt> or -1 if it isn't in the set.
      */
-    protected int index( double val ) {
-        int hash, probe, index, length;
+    protected int index(final double val ) {
+        final int hash;
+        int probe;
+        int index;
+        final int length;
 
         final byte[] states = _states;
         final double[] set = _set;
         length = states.length;
         hash = HashFunctions.hash( val ) & 0x7fffffff;
         index = hash % length;
-        byte state = states[index];
+        final byte state = states[index];
 
         if (state == FREE)
             return -1;
@@ -216,13 +219,13 @@ abstract public class TDoubleHash extends TPrimitiveHash {
         if (state == FULL && set[index] == val)
             return index;
 
-        return indexRehashed(val, index, hash, state);
+        return indexRehashed(val, index, hash);
     }
 
-    int indexRehashed(double key, int index, int hash, byte state) {
+    private int indexRehashed(final double key, int index, final int hash) {
         // see Knuth, p. 529
-        int length = _set.length;
-        int probe = 1 + (hash % (length - 2));
+        final int length = _set.length;
+        final int probe = 1 + (hash % (length - 2));
         final int loopIndex = index;
 
         do {
@@ -230,7 +233,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
             if (index < 0) {
                 index += length;
             }
-            state = _states[index];
+            final byte state = _states[index];
             //
             if (state == FREE)
                 return -1;
@@ -251,12 +254,13 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * @param val an <code>double</code> value
      * @return an <code>int</code> value
      */
-    protected int insertKey( double val ) {
-        int hash, index;
+    protected int insertKey(final double val ) {
+        final int hash;
+        final int index;
 
         hash = HashFunctions.hash(val) & 0x7fffffff;
         index = hash % _states.length;
-        byte state = _states[index];
+        final byte state = _states[index];
 
         consumeFreeSlot = false;
 
@@ -275,10 +279,10 @@ abstract public class TDoubleHash extends TPrimitiveHash {
         return insertKeyRehash(val, index, hash, state);
     }
 
-    int insertKeyRehash(double val, int index, int hash, byte state) {
+    private int insertKeyRehash(final double val, int index, final int hash, byte state) {
         // compute the double hash
         final int length = _set.length;
-        int probe = 1 + (hash % (length - 2));
+        final int probe = 1 + (hash % (length - 2));
         final int loopIndex = index;
         int firstRemoved = -1;
 
@@ -326,7 +330,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
         throw new IllegalStateException("No free or removed slots available. Key set full?!!");
     }
 
-    void insertKeyAt(int index, double val) {
+    private void insertKeyAt(final int index, final double val) {
         _set[index] = val;  // insert value
         _states[index] = FULL;
     }

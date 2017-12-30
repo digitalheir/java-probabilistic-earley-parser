@@ -34,5 +34,5 @@ public interface TDoubleIterator extends TIterator {
      * @return the next double in the collection
      * @exception java.util.NoSuchElementException if the iterator is already exhausted
      */
-    public double next();
+    double next();
 }

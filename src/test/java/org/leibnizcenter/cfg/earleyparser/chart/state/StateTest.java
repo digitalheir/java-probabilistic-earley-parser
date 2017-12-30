@@ -13,10 +13,10 @@ import static org.junit.Assert.*;
  */
 public class StateTest {
 
-    public static final CaseInsensitiveStringTerminal TERMINAL = new CaseInsensitiveStringTerminal("a");
-    public static final CaseInsensitiveStringTerminal TERMINAL_2 = new CaseInsensitiveStringTerminal("b");
-    public static final NonTerminal NON_TERMINAL = NonTerminal.of("S");
-    public static final ProbabilitySemiring SEMIRING = ProbabilitySemiring.get();
+    private static final CaseInsensitiveStringTerminal TERMINAL = new CaseInsensitiveStringTerminal("a");
+    private static final CaseInsensitiveStringTerminal TERMINAL_2 = new CaseInsensitiveStringTerminal("b");
+    private static final NonTerminal NON_TERMINAL = NonTerminal.of("S");
+    private static final ProbabilitySemiring SEMIRING = ProbabilitySemiring.get();
 
     @Test
     public void create() throws Exception {

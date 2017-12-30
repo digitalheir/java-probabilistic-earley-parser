@@ -25,11 +25,11 @@ import java.util.List;
  * @author Robert Sedgewick
  * @author Kevin Wayne
  */
-public class PolynomialRegression {
+class PolynomialRegression {
     private final String variableName;  // name of the predictor variable
     private int degree;                 // degree of the polynomial regression
-    private Matrix beta;                // the polynomial regression coefficients
-    private double sse;                 // sum of squares due to error
+    private final Matrix beta;                // the polynomial regression coefficients
+    private final double sse;                 // sum of squares due to error
     private double sst;                 // total sum of squares
 
 
@@ -42,7 +42,7 @@ public class PolynomialRegression {
      * @param degree the degree of the polynomial to fit
      * @throws IllegalArgumentException if the lengths of the two arrays are not equal
      */
-    public PolynomialRegression(final double[] x, final double[] y, final int degree) {
+    private PolynomialRegression(final double[] x, final double[] y, final int degree) {
         this(x, y, degree, "n");
     }
 
@@ -55,7 +55,7 @@ public class PolynomialRegression {
      * @param variableName the name of the predictor variable
      * @throws IllegalArgumentException if the lengths of the two arrays are not equal
      */
-    public PolynomialRegression(final double[] x, final double[] y, final int degree, final String variableName) {
+    private PolynomialRegression(final double[] x, final double[] y, final int degree, final String variableName) {
         this.degree = degree;
         this.variableName = variableName;
 
@@ -131,7 +131,7 @@ public class PolynomialRegression {
      * @param j the index
      * @return the {@code j}th regression coefficient
      */
-    public double beta(final int j) {
+    private double beta(final int j) {
         // to make -0.0 print as 0.0
         if (Math.abs(beta.get(j, 0)) < 1E-4) return 0.0;
         return beta.get(j, 0);
@@ -152,7 +152,7 @@ public class PolynomialRegression {
      * @return the coefficient of determination <em>R</em><sup>2</sup>,
      * which is a real number between 0 and 1
      */
-    public double R2() {
+    private double R2() {
         if (sst == 0.0) return 1.0;   // constant function
         return 1.0 - sse / sst;
     }

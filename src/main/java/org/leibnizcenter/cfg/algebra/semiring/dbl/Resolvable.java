@@ -12,6 +12,6 @@ public abstract class Resolvable {
         return cached;
     }
 
-    public abstract double resolve();
+    protected abstract double resolve();
 
 }

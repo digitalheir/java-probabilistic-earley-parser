@@ -14,7 +14,7 @@ package org.leibnizcenter.cfg.perf;
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
  */
-public class LinearRegression {
+class LinearRegression {
     private final double intercept, slope;
     private final double r2;
     private final double svar0, svar1;
@@ -73,7 +73,7 @@ public class LinearRegression {
      *
      * @return the <em>y</em>-intercept &alpha; of the best-fit line <em>y = &alpha; + &beta; x</em>
      */
-    public double intercept() {
+   private double intercept() {
         return intercept;
     }
 
@@ -82,7 +82,7 @@ public class LinearRegression {
      *
      * @return the slope &beta; of the best-fit line <em>y</em> = &alpha; + &beta; <em>x</em>
      */
-    public double slope() {
+   private double slope() {
         return slope;
     }
 
@@ -92,7 +92,7 @@ public class LinearRegression {
      * @return the coefficient of determination <em>R</em><sup>2</sup>,
      *         which is a real number between 0 and 1
      */
-    public double R2() {
+   private double R2() {
         return r2;
     }
 

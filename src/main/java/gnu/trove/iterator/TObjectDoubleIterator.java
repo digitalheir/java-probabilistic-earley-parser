@@ -100,7 +100,7 @@ public interface TObjectDoubleIterator<K> extends TAdvancingIterator {
      *
      * @return the key of the entry at the iterator's current position.
      */
-    public K key();
+    K key();
 
 
     /**
@@ -110,7 +110,7 @@ public interface TObjectDoubleIterator<K> extends TAdvancingIterator {
      *
      * @return the value of the entry at the iterator's current position.
      */
-    public double value();
+    double value();
 
 
     /**
@@ -121,5 +121,5 @@ public interface TObjectDoubleIterator<K> extends TAdvancingIterator {
      * @param val the value to set in the current entry
      * @return the old value of the entry.
      */
-    public double setValue( double val );
+    double setValue(double val);
 }

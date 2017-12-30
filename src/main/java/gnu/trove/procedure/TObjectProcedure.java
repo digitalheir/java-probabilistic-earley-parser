@@ -38,5 +38,5 @@ public interface TObjectProcedure<T> {
      * @return true if additional invocations of the procedure are
      * allowed.
      */
-    public boolean execute(T object);
+    boolean execute(T object);
 }// TObjectProcedure

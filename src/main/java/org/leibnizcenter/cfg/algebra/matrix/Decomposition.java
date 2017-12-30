@@ -1,5 +1,5 @@
 package org.leibnizcenter.cfg.algebra.matrix;
 
-public interface Decomposition {
+interface Decomposition {
     Matrix solve(final Matrix identity);
 }

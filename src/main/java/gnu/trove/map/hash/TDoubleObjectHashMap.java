@@ -30,7 +30,6 @@ import gnu.trove.procedure.TDoubleProcedure;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.iterator.TDoubleObjectIterator;
-import gnu.trove.iterator.TPrimitiveIterator;
 import gnu.trove.function.TObjectFunction;
 import gnu.trove.set.TDoubleSet;
 import gnu.trove.TDoubleCollection;
@@ -61,15 +60,15 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
     private final TDoubleObjectProcedure<V> PUT_ALL_PROC = new TDoubleObjectProcedure<V>() {
         public boolean execute(final double key, final V value) {
             put( key, value );
-            return true;
+            return false;
         }
     };
 
     /** the values of the map */
-    protected transient V[] _values;
+    private transient V[] _values;
 
     /** the value that represents null in the key set. */
-    protected double no_entry_key;
+    private double no_entry_key;
 
 
     /**
@@ -117,7 +116,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
      * rehashing takes place.
      * @param noEntryKey the value used to represent null in the key set.
      */
-    public TDoubleObjectHashMap(final int initialCapacity, final float loadFactor, final double noEntryKey ) {
+    private TDoubleObjectHashMap(final int initialCapacity, final float loadFactor, final double noEntryKey) {
         super( initialCapacity, loadFactor );
         no_entry_key = noEntryKey;
     }
@@ -400,7 +399,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
         final byte[] states = _states;
         final V[] values = _values;
         for ( int i = values.length; i-- > 0; ) {
-            if ( states[i] == FULL && ! procedure.execute( values[i] ) ) {
+            if ( states[i] == FULL && procedure.execute( values[i] )) {
                 return false;
             }
         }
@@ -415,7 +414,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
         final double[] keys = _set;
         final V[] values = _values;
         for (int i = keys.length; i-- > 0;) {
-            if (states[i] == FULL && ! procedure.execute(keys[i],values[i])) {
+            if (states[i] == FULL && procedure.execute(keys[i],values[i])) {
                 return false;
             }
         }
@@ -435,7 +434,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
         tempDisableAutoCompaction();
         try {
             for ( int i = keys.length; i-- > 0; ) {
-                if ( states[i] == FULL && ! procedure.execute( keys[i], values[i] ) ) {
+                if ( states[i] == FULL && procedure.execute( keys[i], values[i] )) {
                     removeAt( i );
                     modified = true;
                 }
@@ -529,7 +528,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
 
         /** {@inheritDoc} */
         public boolean contains(final double entry ) {
-            return TDoubleObjectHashMap.this.containsKey( entry );
+            return !TDoubleObjectHashMap.this.containsKey( entry );
         }
 
         /** {@inheritDoc} */
@@ -630,7 +629,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
             boolean modified = false;
             final TDoubleIterator iter = iterator();
             while ( iter.hasNext() ) {
-                if ( ! collection.contains( iter.next() ) ) {
+                if (collection.contains( iter.next() )) {
                     iter.remove();
                     modified = true;
                 }
@@ -717,7 +716,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
             }
             for ( int i = _states.length; i-- > 0; ) {
                 if ( _states[i] == FULL ) {
-                    if ( ! that.contains( _set[i] ) ) {
+                    if (that.contains( _set[i] )) {
                         return false;
                     }
                 }
@@ -757,7 +756,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
             private final TDoubleHash _hash;
 
             /** {@inheritDoc} */
-            public TDoubleHashIterator(final TDoubleHash hash ) {
+            TDoubleHashIterator(final TDoubleHash hash) {
                 super( hash );
                 this._hash = hash;
             }
@@ -806,9 +805,9 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
         class TDoubleObjectValueHashIterator extends THashPrimitiveIterator
                 implements Iterator<V> {
 
-            protected final TDoubleObjectHashMap _map;
+            final TDoubleObjectHashMap _map;
 
-            public TDoubleObjectValueHashIterator(final TDoubleObjectHashMap map ) {
+            TDoubleObjectValueHashIterator(final TDoubleObjectHashMap map) {
                 super( map );
                 _map = map;
             }
@@ -838,9 +837,9 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
 
         public abstract Iterator<E> iterator();
 
-        public abstract boolean removeElement( E key );
+        protected abstract boolean removeElement(E key);
 
-        public abstract boolean containsElement( E key );
+        protected abstract boolean containsElement(E key);
 
         @SuppressWarnings({"unchecked"})
         public boolean contains(final Object key ) {
@@ -928,7 +927,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
          *
          * @param map map to iterate over.
          */
-        public TDoubleObjectHashIterator(final TDoubleObjectHashMap<V> map ) {
+        TDoubleObjectHashIterator(final TDoubleObjectHashMap<V> map) {
             super( map );
             this._map = map;
         }
@@ -1017,7 +1016,7 @@ public class TDoubleObjectHashMap<V> extends TDoubleHash implements
                 buf.append(key);
                 buf.append("=");
                 buf.append(value);
-                return true;
+                return false;
             }
         });
         buf.append("}");

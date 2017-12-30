@@ -38,5 +38,5 @@ public interface TDoubleObjectProcedure<T> {
      * @return true if additional invocations of the procedure are
      * allowed.
      */
-    public boolean execute( double a, T b );
+    boolean execute(double a, T b);
 }

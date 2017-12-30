@@ -36,18 +36,18 @@ import gnu.trove.impl.hash.THashIterator;
 
 public class TObjectHashIterator<E> extends THashIterator<E> {
 
-    protected final TObjectHash _objectHash;
+    private final TObjectHash _objectHash;
 
 
-    public TObjectHashIterator( TObjectHash<E> hash ) {
+    public TObjectHashIterator(final TObjectHash<E> hash ) {
         super( hash );
         _objectHash = hash;
     }
 
 
     @SuppressWarnings("unchecked")
-    protected E objectAtIndex( int index ) {
-        Object obj = _objectHash._set[index];
+    protected E objectAtIndex(final int index ) {
+        final Object obj = _objectHash._set[index];
         if ( obj == TObjectHash.FREE || obj == TObjectHash.REMOVED ) {
             return null;
         }

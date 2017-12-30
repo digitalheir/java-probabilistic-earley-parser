@@ -35,5 +35,5 @@ public interface TObjectFunction<T, R> {
      * @param value an <code>Object</code> input
      * @return an <code>Object</code> result
      */
-    public R execute( T value );
+    R execute(T value);
 }// TObjectFunction

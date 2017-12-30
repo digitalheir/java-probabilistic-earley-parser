@@ -2,7 +2,7 @@ package org.leibnizcenter.cfg.util;
 
 import java.util.Map;
 
-public class MapEntry<K, V> implements Map.Entry<K, V> {
+class MapEntry<K, V> implements Map.Entry<K, V> {
     private final K key;
     private final V value;
 

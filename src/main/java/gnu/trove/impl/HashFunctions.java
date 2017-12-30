@@ -22,10 +22,10 @@ public final class HashFunctions {
      *
      * @return  a hash code value for the specified value.
      */
-    public static int hash(double value) {
+    public static int hash(final double value) {
         assert !Double.isNaN(value) : "Values of NaN are not supported.";
 
-        long bits = Double.doubleToLongBits(value);
+        final long bits = Double.doubleToLongBits(value);
         return (int)(bits ^ (bits >>> 32));
         //return (int) Double.doubleToLongBits(value*663608941.737);
         //this avoids excessive hashCollisions in the case values are
@@ -37,7 +37,7 @@ public final class HashFunctions {
      *
      * @return  a hash code value for the specified value.
      */
-    public static int hash(float value) {
+    public static int hash(final float value) {
         assert !Float.isNaN(value) : "Values of NaN are not supported.";
 
         return Float.floatToIntBits(value*663608941.737f);
@@ -50,7 +50,7 @@ public final class HashFunctions {
      *
      * @return  a hash code value for the specified value.
      */
-    public static int hash(int value) {
+    public static int hash(final int value) {
 		return value;
     }
 
@@ -59,7 +59,7 @@ public final class HashFunctions {
      *
      * @return  a hash code value for the specified value.
      */
-    public static int hash(long value) {
+    public static int hash(final long value) {
         return ((int)(value ^ (value >>> 32)));
     }
 
@@ -68,7 +68,7 @@ public final class HashFunctions {
      *
      * @return  a hash code value for the specified object.
      */
-    public static int hash(Object object) {
+    public static int hash(final Object object) {
         return object==null ? 0 : object.hashCode();
     }
 
@@ -77,7 +77,7 @@ public final class HashFunctions {
      * In profiling, it has been found to be faster to have our own local implementation
      * of "ceil" rather than to call to {@link Math#ceil(double)}.
      */
-    public static int fastCeil( float v ) {
+    public static int fastCeil(final float v ) {
         int possible_result = ( int ) v;
         if ( v - possible_result > 0 ) possible_result++;
         return possible_result;

@@ -27,5 +27,5 @@ public interface TAdvancingIterator extends TIterator {
      *
      * @throws java.util.NoSuchElementException if the iterator is already exhausted
      */
-    public void advance();
+    void advance();
 }

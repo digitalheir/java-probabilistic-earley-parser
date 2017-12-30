@@ -343,7 +343,7 @@ public interface TObjectDoubleMap<K> {
      *
      * @return a <tt>TObjectDoubleIterator</tt> with access to this map's keys and values.
      */
-    public TObjectDoubleIterator<K> iterator();
+    TObjectDoubleIterator<K> iterator();
 
 
     /**
@@ -352,7 +352,7 @@ public interface TObjectDoubleMap<K> {
      * @param key the key of the value to increment
      * @return true if a mapping was found and modified.
      */
-    public boolean increment( K key );
+    boolean increment(K key);
 
 
     /**
@@ -362,7 +362,7 @@ public interface TObjectDoubleMap<K> {
      * @param amount the amount to adjust the value by.
      * @return true if a mapping was found and modified.
      */
-    public boolean adjustValue( K key, double amount );
+    boolean adjustValue(K key, double amount);
 
 
     /**
@@ -375,7 +375,7 @@ public interface TObjectDoubleMap<K> {
      *
      * @return the value present in the map after the adjustment or put operation
      */
-    public double adjustOrPutValue( K key, double adjust_amount, double put_amount );
+    double adjustOrPutValue(K key, double adjust_amount, double put_amount);
 
 
     /**
@@ -385,7 +385,7 @@ public interface TObjectDoubleMap<K> {
      * @return false if the loop over the keys terminated because
      *         the procedure returned false for some key.
      */
-    public boolean forEachKey( TObjectProcedure<? super K> procedure );
+    boolean forEachKey(TObjectProcedure<? super K> procedure);
 
 
     /**
@@ -395,7 +395,7 @@ public interface TObjectDoubleMap<K> {
      * @return false if the loop over the values terminated because
      *         the procedure returned false for some value.
      */
-    public boolean forEachValue( TDoubleProcedure procedure );
+    boolean forEachValue(TDoubleProcedure procedure);
 
 
     /**
@@ -406,7 +406,7 @@ public interface TObjectDoubleMap<K> {
      * @return false if the loop over the entries terminated because
      *         the procedure returned false for some entry.
      */
-    public boolean forEachEntry( TObjectDoubleProcedure<? super K> procedure );
+    boolean forEachEntry(TObjectDoubleProcedure<? super K> procedure);
 
 
     /**
@@ -414,7 +414,7 @@ public interface TObjectDoubleMap<K> {
      *
      * @param function a <code>TDoubleFunction</code> value
      */
-    public void transformValues( TDoubleFunction function );
+    void transformValues(TDoubleFunction function);
 
 
     /**
@@ -424,7 +424,7 @@ public interface TObjectDoubleMap<K> {
      * @param procedure determines which entries to keep
      * @return true if the map was modified.
      */
-    public boolean retainEntries( TObjectDoubleProcedure<? super K> procedure );
+    boolean retainEntries(TObjectDoubleProcedure<? super K> procedure);
 
 
     // Comparison and hashing
