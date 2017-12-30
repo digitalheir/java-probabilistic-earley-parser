@@ -247,7 +247,7 @@ public class Rule {
     /**
      * Runs in O(1)
      *
-     * @return Whether this state is a unit production, i.e. of form X -> Y
+     * @return Whether this state is a unit production, i.e. of form X → Y
      */
     public boolean isUnitProduction() {
         return right.length == 1 && right[0] instanceof NonTerminal;

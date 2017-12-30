@@ -75,7 +75,7 @@ public abstract class ParseTree {
     /**
      * Gets the category category of this parse tree.
      *
-     * @return <code>NP</code> for a subtree <code>NP -> Det N</code>.
+     * @return <code>NP</code> for a subtree <code>NP → Det N</code>.
      */
     public Category getCategory() {
         return category;
@@ -85,7 +85,7 @@ public abstract class ParseTree {
      * Gets the child parse trees of this parse tree, retaining their linear
      * ordering.
      *
-     * @return For a subtree <code>NP -> Det N</code>, returns an array
+     * @return For a subtree <code>NP → Det N</code>, returns an array
      * that contains parse trees whose {@link #getCategory() node} is
      * <code>Det, N</code> in that order, or <code>null</code> if this parse
      * tree has no children.
