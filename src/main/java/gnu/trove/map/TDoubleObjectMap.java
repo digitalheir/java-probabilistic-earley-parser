@@ -313,8 +313,7 @@ public interface TDoubleObjectMap<V> {
 
     /**
      * Returns the values of the map as an Object array. Note that the array returned
-     * is typed as an Object[] and may not be cast to a more specific type. See
-     * {@link #values(V[])} for a version which allows specifically typed arrays.
+     * is typed as an Object[] and may not be cast to a more specific type.
      * Changes to the array of values will not be reflected in the map
      * nor vice-versa.
      *

@@ -1,6 +1,6 @@
 language: java
 install:
-  - ./gradlew assemble -x signArchives uploadArchives
+  - ./gradlew assemble -x signArchives -x uploadArchives
 
 jdk:
   - oraclejdk8
