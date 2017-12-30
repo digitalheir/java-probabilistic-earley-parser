@@ -30,7 +30,6 @@ import java.util.Arrays;
  * </UL>
  * <DL>
  * <DT><B>Example of use:</B></DT>
- * <p>
  * <DD>Solve a linear system A x = b and compute the residual norm, ||b - A x||.
  * <P><PRE>
  * double[][] vals = {{1.,2.,3},{4.,5.,6.},{7.,8.,10.}};
