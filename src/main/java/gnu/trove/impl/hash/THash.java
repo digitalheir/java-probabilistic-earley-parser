@@ -164,7 +164,7 @@ abstract public class THash implements Externalizable {
 
     /**
      * Ensure that this hashtable has sufficient capacity to hold
-     * <tt>desiredCapacity<tt> <b>additional</b> elements without
+     * <tt>desiredCapacity</tt> <b>additional</b> elements without
      * requiring a rehash.  This is a tuning method you can call
      * before doing a large insert.
      *

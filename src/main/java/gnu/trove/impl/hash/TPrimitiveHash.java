@@ -84,7 +84,7 @@ abstract public class TPrimitiveHash extends THash {
     /**
      * Creates a new <code>TPrimitiveHash</code> instance with a prime
      * capacity at or near the minimum needed to hold
-     * <tt>initialCapacity<tt> elements with load factor
+     * <tt>initialCapacity</tt> elements with load factor
      * <tt>loadFactor</tt> without triggering a rehash.
      *
      * @param initialCapacity an <code>int</code> value
