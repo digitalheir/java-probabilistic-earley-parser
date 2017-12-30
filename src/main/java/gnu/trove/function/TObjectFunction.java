@@ -20,7 +20,7 @@ package gnu.trove.function;
 
 /**
  * Interface for functions that accept and return one Object reference.
- * <p/>
+ * <p>
  * Created: Mon Nov  5 22:19:36 2001
  *
  * @author Eric D. Friedman

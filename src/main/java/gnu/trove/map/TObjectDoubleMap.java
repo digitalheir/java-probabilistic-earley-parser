@@ -96,7 +96,7 @@ public interface TObjectDoubleMap<K> {
      * <tt>(value==no_entry_value ? v==no_entry_value : value.equals(v))</tt>.  This operation
      * will probably require time linear in the map size for most
      * implementations of the <tt>Map</tt> interface.
-     *<p/>
+     *<p>
      * Note that no_entry_value is the result of {@link #getNoEntryValue()} and represents
      * null for this map instance.
      *

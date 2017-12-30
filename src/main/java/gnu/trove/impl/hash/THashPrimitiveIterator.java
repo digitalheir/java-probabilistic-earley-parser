@@ -29,18 +29,18 @@ import java.util.NoSuchElementException;
  * Subclasses may override objectAtIndex to vary the object
  * returned by calls to next() (e.g. for values, and Map.Entry
  * objects).
- * <p/>
+ * <p>
  * <p> Note that iteration is fastest if you forego the calls to
  * <tt>hasNext</tt> in favor of checking the size of the structure
  * yourself and then call next() that many times:
- * <p/>
+ * <p>
  * <pre>
  * Iterator i = collection.iterator();
  * for (int size = collection.size(); size-- > 0;) {
  *   Object o = i.next();
  * }
  * </pre>
- * <p/>
+ * <p>
  * <p>You may, of course, use the hasNext(), next() idiom too if
  * you aren't in a performance critical spot.</p>
  */

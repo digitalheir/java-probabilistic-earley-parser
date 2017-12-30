@@ -186,11 +186,11 @@ abstract public class THash implements Externalizable {
      * operations and plan to do a lot of queries or insertions or
      * iteration, it is a good idea to invoke this method.  Doing so
      * will accomplish two things:
-     * <p/>
+     * <p>
      * <ol>
      * <li> You'll free memory allocated to the table but no
      * longer needed because of the remove()s.</li>
-     * <p/>
+     * <p>
      * <li> You'll get better query/insert/iterator performance
      * because there won't be any <tt>REMOVED</tt> slots to skip
      * over when probing for indices in the table.</li>
@@ -215,7 +215,7 @@ abstract public class THash implements Externalizable {
      * If the value is non-zero, the number of removes that need to occur for
      * auto-compaction is the size of table at the time of the previous compaction
      * (or the initial capacity) multiplied by this factor.
-     * <p/>
+     * <p>
      * Setting this value to zero will disable auto-compaction.
      *
      * @param factor a <tt>float</tt> that indicates the auto-compaction factor
