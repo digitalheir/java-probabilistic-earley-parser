@@ -31,16 +31,12 @@ public class DeferredStateScoreComputations {
     }
 
     public void plus(final State s, final Resolvable addValue) {
-        final ExpressionWrapper current = this.getOrCreate(
-                s,
-                this.semiring.zero()
-        );
+        final ExpressionWrapper current = this.getOrCreate(s, this.semiring.zero());
 
         current.setExpression(
                 current.hasExpression()
                         ? semiring.plus(addValue, current.getExpression())
-                        : semiring.plus(addValue, current.getLiteral())
-        );
+                        : semiring.plus(addValue, current.getLiteral()));
         this.states.put(s, current);
     }
 }

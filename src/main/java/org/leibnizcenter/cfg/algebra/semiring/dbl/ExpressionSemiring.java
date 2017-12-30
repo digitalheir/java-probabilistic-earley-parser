@@ -54,8 +54,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
     public Resolvable plus(final Resolvable r1, final Resolvable r2) {
         if (isAdditiveIdentity(r1)) return r2;
         else if (isAdditiveIdentity(r2)) return r1;
-        else
-            return new Plus(r1, r2);
+        else return new Plus(r1, r2);
     }
 
     public Resolvable plus(final Resolvable r1, final double r2) {
@@ -84,14 +83,12 @@ public abstract class ExpressionSemiring implements DblSemiring {
 
         @Override
         public double resolveAndClean() {
-            if (lock)
-                return cached;
-            else {
-                double v = plus(left.resolveFinal(), right.resolveFinal());
-                left = null;
-                right = null;
-                return v;
-            }
+            if (lock) return cached;
+
+            final double v = plus(left.resolveFinal(), right.resolveFinal());
+            left = null;
+            right = null;
+            return v;
         }
 
         @Override
