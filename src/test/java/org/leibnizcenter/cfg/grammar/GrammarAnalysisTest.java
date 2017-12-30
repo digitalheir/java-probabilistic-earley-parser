@@ -31,7 +31,7 @@ public class GrammarAnalysisTest {
         rules.put(b, Rule.create(ProbabilitySemiring.get(), 0.2, b, b));
         rules.put(b, Rule.create(ProbabilitySemiring.get(), 0.1, b, b, b_));
 
-        final LeftCorners leftCorners = new LeftCorners(nonTerminals, rules);
+        final LeftCorners leftCorners = new LeftCorners(rules, nonTerminals.toArray(new NonTerminal[nonTerminals.size()]));
 
         final LeftCorners leftStar = GrammarAnalysis.computeReflexiveTransitiveClosure(leftCorners, nonTerminals.toArray(new NonTerminal[nonTerminals.size()]));
 

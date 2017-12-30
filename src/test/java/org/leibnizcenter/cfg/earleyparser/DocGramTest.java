@@ -245,7 +245,7 @@ public class DocGramTest {
         int s = 0;
 
         //noinspection ConstantConditions
-        for (int i = 0; i < 0; i++) {
+        for (int i = 0; i < 000; i++) {
             if (i < one_doc.size())
                 listSoFar.add(one_doc.get(i));
             else if (i < one_doc.size() + two_doc.size())
@@ -258,7 +258,7 @@ public class DocGramTest {
                 s = ((s + 1) % 4);
                 listSoFar.addAll(s == 0 ? one_doc : s == 1 ? two_doc : s == 2 ? three_doc : four_doc);
             }
-            if (i > 100) {
+            if (i >100) {
                 final long start = System.currentTimeMillis();
                 new Parser<>(grammar).getViterbiParseWithScore(DOCUMENT, listSoFar);
                 final long end = System.currentTimeMillis();

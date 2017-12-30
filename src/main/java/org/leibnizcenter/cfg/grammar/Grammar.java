@@ -90,7 +90,7 @@ public final class Grammar<T> {
         final NonTerminal[] nonTerminalsArr = nonTerminals.toArray(new NonTerminal[nonTerminals.size()]);
 
 
-        leftCorners = new LeftCorners(nonTerminals, rules);
+        leftCorners = new LeftCorners(rules, nonTerminalsArr);
         final LeftCorners leftStarCorners = computeReflexiveTransitiveClosure(leftCorners, nonTerminalsArr);
 
         leftStarCornersAsSemiringElements = new ScoresAsSemiringElements(leftStarCorners, semiring);

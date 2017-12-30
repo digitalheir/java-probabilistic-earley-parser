@@ -70,13 +70,15 @@ class GrammarAnalysis {
      * Sum all probabilities for unit relations (form X -> Y)
      */
     static LeftCorners computeUnitStarCorners(final MyMultimap<NonTerminal, Rule> rules, final NonTerminal[] nonterminalsArr) {
-        final LeftCorners unitRuleProbabilities = new LeftCorners();
-        for (final NonTerminal leftHandSide : nonterminalsArr) {
+        final LeftCorners unitRuleProbabilities = new LeftCorners(nonterminalsArr);
+        for (int i = 0; i < nonterminalsArr.length; i++) {
+            final NonTerminal leftHandSide = nonterminalsArr[i];
             final Collection<Rule> rulesForCategory = rules.get(leftHandSide);
             if (rulesForCategory != null && !rulesForCategory.isEmpty()) {
                 for (final Rule unitProduction : rulesForCategory) {
                     if (unitProduction.isUnitProduction()) {
-                        unitRuleProbabilities.plusRawProbability(leftHandSide, (NonTerminal) unitProduction.right[0], unitProduction.probability);
+                        unitRuleProbabilities.plusRawProbability(i,
+                                (NonTerminal) unitProduction.right[0], unitProduction.probability);
                     }
                 }
             }

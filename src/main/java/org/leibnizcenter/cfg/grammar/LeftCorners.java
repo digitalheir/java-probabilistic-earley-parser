@@ -1,7 +1,5 @@
 package org.leibnizcenter.cfg.grammar;
 
-import gnu.trove.map.TObjectDoubleMap;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
 import org.leibnizcenter.cfg.algebra.matrix.Matrix;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.DblSemiring;
 import org.leibnizcenter.cfg.category.Category;
@@ -11,9 +9,6 @@ import org.leibnizcenter.cfg.util.MyMultimap;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.IntStream;
 
 /**
  * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
@@ -23,31 +18,49 @@ public class LeftCorners {
     final MyMultimap<NonTerminal, NonTerminal> nonZeroScores = new MyMultimap<>();
 
     //private final Map<Category, TObjectDoubleMap<Category>> mapToElements = new HashMap<>();
-    final Map<Category, TObjectDoubleMap<Category>> mapToProb = new HashMap<>();
+    final double[][] mapToProb;
+    final HashMap<Category, Integer> mapToIndex = new HashMap<>();
+    private final Category[] categories;
 
     /**
      * Information holder for left-corner relations and left*-corner relations. Essentially a map from {@link Category}
      * to {@link Category} with some utility functions to deal with probabilities.
      */
-    LeftCorners() {
+    LeftCorners(final Category[] categories) {
+        mapToProb = new double[categories.length][categories.length];
+        this.categories = categories;
+        for (int i = 0, categoriesLength = categories.length; i < categoriesLength; i++)
+            mapToIndex.put(categories[i], i);
     }
 
     /**
      * Compute left corner relations
      */
-    LeftCorners(final Set<NonTerminal> nonTerminals, final MyMultimap<NonTerminal, Rule> rules) {
-        // Sum all probabilities for left corners
-        nonTerminals.forEach(leftHandSide -> {
+    LeftCorners(final MyMultimap<NonTerminal, Rule> rules, final NonTerminal[] categories) {
+        mapToProb = new double[categories.length][categories.length];
+        this.categories = categories;
+        for (int i = 0, categoriesLength = categories.length; i < categoriesLength; i++)
+            mapToIndex.put(categories[i], i);
+
+        sumLeftCornerProbabilities(rules, categories);
+    }
+
+    /**
+     * Sum all probabilities for left corners
+     */
+    private void sumLeftCornerProbabilities(final MyMultimap<NonTerminal, Rule> rules, final NonTerminal[] categories) {
+        for (int i = 0, categoriesLength = categories.length; i < categoriesLength; i++) {
+            final NonTerminal leftHandSide = categories[i];
             final Collection<Rule> rulesOnNonTerminal = rules.get(leftHandSide);
             if (rulesOnNonTerminal != null) {
                 for (final Rule yRule : rulesOnNonTerminal) {
                     final boolean startsWithNonTerminal = yRule.right.length > 0 && yRule.right[0] instanceof NonTerminal;
                     if (startsWithNonTerminal) {
-                        plusRawProbability(leftHandSide, (NonTerminal) yRule.right[0], yRule.probability);
+                        plusRawProbability(i, (NonTerminal) yRule.right[0], yRule.probability);
                     }
                 }
             }
-        });
+        }
     }
 
     /**
@@ -57,11 +70,14 @@ public class LeftCorners {
      * @param nonTerminals indexes of matrix
      */
     LeftCorners(final Matrix r_L, final NonTerminal[] nonTerminals) {
+        final int n = nonTerminals.length;
+        this.categories = nonTerminals;
+        mapToProb = new double[n][n];
+        for (int i = 0; i < n; i++) mapToIndex.put(nonTerminals[i], i);
         final int bound = r_L.getRowDimension();
-        for (int i = 0; i < bound; i++) {
-            final int row = i;
-            IntStream.range(0, r_L.getColumnDimension()).forEach(col -> setRawProbability(nonTerminals[row], nonTerminals[col], r_L.get(row, col)));
-        }
+        for (int i = 0; i < bound; i++)
+            for (int col = 0; col < r_L.getColumnDimension(); col++)
+                setRawProbability(i, col, r_L.get(i, col));
     }
 
     /**
@@ -70,12 +86,12 @@ public class LeftCorners {
      * @param element LHS
      * @return map for given LHS.
      */
-    private static TObjectDoubleMap<Category> getYToProbs(final Map<Category, TObjectDoubleMap<Category>> mapToProb, final Category element) {
-        if (mapToProb.containsKey(element))
-            return mapToProb.get(element);
+    private static double[] getYToProbs(final double[][] mapToProb, final int element) {
+        final double[] doubles = mapToProb[element];
+        if (doubles != null) return doubles;
         else {
-            final TObjectDoubleMap<Category> yToProb = (new TObjectDoubleHashMap<>(10, 0.5F, 0.0));
-            mapToProb.put(element, yToProb);
+            final double[] yToProb = new double[mapToProb.length];
+            mapToProb[element] = yToProb;
             return yToProb;
         }
     }
@@ -85,9 +101,17 @@ public class LeftCorners {
      * @param to          To category
      * @param probability Between 0.0 and 1.0
      */
-    void plusRawProbability(final NonTerminal from, final NonTerminal to, final double probability) {
-        //setPlusElement(from, to, semiring.fromProbability(probability), semiring);
-        setPlusProbability(from, to, probability);
+    void plusRawProbability(final int from, final NonTerminal to, final double probability) {
+        final double[] yToProb = getYToProbs(mapToProb, from);
+        final int yIndex = mapToIndex.get(to);
+        final double newProbability = yToProb[yIndex] + probability;
+        if (Double.isNaN(newProbability)) throw new Error();
+
+
+        yToProb[yIndex] = newProbability;
+        if (probability != 0.0) {
+            nonZeroScores.put((NonTerminal) categories[from], to);
+        }
     }
 
 //    private void setPlusElement(NonTerminal x, NonTerminal y, double Element, DblSemiring semiring) {
@@ -133,12 +157,13 @@ public class LeftCorners {
 //    }
 
     private void setPlusProbability(final NonTerminal x, final NonTerminal y, final double probability) {
-        final TObjectDoubleMap<Category> yToProb = getYToProbs(mapToProb, x);
-        final double newProbability = yToProb.get(y) + probability;
+        final double[] yToProb = getYToProbs(mapToProb, mapToIndex.get(x));
+        final int yIndex = mapToIndex.get(y);
+        final double newProbability = yToProb[yIndex] + probability;
         if (Double.isNaN(newProbability)) throw new Error();
 
 
-        yToProb.put(y, newProbability);
+        yToProb[yIndex] = newProbability;
         if (probability != 0.0) {
             nonZeroScores.put(x, y);
         }
@@ -148,19 +173,27 @@ public class LeftCorners {
      * @return stored value in left-corner relationship. zero by default
      */
     public double getProbability(final Category x, final Category y) {
-        return getYToProbs(mapToProb, x).get(y)/*defaults to zero*/;
+        return getYToProbs(mapToProb, mapToIndex.get(x))[mapToIndex.get(y)]/*defaults to zero*/;
     }
 
-    private void putProb_(final Map<Category, TObjectDoubleMap<Category>> mapToProb,
+    private void putProb_(final double[][] mapToProb,
                           final NonTerminal x,
                           final NonTerminal y,
                           final double val,
                           final double zero) {
-        final TObjectDoubleMap<Category> yToElements = getYToProbs(mapToProb, x);
-        yToElements.put(y, val);
-        if (val != zero) {
-            nonZeroScores.put(x, y);
-        }
+        final double[] yToElements = getYToProbs(mapToProb, mapToIndex.get(x));
+        yToElements[mapToIndex.get(y)] = val;
+        if (val != zero) nonZeroScores.put(x, y);
+    }
+
+    private void putProb_(final double[][] mapToProb,
+                          final int x,
+                          final int y,
+                          final double val,
+                          @SuppressWarnings("SameParameterValue") final double zero) {
+        final double[] yToElements = getYToProbs(mapToProb, x);
+        yToElements[y] = val;
+        if (val != zero) nonZeroScores.put((NonTerminal) this.categories[x], (NonTerminal) this.categories[y]);
     }
 
     /**
@@ -176,6 +209,13 @@ public class LeftCorners {
      */
     void setRawProbability(final NonTerminal x, final NonTerminal y, final double prob) {
         //putProb_(mapToElements, x, y, semiring.fromProbability(prob), semiring.zero());
+        putProb_(mapToProb, x, y, prob, 0.0);
+    }
+
+    /**
+     * Sets table entry to a given raw probability (default 0.0). Will instantiate empty map if it does not exist yet.
+     */
+    private void setRawProbability(final int x, final int y, final double prob) {
         putProb_(mapToProb, x, y, prob, 0.0);
     }
 
