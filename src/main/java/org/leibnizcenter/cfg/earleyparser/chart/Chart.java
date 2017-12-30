@@ -23,10 +23,10 @@ import org.leibnizcenter.cfg.util.StateInformationTriple;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.leibnizcenter.cfg.errors.IssueRequest.ensure;
 import static org.leibnizcenter.cfg.util.Collections2.emptyIfNull;
+import static org.leibnizcenter.cfg.util.Collections2.isFilled;
 
 
 public class Chart<T> {
@@ -366,40 +366,45 @@ public class Chart<T> {
         if (newCompletedStates == null || newCompletedStates.size() <= 0)
             return;
         while (newCompletedStates.size() > 0) {
-            newCompletedStates = newCompletedStates.stream()
-                    // For all states
-                    //      i: Y<sub>j</sub> → v·    [a",y"]
-                    //      j: X<sub>k</suv> → l·Zm  [a',y']
-                    //
-                    //  such that the R*(Z =*> Y) is nonzero
-                    //  and Y → v is not a unit production
+            final HashSet<State> nextCompletedStates = new HashSet<>(newCompletedStates.size());
+            newCompletedStates.forEach(completedState -> {
+                // For all states
+                //      i: Y<sub>j</sub> → v·    [a",y"]
+                //      j: X<sub>k</suv> → l·Zm  [a',y']
+                //
+                //  such that the R*(Z =*> Y) is nonzero
+                //  and Y → v is not a unit production
+                final StateInformationTriple triple = new StateInformationTriple(null,
+                        completedState,
+                        addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState))
+                );
 
-                    // WARNING: shared mutated mutability
-                    .map(completedState -> new StateInformationTriple(null,
-                            completedState,
-                            addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState))
-                    ))
-                    .flatMap(stateSets.activeStates::streamAllStatesToAdvance)
-                    .map(stateInformation -> {
-                                final double prevForward = stateSets.forwardScores.get(stateInformation.stateToAdvance);
-                                return completeNoViterbiForTriple(
-                                        position,
-                                        addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
-                                        addForwardScores.getOrCreate(stateInformation.stateToAdvance, prevForward),
-                                        stateSets,
-                                        stateInformation
-                                );
-                            }
-                    )
-                    .peek(delta -> {
+                final State state = triple.completedState;
+                final Collection<State> statesActive = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
+                if (isFilled(statesActive)) {
+                    statesActive.forEach(stateToAdvance -> {
+                        final StateInformationTriple stateInformation = new StateInformationTriple(
+                                stateToAdvance,
+                                state,
+                                triple.completedInner
+                        );
+                        final double prevForward = stateSets.forwardScores.get(stateInformation.stateToAdvance);
+                        final Complete.Delta delta = completeNoViterbiForTriple(
+                                position,
+                                addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
+                                addForwardScores.getOrCreate(stateInformation.stateToAdvance, prevForward),
+                                stateSets,
+                                stateInformation);
                         addForwardScores.plus(delta.state, delta.addForward);
                         addInnerScores.plus(delta.state, delta.addInner);
-                    })
-                    .filter(delta -> delta.newCompletedStateNoUnitProduction)
-                    .map(Complete.Delta::getState)
+                        if (delta.newCompletedStateNoUnitProduction) {
+                            nextCompletedStates.add(delta.state);
+                        }
+                    });
+                }
+            });
                     /* Prepare next batch of new completed states; recurse until there are no more new completed states */
-                    .collect(Collectors.toSet());
-
+            newCompletedStates = nextCompletedStates;
             newCompletedStates.forEach(stateSets::getOrCreate);
         }
     }

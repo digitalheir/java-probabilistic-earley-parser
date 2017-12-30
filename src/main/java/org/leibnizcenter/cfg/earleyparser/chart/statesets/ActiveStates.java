@@ -139,18 +139,18 @@ public class ActiveStates<T> {
         }
     }
 
-    public Stream<? extends StateInformationTriple> streamAllStatesToAdvance(final StateInformationTriple completedState) {
-        final State state = completedState.completedState;
-        final Collection<State> statesActive = getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
-        return statesActive == null ? Stream.empty() : statesActive
-                .stream()
-                .map(stateToAdvance -> new StateInformationTriple(
-                                stateToAdvance,
-                                state,
-                                completedState.completedInner
-                        )
-                );
-    }
+//    public Stream<? extends StateInformationTriple> streamAllStatesToAdvance(final StateInformationTriple completedState) {
+//        final State state = completedState.completedState;
+//        final Collection<State> statesActive = getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
+//        return statesActive == null ? Stream.empty() : statesActive
+//                .stream()
+//                .map(stateToAdvance -> new StateInformationTriple(
+//                                stateToAdvance,
+//                                state,
+//                                completedState.completedInner
+//                        )
+//                );
+//    }
 
     public Collection<State> getJustScannedError(final int position) {
         return justScannedError.get(position);
