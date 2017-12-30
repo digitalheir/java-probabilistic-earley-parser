@@ -269,8 +269,7 @@ public final class Grammar<T> {
                 ignored -> this.terminals.stream()
                         .filter(category -> !(category instanceof NonLexicalToken))
                         .filter(category -> category.hasCategory(token))
-                        .collect(Collectors.toSet())
-        );
+                        .collect(Collectors.toSet()));
     }
 
 
@@ -326,6 +325,10 @@ public final class Grammar<T> {
 
         /**
          * Ensures grammar is proper, i.e. the sum of production probabilities should equal 1.0 for each producible category
+         *
+         * @param rules    Collection of potentially unweighted rules
+         * @param semiring Semiring used to compute probabilities
+         * @return New object containing all rules with normalized probabilities
          */
         private MyMultimap<NonTerminal, Rule> normalizeRuleWeights(final MyMultimap<NonTerminal, Rule> rules, final DblSemiring semiring) {
             final MyMultimap<NonTerminal, Rule> newRuleMap = new MyMultimap<>();
