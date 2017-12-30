@@ -40,7 +40,7 @@ import java.util.*;
 
 
 //////////////////////////////////////////////////
-// THIS IS A GENERATED CLASS. DO NOT HAND EDIT! //
+// THIS IS A GENERATED CLASS. HAND EDIT! //
 //////////////////////////////////////////////////
 
 
@@ -53,16 +53,15 @@ import java.util.*;
  * @author Rob Eden
  * @author Jeff Randall
  */
+@SuppressWarnings("unused")
 public class TObjectDoubleHashMap<K> extends TObjectHash<K>
     implements TObjectDoubleMap<K>, Externalizable {
 
     static final long serialVersionUID = 1L;
 
-    private final TObjectDoubleProcedure<K> PUT_ALL_PROC = new TObjectDoubleProcedure<K>() {
-        public boolean execute(final K key, final double value) {
-            put(key, value);
-            return true;
-        }
+    private final TObjectDoubleProcedure<K> PUT_ALL_PROC = (key, value) -> {
+        put(key, value);
+        return true;
     };
 
     /** the values of the map */
@@ -410,7 +409,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
      * @return an iterator over the entries in this map
      */
     public TObjectDoubleIterator<K> iterator() {
-        return new TObjectDoubleHashIterator<K>( this );
+        return new TObjectDoubleHashIterator<>(this);
     }
 
 

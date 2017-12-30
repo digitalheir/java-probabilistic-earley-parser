@@ -45,47 +45,6 @@ package gnu.trove.iterator;
  * position to position.  Read or write operations affect the current entry only and
  * do not assume responsibility for moving the finger.
  *
- * Here are some sample scenarios for this class of iterator:
- *
- * <pre>
- * // accessing keys/values through an iterator:
- * for ( TDoubleObjectIterator it = map.iterator(); it.hasNext(); ) {
- *   it.advance();
- *   if ( satisfiesCondition( it.key() ) ) {
- *     doSomethingWithValue( it.value() );
- *   }
- * }
- * </pre>
- *
- * <pre>
- * // modifying values in-place through iteration:
- * for ( TDoubleObjectIterator it = map.iterator(); it.hasNext(); ) {
- *   it.advance();
- *   if ( satisfiesCondition( it.key() ) ) {
- *     it.setValue( newValueForKey( it.key() ) );
- *   }
- * }
- * </pre>
- *
- * <pre>
- * // deleting entries during iteration:
- * for ( TDoubleObjectIterator it = map.iterator(); it.hasNext(); ) {
- *   it.advance();
- *   if ( satisfiesCondition( it.key() ) ) {
- *     it.remove();
- *   }
- * }
- * </pre>
- *
- * <pre>
- * // faster iteration by avoiding hasNext():
- * TDoubleObjectIterator iterator = map.iterator();
- * for ( int i = map.size(); i-- > 0; ) {
- *   iterator.advance();
- *   doSomethingWithKeyAndValue( iterator.key(), iterator.value() );
- * }
- * </pre>
- *
  * @author Eric D. Friedman
  * @author Rob Eden
  * @author Jeff Randall
