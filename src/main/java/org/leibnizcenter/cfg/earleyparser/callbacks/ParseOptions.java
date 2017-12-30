@@ -6,7 +6,7 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 /**
  * Callbacks for parsing
- * <p>
+ *
  * Created by maarten on 16/01/17.
  */
 @SuppressWarnings("WeakerAccess")

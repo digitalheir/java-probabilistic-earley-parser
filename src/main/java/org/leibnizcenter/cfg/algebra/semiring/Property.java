@@ -2,7 +2,7 @@ package org.leibnizcenter.cfg.algebra.semiring;
 
 /**
  * Properties that semiring might have
- * <p>
+ *
  * Created by maarten on 19-6-16.
  */
 public enum Property {

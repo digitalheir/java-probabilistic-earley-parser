@@ -5,7 +5,7 @@ import org.leibnizcenter.cfg.category.terminal.Terminal;
 import java.util.Set;
 
 /**
- * <p>
+ *
  * This class represents a token with all applicable categories.
  * Note that this is <em>not</em> the place to mess with which categories apply to the
  * given token; that should be a function of interface {@link Terminal}. This is just the place where all applicable categories

@@ -5,13 +5,13 @@ import java.util.stream.IntStream;
 
 /**
  * Semiring defined on double primitives.
- * <p>
+ *
  * A semiring is specified by two binary operations ⊕ and ⊗ and two designated elements 0 and 1 with the following properties:
  * <ul>
  * <li>⊕: associative, commutative, and has 0 as its identity.</li>
  * <li>⊗: associative and has identity 1, distributes w.r.t. ⊕, and has 0 as an annihilator: 0 ⊗ a = a ⊗ 0 = 0.</li>
  * </ul>
- * <p>
+ *
  * Created by maarten on 19-6-16.
  */
 public interface DblSemiring {
@@ -82,18 +82,18 @@ public interface DblSemiring {
 //
 //    /**
 //     * NATURAL ORDER
-//     * <p>
+//     *
 //     * By definition: a <= b iff a + b = a
-//     * <p>
+//     *
 //     * The natural order is a negative partial order iff the semiring is
 //     * idempotent. It is trivially monotonic for operator. It is left (resp. right)
 //     * monotonic for times iff the semiring is left (resp. right) distributive.
 //     * It is a total order iff the semiring has the path property.
-//     * <p>
+//     *
 //     * See Mohri,
 //     * "Semiring Framework and Algorithms for Shortest-Distance Problems",
 //     * Journal of Automata, Languages and Combinatorics 7(3):321-350, 2002.
-//     * <p>
+//     *
 //     * We define the strict version of this order below.
 //     */
 //    @SuppressWarnings("unused")

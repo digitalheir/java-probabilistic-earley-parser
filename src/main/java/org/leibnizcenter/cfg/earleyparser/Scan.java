@@ -9,7 +9,7 @@ import org.leibnizcenter.cfg.token.TokenWithCategories;
 
 /**
  * Scan phase of Earley
- * <p>
+ *
  * Created by maarten on 31/10/16.
  */
 public final class Scan {

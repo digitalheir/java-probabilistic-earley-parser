@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  * rules in a {@link Grammar}. Parse trees recursively contain
  * {@link #getChildren() other parse trees}, so they can be iterated through to
  * find the entire derivation of a category.
- * <p>
+ *
  * Parse trees are essentially partial views of a Chart from a
  * given {@link State} or {@link Category}. They represent the completed
  * category at a given string index and origin position. The special

@@ -4,7 +4,7 @@ import org.junit.Test;
 
 /**
  * TODO implement tests
- * <p>
+ *
  * Created by maarten on 18-1-17.
  */
 public class RuleTest {

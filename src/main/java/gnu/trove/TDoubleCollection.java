@@ -92,12 +92,12 @@ public interface TDoubleCollection {
      * If this collection makes any guarantees as to what order its elements
      * are returned by its iterator, this method must return the
      * elements in the same order.
-     * <p>
+     *
      * <p>The returned array will be "safe" in that no references to it
      * are maintained by this collection.  (In other words, this method must
      * allocate a new array even if this collection is backed by an array).
      * The caller is thus free to modify the returned array.
-     * <p>
+     *
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *
@@ -108,18 +108,18 @@ public interface TDoubleCollection {
 
     /**
      * Returns an array containing elements in this collection.
-     * <p>
+     *
      * <p>If this collection fits in the specified array with room to spare
      * (i.e., the array has more elements than this collection), the element in
      * the array immediately following the end of the collection is collection to
      * <tt>{@link #getNoEntryValue()}</tt>.  (This is useful in determining
      * the length of this collection <i>only</i> if the caller knows that this
      * collection does not contain any elements representing null.)
-     * <p>
+     *
      * <p>If the native array is smaller than the collection size,
      * the array will be filled with elements in Iterator order
      * until it is full and exclude the remainder.
-     * <p>
+     *
      * <p>If this collection makes any guarantees as to what order its elements
      * are returned by its iterator, this method must return the elements
      * in the same order.

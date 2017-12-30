@@ -8,7 +8,7 @@ package org.leibnizcenter.cfg.algebra.semiring;
  * <li>⊕: associative, commutative, and has 0 as its identity.</li>
  * <li>⊗: associative and has identity 1, distributes w.r.t. ⊕, and has 0 as an annihilator: 0 ⊗ a = a ⊗ 0 = 0.</li>
  * </ul>
- * <p>
+ *
  * Created by maarten on 19-6-16.
  */
 @SuppressWarnings("unused")
@@ -54,18 +54,18 @@ public interface Semiring<T> {
 //
 //    /**
 //     * NATURAL ORDER
-//     * <p>
+//     *
 //     * By definition: a <= b iff a + b = a
-//     * <p>
+//     *
 //     * The natural order is a negative partial order iff the semiring is
 //     * idempotent. It is trivially monotonic for operator. It is left (resp. right)
 //     * monotonic for times iff the semiring is left (resp. right) distributive.
 //     * It is a total order iff the semiring has the path property.
-//     * <p>
+//     *
 //     * See Mohri,
 //     * "Semiring Framework and Algorithms for Shortest-Distance Problems",
 //     * Journal of Automata, Languages and Combinatorics 7(3):321-350, 2002.
-//     * <p>
+//     *
 //     * We define the strict version of this order below.
 //     */
 //    default boolean naturalLess(T w1, T w2) {
@@ -92,7 +92,7 @@ public interface Semiring<T> {
 //     * <li> Reverse(Plus(a, b)) = Plus(Reverse(a), Reverse(b))</li>
 //     * <li> Reverse(Times(a, b)) = Times(Reverse(b), Reverse(a))</li>
 //     * </ul>
-//     * <p>
+//     *
 //     * Typically the identity mapping in a (both left and right) semiring. In the left string semiring, it maps to the reverse string in the right string semiring.
 //     *
 //     * @return the reverse T

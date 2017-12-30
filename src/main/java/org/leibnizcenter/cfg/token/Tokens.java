@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 /**
  * Utility functions for {@link Token}
- * <p>
+ *
  * Created by maarten on 10-6-16.
  */
 public final class Tokens {

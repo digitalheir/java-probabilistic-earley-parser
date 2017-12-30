@@ -19,7 +19,7 @@ class GrammarAnalysis {
 
     /**
      * Uses a trick to compute left*Corners (R_L), the reflexive transitive closure of leftCorners (P_L):
-     * <p>
+     *
      * <code>R_L = I + P_L R_L = (I - P_L)^-1</code>
      *
      * @param leftCorners left corners

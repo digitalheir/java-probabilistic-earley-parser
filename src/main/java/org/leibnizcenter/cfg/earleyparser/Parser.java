@@ -22,7 +22,7 @@ import static org.leibnizcenter.cfg.util.Collections2.isFilled;
 
 /**
  * Helper function for parsing
- * <p>
+ *
  * Created by Maarten on 31-7-2016.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})

@@ -32,14 +32,14 @@ import static org.leibnizcenter.cfg.grammar.GrammarParser.TRAILING_COMMENT;
 
 /**
  * Represents a stochastic context-free grammar (set of production rules with probabilities).
- * <p>
+ *
  * Grammars maintain their rules indexed by
  * {@link Rule#getLeft() left side category}. The rule sets contained for
  * any given {@link Category left category} are not guaranteed to be
  * maintained in the order of insertion.
- * <p>
+ *
  * This class pre-computes all the left-relations for the non-terminals that occur
- * <p>
+ *
  * Once the Grammar is instantiated, it is immutable.
  */
 public final class Grammar<T> {

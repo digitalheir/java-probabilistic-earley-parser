@@ -43,6 +43,7 @@ import java.io.ObjectInput;
  *
  * @version $Id: THash.java,v 1.1.2.4 2010/03/02 00:55:34 robeden Exp $
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 abstract public class THash implements Externalizable {
     @SuppressWarnings( { "UnusedDeclaration" } )
     static final long serialVersionUID = -1792948471915530295L;
@@ -68,8 +69,8 @@ abstract public class THash implements Externalizable {
 
     /**
      * Determines how full the internal table can become before
-     * rehashing is required. This must be a value in the range: 0.0 <
-     * loadFactor < 1.0.  The default value is 0.5, which is about as
+     * rehashing is required. This must be a value in the range: 0.0 lt
+     * loadFactor lt 1.0.  The default value is 0.5, which is about as
      * large as you can get in open addressing without hurting
      * performance.  Cf. Knuth, Volume 3., Chapter 6.
      */
@@ -186,11 +187,11 @@ abstract public class THash implements Externalizable {
      * operations and plan to do a lot of queries or insertions or
      * iteration, it is a good idea to invoke this method.  Doing so
      * will accomplish two things:
-     * <p>
+     *
      * <ol>
      * <li> You'll free memory allocated to the table but no
      * longer needed because of the remove()s.</li>
-     * <p>
+     *
      * <li> You'll get better query/insert/iterator performance
      * because there won't be any <tt>REMOVED</tt> slots to skip
      * over when probing for indices in the table.</li>
@@ -215,7 +216,7 @@ abstract public class THash implements Externalizable {
      * If the value is non-zero, the number of removes that need to occur for
      * auto-compaction is the size of table at the time of the previous compaction
      * (or the initial capacity) multiplied by this factor.
-     * <p>
+     *
      * Setting this value to zero will disable auto-compaction.
      *
      * @param factor a <tt>float</tt> that indicates the auto-compaction factor
@@ -231,8 +232,6 @@ abstract public class THash implements Externalizable {
 
     /**
      * @see #setAutoCompactionFactor
-     *
-     * @return a <<tt>float</tt> that represents the auto-compaction factor.
      */
     public float getAutoCompactionFactor() {
         return _autoCompactionFactor;

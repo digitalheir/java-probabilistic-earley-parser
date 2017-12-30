@@ -4,7 +4,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 /**
  * Predict phase
- * <p>
+ *
  * Created by maarten on 31/10/16.
  */
 @SuppressWarnings("WeakerAccess")

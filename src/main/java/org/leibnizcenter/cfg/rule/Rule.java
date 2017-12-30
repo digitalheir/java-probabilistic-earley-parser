@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 
 /**
  * Represents a production rule in a {@link Grammar context-free grammar}.
- * <p>
+ *
  * Rules contain a single {@link Category category} on the
  * {@link Rule#getLeft() left side} that produces the series of category on
  * the {@link Rule#getRight() right side}. Rules that license empty productions
  * (have an empty right side) can be specified with a rule that has a right
  * side of length <code>1</code> whose member is an empty string. A rule that
  * contains a terminal on the right must contain <em>only</em> that terminal.
- * <p>
+ *
  * Rules are immutable and cannot be changed once instantiated.
  *
  * @see Category

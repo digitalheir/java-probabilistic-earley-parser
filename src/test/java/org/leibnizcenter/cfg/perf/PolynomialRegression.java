@@ -17,7 +17,7 @@ import java.util.List;
  * and the &beta;<sub><em>i</em></sub> are the regression coefficients)
  * that minimizes the sum of squared residuals of the multiple regression model.
  * It also computes associated the coefficient of determination <em>R</em><sup>2</sup>.
- * <p>
+ *
  * This implementation performs a QR-decomposition of the underlying
  * Vandermonde matrix, so it is not the fastest or most numerically
  * stable way to perform the polynomial regression.

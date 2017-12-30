@@ -12,7 +12,7 @@ import static org.leibnizcenter.cfg.util.Collections2.*;
 
 /**
  * Represented chart indexes to completed states
- * <p>
+ *
  * Created by maarten on 18-1-17.
  */
 public class CompletedStates {

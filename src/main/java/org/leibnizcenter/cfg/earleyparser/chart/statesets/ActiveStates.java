@@ -17,7 +17,7 @@ import static org.leibnizcenter.cfg.util.Collections2.*;
 
 /**
  * Represents an index of active states in a chart
- * <p>
+ *
  * Created by maarten on 18-1-17.
  */
 public class ActiveStates<T> {

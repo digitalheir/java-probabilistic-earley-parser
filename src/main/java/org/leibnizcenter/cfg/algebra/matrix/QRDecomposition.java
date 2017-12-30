@@ -2,11 +2,11 @@ package org.leibnizcenter.cfg.algebra.matrix;
 
 /**
  * QR Decomposition.
- * <p>
+ *
  * For an m-by-n matrix A with m &gt;= n, the QR decomposition is an m-by-n
  * orthogonal matrix Q and an n-by-n upper triangular matrix R so that
  * A = Q*R.
- * <p>
+ *
  * The QR decompostion always exists, even if the matrix does not have
  * full rank, so the constructor will never fail.  The primary use of the
  * QR decomposition is in the least squares solution of non-square systems

@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * Semiring for abstract expression trees
- * <p>
+ *
  * Created by Maarten on 24-8-2016.
  */
 public abstract class ExpressionSemiring implements DblSemiring {

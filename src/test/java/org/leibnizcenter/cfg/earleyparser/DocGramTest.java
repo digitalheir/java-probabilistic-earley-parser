@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Document grammar
- * <p>
+ *
  * Created by Maarten on 23-8-2016.
  */
 public class DocGramTest {

@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import static java.lang.Character.isWhitespace;
 
 /**
- * <p>
+ *
  * For parsing a rule from a {@link String}
  * </p>
  * Created by maarten on 6-2-17.

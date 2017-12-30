@@ -7,7 +7,7 @@ import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 
 /**
  * Factory for {@link Rule rules}
- * <p>
+ *
  * Created by Maarten on 31-7-2016.
  */
 public class RuleFactory {

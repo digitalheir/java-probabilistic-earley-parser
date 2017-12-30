@@ -45,7 +45,7 @@ import java.util.function.Function;
 
 /**
  * An open addressed Map implementation for double keys and Object values.
- * <p>
+ *
  * Created: Sun Nov  4 08:52:45 2001
  *
  * @author Eric D. Friedman

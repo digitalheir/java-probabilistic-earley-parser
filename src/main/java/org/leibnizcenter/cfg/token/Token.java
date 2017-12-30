@@ -3,7 +3,7 @@ package org.leibnizcenter.cfg.token;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 
 /**
- * <p>
+ *
  * Represents an abstract word. A list of tokens makes a sentence. A token can be of a category / type,
  * which must be a {@link Terminal}.  {@link Terminal}
  * implements a function that returns, given a token, whether given token is of that {@link org.leibnizcenter.cfg.category.Category Category}.

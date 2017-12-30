@@ -4,7 +4,7 @@ import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.util.Strings2;
 
 /**
- * <p>
+ *
  * Non-terminal {@link Category}. Just a symbol, so contains a name to distinguish it from other non-terminals.
  * </p>
  * Created by maarten on 10-6-16.

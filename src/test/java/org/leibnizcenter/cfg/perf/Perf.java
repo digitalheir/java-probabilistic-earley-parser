@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Test performance todo linear / exponential regression
- * <p>
+ *
  * Created by Maarten on 23-8-2016.
  */
 class Perf {

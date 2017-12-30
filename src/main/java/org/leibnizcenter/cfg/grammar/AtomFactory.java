@@ -9,7 +9,7 @@ import java.lang.ref.WeakReference;
 
 /**
  * For not re-creating atom objects all the time, a weak cache of atoms. Values might get garbage collected.
- * <p>
+ *
  * Created by maarten on 22/01/17.
  */
 public class AtomFactory {

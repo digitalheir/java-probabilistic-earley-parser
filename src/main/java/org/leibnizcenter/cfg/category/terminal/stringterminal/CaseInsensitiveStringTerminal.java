@@ -6,7 +6,7 @@ import java.util.Locale;
 
 /**
  * Terminal for which a given string token matches exactly, modulo character case
- * <p>
+ *
  * Created by maarten on 11-6-16.
  */
 @SuppressWarnings("WeakerAccess")

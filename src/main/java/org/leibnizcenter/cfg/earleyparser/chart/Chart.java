@@ -150,7 +150,7 @@ public class Chart<T> {
 
     /**
      * Makes predictions in the specified chart at the given index.
-     * <p>
+     *
      * For each state at position i, look at the the nonterminal at the dot position,
      * add a state that expands that nonterminal at position i, with the dot position at 0
      *

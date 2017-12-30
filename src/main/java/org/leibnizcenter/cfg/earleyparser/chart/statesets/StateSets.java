@@ -16,7 +16,7 @@ import static org.leibnizcenter.cfg.util.Collections2.containsKey;
 
 /**
  * Represents an index of states, indexed by many different aspects
- * <p>
+ *
  * Created by maarten on 31/10/16.
  */
 @SuppressWarnings("WeakerAccess")

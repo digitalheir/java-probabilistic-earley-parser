@@ -5,7 +5,7 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 
 /**
  * Complete stage
- * <p>
+ *
  * Created by maarten on 31/10/16.
  */
 public class Complete {
