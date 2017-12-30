@@ -30,9 +30,6 @@ This library allows you to do these things [efficiently](#runtime-complexity), a
 
 The innovation of this library with respect to the many other parsing libraries is that this one allows the production rules in your grammar to have a probability attached to them. That is: it parses sentences using [Stochastic Context-free Grammars](https://en.wikipedia.org/wiki/Stochastic_context-free_grammar). This allows us to make better choices in case of ambiguous sentences, because we can order multiple interpretations of the same sentence by probability. Furthermore, this parser does not limit token types to strings.
 
-The parser seems to work correctly and efficiently, but is still < v1.0 because I still
-want to add some extra utility functions and tests.
-
 For a theoretical grounding of this work, refer to [*Stolcke, An Efficient Probabilistic Context-Free
            Parsing Algorithm that Computes Prefix
            Probabilities*](http://www.aclweb.org/anthology/J95-2002).
