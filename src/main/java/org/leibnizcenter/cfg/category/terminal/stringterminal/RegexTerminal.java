@@ -5,10 +5,10 @@ import org.leibnizcenter.cfg.token.Token;
 import java.util.regex.Pattern;
 
 /**
- *
+ * <p>
  * A terminal that matches a {@link Pattern Regex pattern}
  * </p>
- *
+ * <p>
  * Created by maarten on 7-2-17.
  * </p>
  */
