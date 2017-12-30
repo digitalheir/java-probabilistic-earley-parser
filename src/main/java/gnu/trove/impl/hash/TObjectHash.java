@@ -427,6 +427,7 @@ abstract public class TObjectHash<T> extends THash {
      * @param o2 the second of the equal elements with unequal hash codes.
      * @param oldKeys @throws IllegalArgumentException the whole point of this method.
      */
+    @SuppressWarnings("unused")
     protected final void throwObjectContractViolation(final Object o1, final Object o2, final int size, final int oldSize, final Object[] oldKeys)
             throws IllegalArgumentException {
         final String extra = dumpExtraInfo(o1, o2, size(), oldSize, oldKeys);
@@ -447,7 +448,7 @@ abstract public class TObjectHash<T> extends THash {
      * @param o2 the second of the equal elements with unequal hash codes.
      * @throws IllegalArgumentException the whole point of this method.
      */
-    protected final IllegalArgumentException buildObjectContractViolation(final Object o1, final Object o2, final String extra ) {
+    private IllegalArgumentException buildObjectContractViolation(final Object o1, final Object o2, final String extra) {
         return new IllegalArgumentException("Equal objects must have equal hashcodes. " +
                 "During rehashing, Trove discovered that the following two objects claim " +
                 "to be equal (as in java.lang.Object.equals()) but their hashCodes (or " +
@@ -459,17 +460,15 @@ abstract public class TObjectHash<T> extends THash {
 
 
     protected boolean equals(final Object notnull, final Object two) {
-        if (two == null || two == REMOVED)
-            return false;
+        return two != null && two != REMOVED && notnull.equals(two);
 
-        return notnull.equals(two);
     }
 
     protected int hash(final Object notnull) {
         return notnull.hashCode();
     }
 
-    protected static String reportPotentialConcurrentMod(final int newSize, final int oldSize) {
+    private static String reportPotentialConcurrentMod(final int newSize, final int oldSize) {
         // Note that we would not be able to detect concurrent paired of put()-remove()
         // operations with this simple check
         if (newSize != oldSize)
@@ -487,7 +486,7 @@ abstract public class TObjectHash<T> extends THash {
      * @param oldSize size of the key set before rehashing
      * @param oldKeys the old key set
      */
-    protected String dumpExtraInfo(final Object newVal, final Object oldVal, final int currentSize, final int oldSize, final Object[] oldKeys) {
+    private String dumpExtraInfo(final Object newVal, final Object oldVal, final int currentSize, final int oldSize, final Object[] oldKeys) {
         final StringBuilder b = new StringBuilder();
         //
         b.append(dumpKeyTypes(newVal, oldVal));
@@ -506,8 +505,6 @@ abstract public class TObjectHash<T> extends THash {
     /**
      * Detect inconsistent hashCode() and/or equals() methods
      *
-     * @param keys
-     * @param oldSize
      */
     private static String detectKeyLoss(final Object[] keys, final int oldSize) {
         final StringBuilder buf = new StringBuilder();
@@ -522,7 +519,7 @@ abstract public class TObjectHash<T> extends THash {
     }
 
     private static Set<Object> makeKeySet(final Object[] keys) {
-        final Set<Object> types = new HashSet<Object>();
+        final Set<Object> types = new HashSet<>();
         for (final Object o : keys) {
             if (o != FREE && o != REMOVED) {
                     types.add(o);
@@ -553,14 +550,14 @@ abstract public class TObjectHash<T> extends THash {
         return buf.toString();
     }
 
-    protected static String objectInfo(final Object o) {
+    private static String objectInfo(final Object o) {
         return (o == null ? "class null" : o.getClass()) + " id= " + System.identityHashCode(o)
                 + " hashCode= " + (o == null ? 0 : o.hashCode()) + " toString= " + String.valueOf(o);
     }
 
     private String dumpKeyTypes(final Object newVal, final Object oldVal) {
         final StringBuilder buf = new StringBuilder();
-        final Set<Class<?>> types = new HashSet<Class<?>>();
+        final Set<Class<?>> types = new HashSet<>();
         for (final Object o : _set) {
             if (o != FREE && o != REMOVED) {
                 if (o != null)

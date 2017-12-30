@@ -115,11 +115,11 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      * rehashing takes place.
      * @param no_entry_value value that represents null
      */
+    @SuppressWarnings("unused")
     public TDoubleHash(final int initialCapacity, final float loadFactor, final double no_entry_value ) {
         super(initialCapacity, loadFactor);
         this.no_entry_value = no_entry_value;
-        //noinspection RedundantCast
-        if ( no_entry_value != ( double ) 0 ) {
+        if ( no_entry_value != 0.0 ) {
             Arrays.fill( _set, no_entry_value );
         }
     }
@@ -132,6 +132,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      *
      * @return the value that represents null
      */
+    @SuppressWarnings("unused")
     public double getNoEntryValue() {
         return no_entry_value;
     }
@@ -202,8 +203,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
      */
     protected int index(final double val ) {
         final int hash;
-        int probe;
-        int index;
+        final int index;
         final int length;
 
         final byte[] states = _states;
@@ -286,9 +286,7 @@ abstract public class TDoubleHash extends TPrimitiveHash {
         final int loopIndex = index;
         int firstRemoved = -1;
 
-        /**
-         * Look until FREE slot or we start to loop
-         */
+        // Look until FREE slot or we start to loop
         do {
             // Identify first removed slot
             if (state == REMOVED && firstRemoved == -1)

@@ -28,6 +28,7 @@ package gnu.trove.procedure;
  * @version $Id: TObjectProcedure.java,v 1.1.2.1 2009/09/02 21:52:33 upholderoftruth Exp $
  */
 
+@FunctionalInterface
 public interface TObjectProcedure<T> {
     /**
      * Executes this procedure. A false return value indicates that

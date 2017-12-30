@@ -85,6 +85,7 @@ public abstract class THashPrimitiveIterator implements TPrimitiveIterator {
 
         final byte[] states = _hash._states;
         int i = _index;
+        //noinspection StatementWithEmptyBody
         while ( i-- > 0 && ( states[i] != TPrimitiveHash.FULL ) ) {
         }
         return i;

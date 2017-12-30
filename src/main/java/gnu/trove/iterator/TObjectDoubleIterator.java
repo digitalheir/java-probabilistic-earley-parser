@@ -121,5 +121,6 @@ public interface TObjectDoubleIterator<K> extends TAdvancingIterator {
      * @param val the value to set in the current entry
      * @return the old value of the entry.
      */
+    @SuppressWarnings("unused")
     double setValue(double val);
 }

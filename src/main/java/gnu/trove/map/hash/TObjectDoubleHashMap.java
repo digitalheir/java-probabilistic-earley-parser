@@ -724,37 +724,37 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
 
     class TDoubleValueCollection implements TDoubleCollection {
 
-        /** {@inheritDoc} */
+
         public TDoubleIterator iterator() {
             return new TObjectDoubleValueHashIterator();
         }
 
-        /** {@inheritDoc} */
+
         public double getNoEntryValue() {
             return no_entry_value;
         }
 
-        /** {@inheritDoc} */
+
         public int size() {
             return _size;
         }
 
-        /** {@inheritDoc} */
+
         public boolean isEmpty() {
             return 0 == _size;
         }
 
-        /** {@inheritDoc} */
+
         public boolean contains(final double entry ) {
             return !TObjectDoubleHashMap.this.containsValue( entry );
         }
 
-        /** {@inheritDoc} */
+
         public double[] toArray() {
             return TObjectDoubleHashMap.this.values();
         }
 
-        /** {@inheritDoc} */
+
         public double[] toArray(final double[] dest ) {
             return TObjectDoubleHashMap.this.values( dest );
         }
@@ -763,7 +763,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             throw new UnsupportedOperationException();
         }
 
-        /** {@inheritDoc} */
+
         public boolean remove(final double entry ) {
             final double[] values = _values;
             final Object[] set = _set;
@@ -777,7 +777,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return false;
         }
 
-        /** {@inheritDoc} */
+
         public boolean containsAll(final Collection<?> collection ) {
             for ( final Object element : collection ) {
                 if ( element instanceof Double ) {
@@ -792,7 +792,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return true;
         }
 
-        /** {@inheritDoc} */
+
         public boolean containsAll(final TDoubleCollection collection ) {
             final TDoubleIterator iter = collection.iterator();
             while ( iter.hasNext() ) {
@@ -803,7 +803,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return true;
         }
 
-        /** {@inheritDoc} */
+
         public boolean containsAll(final double[] array ) {
             for ( final double element : array ) {
                 if ( ! TObjectDoubleHashMap.this.containsValue( element ) ) {
@@ -813,22 +813,22 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return true;
         }
 
-        /** {@inheritDoc} */
+
         public boolean addAll(final Collection<? extends Double> collection ) {
             throw new UnsupportedOperationException();
         }
 
-        /** {@inheritDoc} */
+
         public boolean addAll(final TDoubleCollection collection ) {
             throw new UnsupportedOperationException();
         }
 
-        /** {@inheritDoc} */
+
         public boolean addAll(final double[] array ) {
             throw new UnsupportedOperationException();
         }
 
-        /** {@inheritDoc} */
+
         @SuppressWarnings({"SuspiciousMethodCalls"})
         public boolean retainAll(final Collection<?> collection ) {
             boolean modified = false;
@@ -842,7 +842,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return modified;
         }
 
-        /** {@inheritDoc} */
+
         @SuppressWarnings("Duplicates")
         public boolean retainAll(final TDoubleCollection collection ) {
             if ( this == collection ) {
@@ -859,7 +859,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return modified;
         }
 
-        /** {@inheritDoc} */
+
         public boolean retainAll(final double[] array ) {
             boolean changed = false;
             Arrays.sort( array );
@@ -877,7 +877,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return changed;
         }
 
-        /** {@inheritDoc} */
+
         @SuppressWarnings("Duplicates")
         public boolean removeAll(final Collection<?> collection ) {
             boolean changed = false;
@@ -892,7 +892,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return changed;
         }
 
-        /** {@inheritDoc} */
+
         @SuppressWarnings("Duplicates")
         public boolean removeAll(final TDoubleCollection collection ) {
             if ( this == collection ) {
@@ -910,7 +910,7 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return changed;
         }
 
-        /** {@inheritDoc} */
+
         public boolean removeAll(final double[] array ) {
             boolean changed = false;
             for ( int i = array.length; i-- > 0; ) {
@@ -921,12 +921,12 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             return changed;
         }
 
-        /** {@inheritDoc} */
+
         public void clear() {
             TObjectDoubleHashMap.this.clear();
         }
 
-        /** {@inheritDoc} */
+
         public boolean forEach(final TDoubleProcedure procedure ) {
             return TObjectDoubleHashMap.this.forEachValue( procedure );
         }
@@ -973,12 +973,12 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
                 _index = _hash.capacity();
             }
 
-            /** {@inheritDoc} */
+
             public boolean hasNext() {
                 return nextIndex() >= 0;
             }
 
-            /** {@inheritDoc} */
+
             public double next() {
                 moveToNextIndex();
                 return _values[_index];
@@ -1054,23 +1054,23 @@ public class TObjectDoubleHashMap<K> extends TObjectHash<K>
             this._map = map;
         }
 
-        /** {@inheritDoc} */
+
         public void advance() {
             moveToNextIndex();
         }
 
-        /** {@inheritDoc} */
+
         @SuppressWarnings({"unchecked"})
         public K key() {
             return ( K ) _map._set[_index];
         }
 
-        /** {@inheritDoc} */
+
         public double value() {
             return _map._values[_index];
         }
 
-        /** {@inheritDoc} */
+
         public double setValue(final double val ) {
             final double old = value();
             _map._values[_index] = val;

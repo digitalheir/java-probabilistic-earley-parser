@@ -24,11 +24,12 @@ import gnu.trove.iterator.TDoubleObjectIterator;
 import gnu.trove.procedure.TDoubleProcedure;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.procedure.TDoubleObjectProcedure;
-import gnu.trove.function.TObjectFunction;
+
 import gnu.trove.set.TDoubleSet;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
 
 //////////////////////////////////////////////////
@@ -377,9 +378,9 @@ public interface TDoubleObjectMap<V> {
     /**
      * Transform the values in this map using <tt>function</tt>.
      *
-     * @param function a <code>TObjectFunction</code> value
+     * @param function a <code>Function</code> value
      */
-    void transformValues(TObjectFunction<V, V> function);
+    void transformValues(Function<V, V> function);
 
 
     /**

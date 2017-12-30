@@ -177,6 +177,7 @@ public interface TObjectDoubleMap<K> {
      * @return the previous value associated with <tt>key</tt>, or the "no entry" value
      *         if none was found (see {@link #getNoEntryValue}).
      */
+    @SuppressWarnings("unused")
     double putIfAbsent( K key, double value );
 
 

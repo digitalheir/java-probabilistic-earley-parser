@@ -21,6 +21,7 @@ package gnu.trove.impl;
 /**
  * Central location for constants needed by various implementations.
  */
+@SuppressWarnings("ConstantConditions")
 public class Constants {
 
     private static final boolean VERBOSE =
@@ -71,23 +72,23 @@ public class Constants {
     }
 
 
-    /** the default value that represents for <tt>char</tt> types. */
-    private static final char DEFAULT_CHAR_NO_ENTRY_VALUE;
-    static {
-        char value;
-        final String property = System.getProperty( "gnu.trove.no_entry.char", "\0" );
-        if ( "MAX_VALUE".equalsIgnoreCase( property ) ) value = Character.MAX_VALUE;
-        else if ( "MIN_VALUE".equalsIgnoreCase( property ) ) value = Character.MIN_VALUE;
-        else value = property.toCharArray()[0];
-
-        if ( value > Character.MAX_VALUE ) value = Character.MAX_VALUE;
-        else if ( value < Character.MIN_VALUE ) value = Character.MIN_VALUE;
-        DEFAULT_CHAR_NO_ENTRY_VALUE = value;
-        if ( VERBOSE ) {
-            System.out.println( "DEFAULT_CHAR_NO_ENTRY_VALUE: " +
-                                Integer.valueOf( value ) );
-        }
-    }
+//    /** the default value that represents for <tt>char</tt> types. */
+//    private static final char DEFAULT_CHAR_NO_ENTRY_VALUE;
+//    static {
+//        char value;
+//        final String property = System.getProperty( "gnu.trove.no_entry.char", "\0" );
+//        if ( "MAX_VALUE".equalsIgnoreCase( property ) ) value = Character.MAX_VALUE;
+//        else if ( "MIN_VALUE".equalsIgnoreCase( property ) ) value = Character.MIN_VALUE;
+//        else value = property.toCharArray()[0];
+//
+//        if ( value > Character.MAX_VALUE ) value = Character.MAX_VALUE;
+//        else if ( value < Character.MIN_VALUE ) value = Character.MIN_VALUE;
+//        DEFAULT_CHAR_NO_ENTRY_VALUE = value;
+//        if ( VERBOSE ) {
+//            System.out.println( "DEFAULT_CHAR_NO_ENTRY_VALUE: " +
+//                                Integer.valueOf( value ) );
+//        }
+//    }
 
 
     /** the default value that represents for <tt>int</tt> types. */

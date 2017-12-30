@@ -22,10 +22,10 @@ package gnu.trove.procedure;
 // THIS IS A GENERATED CLASS. DO NOT HAND EDIT! //
 //////////////////////////////////////////////////
 
-
 /**
  * Interface for procedures that take two parameters of type double and Object.
  */
+@FunctionalInterface
 public interface TDoubleObjectProcedure<T> {
 
     /**

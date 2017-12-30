@@ -29,7 +29,6 @@ import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.procedure.TDoubleProcedure;
 
 import java.util.Collection;
-import java.io.Serializable;
 
 /**
  * An interface that mimics the <tt>Collection</tt> interface.
@@ -40,9 +39,8 @@ import java.io.Serializable;
  * @version $Id: _E_Collection.template,v 1.1.2.2 2009/09/15 02:38:30 upholderoftruth Exp $
  */
 
+@SuppressWarnings("unused")
 public interface TDoubleCollection {
-    long serialVersionUID = 1L;
-
     /**
      * Returns the value that is used to represent null. The default
      * value is generally zero, but can be changed during construction

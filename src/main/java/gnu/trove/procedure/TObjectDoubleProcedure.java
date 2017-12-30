@@ -26,6 +26,7 @@ package gnu.trove.procedure;
 /**
  * Interface for procedures that take two parameters of type Object and double.
  */
+@FunctionalInterface
 public interface TObjectDoubleProcedure<K> {
 
     /**

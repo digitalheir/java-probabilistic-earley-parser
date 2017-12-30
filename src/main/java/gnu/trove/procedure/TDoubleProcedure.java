@@ -27,6 +27,8 @@ package gnu.trove.procedure;
 /**
  * Interface for procedures with one double parameter.
  */
+
+@FunctionalInterface
 public interface TDoubleProcedure {
     /**
      * Executes this procedure. A false return value indicates that
