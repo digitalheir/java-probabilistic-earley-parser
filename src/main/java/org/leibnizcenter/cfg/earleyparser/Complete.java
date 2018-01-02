@@ -12,20 +12,10 @@ public class Complete {
 
 
     public static class Delta {
-        public final State state;
-        public final Resolvable addForward;
-        public final Resolvable addInner;
         public final boolean newCompletedStateNoUnitProduction;
 
-        public Delta(final State state, final Resolvable addInner, final Resolvable addForward, final boolean newCompletedStateNoUnitProduction) {
-            this.state = state;
-            this.addInner = addInner;
-            this.addForward = addForward;
+        public Delta(final State state, final boolean newCompletedStateNoUnitProduction) {
             this.newCompletedStateNoUnitProduction = newCompletedStateNoUnitProduction;
-        }
-
-        public State getState() {
-            return state;
         }
     }
 

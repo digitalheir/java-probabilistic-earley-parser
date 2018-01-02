@@ -8,8 +8,10 @@ import org.leibnizcenter.cfg.rule.Rule;
 import java.text.DecimalFormat;
 
 /**
+ * <p>
  * A chart state, describing a pending derivation.
- *
+ * </p>
+ * <p>
  * A state is of the form <code>i: X<sub>k</sub> → λ·μ</code>
  * where X is a nonterminal of the grammar, λ and μ are strings of nonterminals and/or
  * terminals, and i and k are indices into the input string. States are derived from productions
@@ -31,12 +33,12 @@ import java.text.DecimalFormat;
  * expanded the right-hand side (RHS) <code>λμ</code> up to the position indicated by
  * the dot. The dot thus refers to the current position <code>i</code>.</li>
  * </ul>
- *
+ * <p>
  * A state with the dot to the right of the entire RHS is called a completeNoViterbi state, since
  * it indicates that the left-hand side (LHS) nonterminal has been fully expanded.
- *
+ * <p>
  * States are mutable
- *
+ * <p>
  * Created by maarten on 24-6-16.
  */
 public class State {
@@ -77,6 +79,10 @@ public class State {
 
     public static State create(final int index, final int ruleStart, final int dotPosition, final Rule rule) {
         return new State(rule, index, ruleStart, dotPosition);
+    }
+
+    public static State create(final int index, final State copyState, final int dotPosition) {
+        return new State(copyState.rule, index, copyState.ruleStartPosition, dotPosition);
     }
 
     @Override

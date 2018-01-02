@@ -7,7 +7,6 @@ import java.util.Objects;
 
 /**
  * Semiring for abstract expression trees
- *
  * Created by Maarten on 24-8-2016.
  */
 public abstract class ExpressionSemiring implements DblSemiring {
@@ -30,6 +29,7 @@ public abstract class ExpressionSemiring implements DblSemiring {
         if (r1 == ONE) return times(r2, r3);
         else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
         else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
+        else if (r3 instanceof Atom) return new DblTimes(times(r1, ((Atom) r3).value), r2);
         else return new DblTimes(r1, r2, r3);
     }
 

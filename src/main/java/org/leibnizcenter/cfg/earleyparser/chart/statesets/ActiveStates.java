@@ -8,7 +8,6 @@ import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.ScoresAsSemiringElements;
 import org.leibnizcenter.cfg.util.MyMultimap;
-import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.*;
 import java.util.stream.Stream;

@@ -5,7 +5,7 @@ import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ResolvableLockable;
 
 @SuppressWarnings("WeakerAccess")
-public class ExpressionWrapper extends ResolvableLockable {
+public final class ExpressionWrapper extends ResolvableLockable {
     private double literal = Double.NaN;
     private Resolvable expression = null;
 
@@ -32,7 +32,6 @@ public class ExpressionWrapper extends ResolvableLockable {
     }
 
     public void setExpression(final double expression) {
-        System.out.println("YAAAAAs");
         if (lock) throw new IllegalStateException("Value already locked");
         this.literal = expression;
         this.expression = null;

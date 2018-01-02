@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.util;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Collection utils
@@ -13,6 +14,14 @@ public class Collections2 {
 
     public static <T> boolean isFilled(final Collection<T> collection) {
         return !nullOrEmpty(collection);
+    }
+
+
+    public static <T> boolean ifFilled(final Collection<T> collection, final Consumer<T> consumer) {
+        if (nullOrEmpty(collection)) return false;
+
+        collection.forEach(consumer);
+        return false;
     }
 
     public static <T> Collection<T> emptyIfNull(final Collection<T> collection) {

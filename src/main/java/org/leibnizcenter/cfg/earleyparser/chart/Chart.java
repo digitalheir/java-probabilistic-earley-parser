@@ -2,23 +2,23 @@ package org.leibnizcenter.cfg.earleyparser.chart;
 
 import org.leibnizcenter.cfg.algebra.semiring.dbl.ExpressionSemiring;
 import org.leibnizcenter.cfg.algebra.semiring.dbl.Resolvable;
-import org.leibnizcenter.cfg.algebra.semiring.dbl.ResolvableLockable;
 import org.leibnizcenter.cfg.category.Category;
 import org.leibnizcenter.cfg.category.nonterminal.KleeneClosure;
 import org.leibnizcenter.cfg.category.nonterminal.NonTerminal;
 import org.leibnizcenter.cfg.category.terminal.Terminal;
 import org.leibnizcenter.cfg.earleyparser.Complete;
 import org.leibnizcenter.cfg.earleyparser.DeferredStateScoreComputations;
+import org.leibnizcenter.cfg.earleyparser.ExpressionWrapper;
 import org.leibnizcenter.cfg.earleyparser.Scan;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ParseOptions;
 import org.leibnizcenter.cfg.earleyparser.callbacks.ScanProbability;
 import org.leibnizcenter.cfg.earleyparser.chart.state.State;
 import org.leibnizcenter.cfg.earleyparser.chart.statesets.StateSets;
+import org.leibnizcenter.cfg.errors.Bug;
 import org.leibnizcenter.cfg.errors.IssueRequest;
 import org.leibnizcenter.cfg.grammar.Grammar;
 import org.leibnizcenter.cfg.rule.Rule;
 import org.leibnizcenter.cfg.token.TokenWithCategories;
-import org.leibnizcenter.cfg.util.StateInformationTriple;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,10 +38,7 @@ public class Chart<T> {
      * Creates a new chart, initializing its internal data structure.
      */
     public Chart(final Grammar<T> grammar) {
-        this(
-                grammar,
-                null
-        );
+        this(grammar, null);
     }
 
     public Chart(final Grammar<T> grammar, final ParseOptions<T> parseOptions
@@ -55,34 +52,27 @@ public class Chart<T> {
         return viterbiScore == null || viterbiScore.semiring.compare(viterbiScore.probabilityAsSemiringElement, newViterbiScore) < 0;
     }
 
-    private static <E> Complete.Delta completeNoViterbiForTriple(final int position,
-                                                                 final ResolvableLockable prevInner,
-                                                                 final ResolvableLockable prevForward,
-                                                                 final StateSets<E> stateSets,
-                                                                 final StateInformationTriple t) {
-        final int j = t.completedState.ruleStartPosition;
-        final NonTerminal Yl = t.completedState.rule.left;
+    private State completeNoViterbi(final int position,
+                                    final DeferredStateScoreComputations addInnerScores,
+                                    final DeferredStateScoreComputations addForwardScores,
+                                    final State stateToAdvance,
+                                    final State completedState, final Resolvable completedInner) {
+
+        final ExpressionWrapper prevInner = addInnerScores.getOrCreate(stateToAdvance, stateSets.innerScores.get(stateToAdvance));
+        final ExpressionWrapper prevForward = addForwardScores.getOrCreate(stateToAdvance, stateSets.forwardScores.get(stateToAdvance));
 
         // Make i: X_k → lZ·m
-        final Category Z = t.stateToAdvance.getActiveCategory();
-        final Grammar<E> grammar = stateSets.grammar;
-        final double unitStarScore = grammar.getUnitStarScore(Z, Yl);
+        final State nextState = State.create(position, stateToAdvance, stateToAdvance.advanceDot());
 
-        final Resolvable fw = grammar.semiring.times(unitStarScore, prevForward, t.completedInner);
-        final Resolvable inner = grammar.semiring.times(unitStarScore, prevInner, t.completedInner);
+        final Category Z = stateToAdvance.getActiveCategory();
+        final NonTerminal Yl = completedState.rule.left;
+        final double unitStarScore = stateSets.grammar.getUnitStarScore(Z, Yl);
 
-        if (j != t.stateToAdvance.position) throw new IssueRequest("Index failed. This is a bug.");
-        final State s = State.create(
-                position,
-                t.stateToAdvance.ruleStartPosition,
-                t.stateToAdvance.advanceDot(),
-                t.stateToAdvance.rule
-        );
-        return new Complete.Delta(s, inner, fw,
-                // If this is a new completed state that is no unit production, make a note of it it because we want to recursively call *complete* on these states
-                ((s.rule.isPassive(s.ruleDotPosition)/*isCompleted*/
-                        && !s.rule.isUnitProduction()
-                        && !stateSets.contains(s))));
+        if (completedState.ruleStartPosition != stateToAdvance.position) throw new Bug("Index failed. This is a bug.");
+
+        addForwardScores.plusProductOf(nextState, stateSets.grammar.semiring, unitStarScore, prevForward, completedInner);
+        addInnerScores.plusProductOf(nextState, stateSets.grammar.semiring, unitStarScore, prevInner, completedInner);
+        return nextState;
     }
 
     /**
@@ -150,7 +140,7 @@ public class Chart<T> {
 
     /**
      * Makes predictions in the specified chart at the given index.
-     *
+     * <p>
      * For each state at position i, look at the the nonterminal at the dot position,
      * add a state that expands that nonterminal at position i, with the dot position at 0
      *
@@ -361,8 +351,7 @@ public class Chart<T> {
     private void completeNoViterbi(final int position,
                                    Collection<State> newCompletedStates,
                                    final DeferredStateScoreComputations addForwardScores,
-                                   final DeferredStateScoreComputations addInnerScores
-    ) {
+                                   final DeferredStateScoreComputations addInnerScores) {
         if (newCompletedStates == null || newCompletedStates.size() <= 0)
             return;
         while (newCompletedStates.size() > 0) {
@@ -374,33 +363,25 @@ public class Chart<T> {
                 //
                 //  such that the R*(Z =*> Y) is nonzero
                 //  and Y → v is not a unit production
-                final StateInformationTriple triple = new StateInformationTriple(null,
-                        completedState,
-                        addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState))
-                );
 
-                final State state = triple.completedState;
-                final Collection<State> statesActive = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(state.ruleStartPosition, state.rule.left);
-                if (isFilled(statesActive)) {
-                    statesActive.forEach(stateToAdvance -> {
-                        final StateInformationTriple stateInformation = new StateInformationTriple(
-                                stateToAdvance,
-                                state,
-                                triple.completedInner
-                        );
-                        final double prevForward = stateSets.forwardScores.get(stateInformation.stateToAdvance);
-                        final Complete.Delta delta = completeNoViterbiForTriple(
-                                position,
-                                addInnerScores.getOrCreate(stateInformation.stateToAdvance, stateSets.innerScores.get(stateInformation.stateToAdvance)),
-                                addForwardScores.getOrCreate(stateInformation.stateToAdvance, prevForward),
-                                stateSets,
-                                stateInformation);
-                        addForwardScores.plus(delta.state, delta.addForward);
-                        addInnerScores.plus(delta.state, delta.addInner);
-                        if (delta.newCompletedStateNoUnitProduction) {
-                            nextCompletedStates.add(delta.state);
-                        }
-                    });
+                final Collection<State> statesActive = stateSets.activeStates.getStatesActiveOnNonTerminalWithNonZeroUnitStarScoreToY(
+                        completedState.ruleStartPosition,
+                        completedState.rule.left);
+                if (isFilled(statesActive)) for (final State stateToAdvance : statesActive) {
+                    final State newState = completeNoViterbi(position,
+                            addInnerScores,
+                            addForwardScores,
+                            stateToAdvance,
+                            completedState,
+                            addInnerScores.getOrCreate(completedState, stateSets.innerScores.get(completedState)));
+
+                    // If this is a new completed state that is no unit production, make a note of it it
+                    // because we want to recursively call *complete* on these states
+                    if (((newState.rule.isPassive(newState.ruleDotPosition)/*isCompleted*/
+                            && !newState.rule.isUnitProduction()
+                            && !stateSets.contains(newState)))) {
+                        nextCompletedStates.add(newState);
+                    }
                 }
             });
                     /* Prepare next batch of new completed states; recurse until there are no more new completed states */
