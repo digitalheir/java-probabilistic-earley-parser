@@ -36,18 +36,18 @@ public class DeferredStateScoreComputations {
         return this.states.getOrDefault(state, null);
     }
 
-    public void plus(final State s, final Resolvable addValue) {
-        final ExpressionWrapper current = this.getOrCreate(s, this.semiring.zero());
-
-        if (current.hasExpression())
-            current.setExpression(semiring.plus(addValue, current.getExpression()));
-        else if (addValue instanceof Atom && !current.hasExpression())
-            current.setExpression(semiring.plus(((Atom) addValue).value, current.getLiteral()));
-        else
-            current.setExpression(semiring.plus(addValue, current.getLiteral()));
-
-        this.states.put(s, current);
-    }
+//    public void plus(final State s, final Resolvable addValue) {
+//        final ExpressionWrapper current = this.getOrCreate(s, this.semiring.zero());
+//
+//        if (current.hasExpression())
+//            current.setExpression(semiring.plus(addValue, current.getExpression()));
+//        else if (addValue instanceof Atom && !current.hasExpression())
+//            current.setExpression(semiring.plus(((Atom) addValue).value, current.getLiteral()));
+//        else
+//            current.setExpression(semiring.plus(addValue, current.getLiteral()));
+//
+//        this.states.put(s, current);
+//    }
 
     public void plusProductOf(final State s, final ExpressionSemiring semiring, final double t1, final ExpressionWrapper t2, final Resolvable t3) {
         final ExpressionWrapper current = this.getOrCreate(s, this.semiring.zero());

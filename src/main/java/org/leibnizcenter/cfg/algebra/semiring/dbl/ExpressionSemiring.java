@@ -1,6 +1,7 @@
 package org.leibnizcenter.cfg.algebra.semiring.dbl;
 
 import org.leibnizcenter.cfg.earleyparser.Atom;
+import org.leibnizcenter.cfg.earleyparser.ExpressionWrapper;
 
 import java.text.DecimalFormat;
 import java.util.Objects;
@@ -22,12 +23,12 @@ public abstract class ExpressionSemiring implements DblSemiring {
     /*     NOTE:
      *   Checking for multiplicative and additive identities doesn't seem to add any performance in practice!
      */
-    public Resolvable times(final double r1, final Resolvable r2, final Resolvable r3) {
-        if (r3 instanceof Atom && r2 instanceof Atom)
-            return new Atom(times(r1, times(((Atom) r3).value, ((Atom) r2).value)));
+    public Resolvable times(final double r1, final ExpressionWrapper r2, final Resolvable r3) {
+//        if (r3 instanceof Atom && r2 instanceof Atom)
+//            return new Atom(times(r1, times(((Atom) r3).value, ((Atom) r2).value)));
 
         if (r1 == ONE) return times(r2, r3);
-        else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
+        // else if (isMultiplicativeIdentity(r2)) return times(r1, r3);
         else if (isMultiplicativeIdentity(r3)) return times(r1, r2);
         else if (r3 instanceof Atom) return new DblTimes(times(r1, ((Atom) r3).value), r2);
         else return new DblTimes(r1, r2, r3);
