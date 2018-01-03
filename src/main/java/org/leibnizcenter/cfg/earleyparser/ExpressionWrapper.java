@@ -42,17 +42,25 @@ public final class ExpressionWrapper extends ResolvableLockable {
     timesLiteral = Double.NaN;
     this.expression = null;
   }
-  
+
   public void setPlusLiteral(final double plus) {
-    plusLiteral = plus;    
+    plusLiteral = plus;
   }
   
   public void setTimesLiteral(final double times) {
-    timesLiteral = times;    
+    timesLiteral = times;
   }
 
-  public double resolveAndClean() {
+  public double resolveAndClean(/*DblSemiring sr*/) {
     if (lock) return cached;
+    double expressionValue = expressionValue();
+    // TODO
+//    if(Double.isFinite(plusLiteral)) expressionValue = sr.plus(expressionValue, plusLiteral);
+//    if(Double.isFinite(plusLiteral)) expressionValue = sr.times(expressionValue, timesLiteral);
+    return expressionValue;
+  }
+
+  private double expressionValue() {
     if (expression == null) return literal;
     else {
       literal = expression.resolveFinal();
