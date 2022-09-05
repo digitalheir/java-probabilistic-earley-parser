@@ -224,7 +224,7 @@ parse:
 
 * any CFG in O(n³), 
 * unambiguous CFGs in O(n²)
-* left-recursive unambiguous grammars in O(n)
+* left-recursive unambiguous grammars in O(n). For example, `S → S a` is a left-recursive rule.
 
 Note that this implementation does not apply innovations such as [Joop Leo's improvement](http://www.sciencedirect.com/science/article/pii/030439759190180A) to run linearly on on right-recursive grammars as well. It might be complicated to implement these ideas and still have a probabilistic parser.
 
