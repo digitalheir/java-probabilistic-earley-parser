@@ -4,7 +4,11 @@
 [![License](https://img.shields.io/npm/l/probabilistic-earley-parser.svg)](https://github.com/digitalheir/java-probabilistic-earley-parser/blob/master/LICENSE)
 
 ## ⚠️ Warning
-This code is currently broken. It has a subtle bug which produces invalid results, can make your code run exponentially & could use exponential memory. !!!DO NOT USE THIS LIBRARY!!! Pull requests are welcome, but seeing as this is GitHub, nobody will care & the project is thus effectively abandoned. Contact maartentrompper@freedom.nl if you really need a functioning Probabilistic Earley Parser enough so that you are willing to fund it.  
+This code is currently broken. It has a subtle bug which produces invalid results, can make your code run exponentially & could use exponential memory. 
+
+**DO NOT USE THIS LIBRARY!!!**
+
+Pull requests are welcome, but seeing as this is GitHub, nobody will care & the project is thus effectively abandoned. Contact maartentrompper@freedom.nl if you really need a functioning Probabilistic Earley Parser enough so that you are willing to fund it.  
 
 ---
 
